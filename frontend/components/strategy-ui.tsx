@@ -10,7 +10,7 @@ type FormValue = BuildRequest | AuditRequest | StressTestRequest;
 type ResultValue = BuildResponse | AuditResponse | StressTestResponse;
 
 const copy = {
-  builder: { kicker: "Design from first principles", title: "Strategy Builder", description: "Set your capital, carry assumptions, and risk posture. DeltaZero returns a balanced structure and an explicit entry decision.", endpoint: "POST /strategy/build", submit: "Build strategy" },
+  builder: { kicker: "Design from first principles", title: "Strategy Builder", description: "Set your capital, carry assumptions, and risk posture. DeltaZero returns a balanced structure and an explicit entry decision.", endpoint: "POST /strategy/build", submit: "Analyze strategy" },
   auditor: { kicker: "Inspect the position", title: "Position Auditor", description: "Assess an existing long and short structure for hedge alignment, carry quality, and collateral resilience.", endpoint: "POST /strategy/audit", submit: "Audit position" },
   "stress-test": { kicker: "Pressure before the market", title: "Stress Test", description: "Apply a deterministic market shock and see how the position, health, and recommended action respond.", endpoint: "POST /strategy/stress-test", submit: "Run stress test" },
 };
@@ -21,27 +21,47 @@ const fieldLabels: Record<string, string> = {
   asset: "Asset", capital_usd: "Capital (USD)", risk_tolerance: "Risk tolerance", target_style: "Target style", long_notional_usd: "Long notional (USD)", short_notional_usd: "Short notional (USD)", collateral_usd: "Collateral (USD)", long_yield_apy: "Long yield APY (%)", short_funding_apy: "Short funding APY (%)", fee_drag_apy: "Fee drag APY (%)",
 };
 
+const fieldHelpers: Record<string, string> = {
+  long_yield_apy: "Estimated annual yield from the long strategy.",
+  short_funding_apy: "Estimated annual funding cost of the short hedge.",
+  fee_drag_apy: "Estimated annual protocol and execution cost.",
+  risk_tolerance: "Controls hedge and collateral targets.",
+  target_style: "Defines the strategy construction objective.",
+};
+
 function formatKey(key: string) { return key.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()); }
 function usd(value: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
 
 function StrategyForm({ mode, value, setValue, submit, loading }: { mode: Mode; value: FormValue; setValue: (value: FormValue) => void; submit: (event: FormEvent) => void; loading: boolean }) {
   const update = (key: string, raw: string) => setValue({ ...value, [key]: ["asset", "risk_tolerance", "target_style"].includes(key) ? raw : Number(raw) } as FormValue);
-  const keys = Object.keys(value).filter((key) => key !== "scenario");
+  const available = new Set(Object.keys(value));
+  const groups = [
+    { title: "Strategy inputs", icon: "◇", keys: ["asset", "capital_usd", "long_notional_usd", "short_notional_usd", "collateral_usd"] },
+    { title: "Market assumptions", icon: "↗", keys: ["long_yield_apy", "short_funding_apy", "fee_drag_apy"] },
+    { title: "Risk settings", icon: "◎", keys: ["risk_tolerance", "target_style"] },
+  ].map((group) => ({ ...group, keys: group.keys.filter((key) => available.has(key)) }));
+
+  const renderField = (key: string) => <div className={`field ${fieldHelpers[key] ? "field-with-help" : ""}`} key={key}>
+    <label htmlFor={`${mode}-${key}`}>{fieldLabels[key]}</label>
+    {key === "asset" ? <select id={`${mode}-${key}`} value={String(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)}><option value="SOL">SOL</option><option value="ETH">ETH</option></select>
+    : key === "risk_tolerance" ? <select id={`${mode}-${key}`} value={String(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+    : key === "target_style" ? <select id={`${mode}-${key}`} value={String(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)}><option value="neutral_yield">Neutral yield</option></select>
+    : <input id={`${mode}-${key}`} type="number" step="any" min={key === "fee_drag_apy" ? 0 : undefined} value={Number(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)} required />}
+    {fieldHelpers[key] && <small>{fieldHelpers[key]}</small>}
+  </div>;
+
   return <form className="panel" onSubmit={submit}>
-    <h2 className="panel-title">Strategy inputs</h2>
-    <div className="form-grid">
-      {keys.map((key) => <div className={`field ${["capital_usd"].includes(key) ? "full" : ""}`} key={key}>
-        <label htmlFor={`${mode}-${key}`}>{fieldLabels[key]}</label>
-        {key === "asset" ? <select id={`${mode}-${key}`} value={String(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)}><option value="SOL">SOL</option><option value="ETH">ETH</option></select>
-        : key === "risk_tolerance" ? <select id={`${mode}-${key}`} value={String(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
-        : key === "target_style" ? <select id={`${mode}-${key}`} value={String(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)}><option value="neutral_yield">Neutral yield</option></select>
-        : <input id={`${mode}-${key}`} type="number" step="any" min={key === "fee_drag_apy" ? 0 : undefined} value={Number(value[key as keyof FormValue])} onChange={(e) => update(key, e.target.value)} required />}
-      </div>)}
-      {mode === "stress-test" && <>
+    {groups.map((group) => <section className="form-section" key={group.title}>
+      <h2><span aria-hidden="true">{group.icon}</span>{group.title}</h2>
+      <div className="form-grid">{group.keys.map(renderField)}</div>
+    </section>)}
+    {mode === "stress-test" && <section className="form-section">
+      <h2><span aria-hidden="true">⚡</span>Stress scenario</h2>
+      <div className="form-grid">
         <div className="field"><label htmlFor="scenario-type">Scenario</label><select id="scenario-type" value={(value as StressTestRequest).scenario.type} onChange={(e) => setValue({ ...value, scenario: { ...(value as StressTestRequest).scenario, type: e.target.value as ScenarioType } } as StressTestRequest)}><option value="funding_worsens">Funding worsens</option><option value="yield_drops">Yield drops</option><option value="price_drop">Price drops</option><option value="price_rise">Price rises</option></select></div>
         <div className="field"><label htmlFor="scenario-magnitude">Magnitude (%)</label><input id="scenario-magnitude" type="number" min="0" step="any" required value={(value as StressTestRequest).scenario.magnitude_pct} onChange={(e) => setValue({ ...value, scenario: { ...(value as StressTestRequest).scenario, magnitude_pct: Number(e.target.value) } } as StressTestRequest)} /></div>
-      </>}
-    </div>
+      </div>
+    </section>}
     <button className="button button-primary form-submit" disabled={loading}>{loading ? "Analyzing…" : copy[mode].submit}<span>→</span></button>
     <p className="form-note">Demo values are preloaded · Edit any input</p>
   </form>;
@@ -50,18 +70,18 @@ function StrategyForm({ mode, value, setValue, submit, loading }: { mode: Mode; 
 function MetricsView({ metrics }: { metrics: Metrics }) {
   const values = [
     ["Safety Buffer", metrics.safety_buffer_score.toFixed(1), "Collateral resilience", true],
-    ["Hedge ratio", metrics.hedge_ratio.toFixed(3), "Short ÷ long", false],
+    ["Estimated net carry APY", `${metrics.estimated_net_carry_apy.toFixed(1)}%`, "After funding & fees", true],
+    ["Hedge ratio", metrics.hedge_ratio.toFixed(3), "Short ÷ long", true],
     ["Hedge drift", `${metrics.hedge_drift_pct.toFixed(1)}%`, "Distance from neutral", false],
-    ["Net delta", `${metrics.net_delta_estimate > 0 ? "+" : ""}${metrics.net_delta_estimate.toFixed(1)}%`, "Directional exposure", false],
-    ["Net carry APY", `${metrics.estimated_net_carry_apy.toFixed(1)}%`, "After funding & fees", false],
+    ["Net delta estimate", `${metrics.net_delta_estimate > 0 ? "+" : ""}${metrics.net_delta_estimate.toFixed(1)}%`, "Directional exposure", false],
     ["Carry efficiency", metrics.carry_efficiency_score.toFixed(1), "Return quality score", false],
     ["Capital at risk", usd(metrics.capital_at_risk_proxy), "Exposure proxy", false],
   ];
   return <section className="metrics-section">
     <div className="section-label-row"><h2 className="panel-title">Core metrics</h2><span>Deterministic output</span></div>
     <div className="metrics-grid">
-      {values.map(([label, value, helper, featured]) => <div className={`metric ${featured ? "metric-featured" : ""}`} key={String(label)}>
-        <div className="metric-heading"><label>{label}</label>{featured && <span>Primary risk signal</span>}</div>
+      {values.map(([label, value, helper, primary]) => <div className={`metric ${primary ? "metric-primary" : "metric-secondary"}`} key={String(label)}>
+        <div className="metric-heading"><label>{label}</label>{label === "Safety Buffer" && <span>Primary risk signal</span>}</div>
         <strong>{value}</strong>
         <small>{helper}</small>
       </div>)}
@@ -69,23 +89,34 @@ function MetricsView({ metrics }: { metrics: Metrics }) {
   </section>;
 }
 
-function Summary({ result }: { result: ResultValue }) { return <section className="panel summary-card"><div><span className="summary-meta">Analysis complete · {result.asset}</span><h2>{result.strategy_name}</h2><span className="summary-meta">{result.service} strategy summary</span></div><span className="summary-check">✓ Complete</span></section>; }
+function Summary({ result }: { result: ResultValue }) {
+  const items = [
+    ["Asset", result.asset],
+    ["Strategy name", result.strategy_name],
+    ["Strategy health", result.strategy_health],
+    ["Recommended action", result.recommendation.action],
+    ["Estimated net carry APY", `${result.metrics.estimated_net_carry_apy.toFixed(1)}%`],
+    ["Safety Buffer score", result.metrics.safety_buffer_score.toFixed(1)],
+  ];
+  return <section className="panel summary-card">
+    <div className="summary-heading"><div><span className="summary-meta">Analysis complete · {result.service}</span><h2>Strategy summary</h2></div><span className="summary-check">✓ Complete</span></div>
+    <div className="summary-grid">{items.map(([label, value]) => <div key={label}><label>{label}</label><strong className={label === "Strategy health" ? `summary-state health-${result.strategy_health}` : label === "Recommended action" ? `summary-state action-${result.recommendation.action.toLowerCase()}` : ""}>{value}</strong></div>)}</div>
+  </section>;
+}
 function RiskNotes({ notes }: { notes: string[] }) { return <section className="panel"><h2 className="panel-title">Risk notes</h2><ul className="risk-list">{notes.map((note) => <li key={note}>{note}</li>)}</ul></section>; }
 
 function DecisionPanel({ result }: { result: ResultValue }) {
   return <section className="panel decision-card">
-    <div className="decision-header"><div><p className="decision-eyebrow">Decision output</p><h2>{result.recommendation.summary}</h2></div><span className="decision-mark">Δ</span></div>
-    <div className="decision-statuses">
-      <div className="decision-status">
-        <span className="decision-label">Strategy Health</span>
-        <strong className={`health-value ${result.strategy_health}`}>{result.strategy_health}</strong>
-        <p>Current risk condition based on hedge, carry, and collateral metrics.</p>
-      </div>
-      <div className="decision-status action-status">
-        <span className="decision-label">Recommended Action</span>
-        <strong className="action-value">{result.recommendation.action}</strong>
-        <p>The next decision suggested by the current strategy condition.</p>
-      </div>
+    <div className="assessment-main">
+      <div className="assessment-heading"><span className="assessment-icon" aria-hidden="true">Δ</span><p className="decision-eyebrow">AI Assessment</p></div>
+      <span className="decision-label">Recommended Action</span>
+      <strong className={`action-value action-${result.recommendation.action.toLowerCase()}`}>{result.recommendation.action}</strong>
+      <h2>{result.recommendation.summary}</h2>
+      <p className="assessment-risk"><b>Key risk signal</b>{result.risk_notes[0]}</p>
+    </div>
+    <div className="health-context">
+      <div><span className="decision-label">Strategy Health</span><strong className={`health-value health-${result.strategy_health}`}>{result.strategy_health}</strong></div>
+      <p>Health describes the current risk condition. Action describes the next decision.</p>
     </div>
   </section>;
 }
