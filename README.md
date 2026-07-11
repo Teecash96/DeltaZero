@@ -17,6 +17,14 @@ DeltaZero helps users evaluate a pseudo-delta-neutral carry strategy built from 
 
 The project combines a focused Next.js interface with a typed FastAPI service and heuristic risk engine. Users can build a proposed neutral-carry allocation, audit an existing long/short position, or apply funding, yield, and price shocks before making a decision. DeltaZero is decision-support software; it does not connect to wallets, execute trades, or consume live protocol data.
 
+## Live Demo
+
+[https://delta-zero-alpha.vercel.app](https://delta-zero-alpha.vercel.app)
+
+## Backend API
+
+[https://deltazero-production.up.railway.app](https://deltazero-production.up.railway.app)
+
 ## Features
 
 - **Strategy Builder** — converts capital, risk tolerance, and carry assumptions into a recommended long, short, and collateral structure.
@@ -268,14 +276,27 @@ Complete request models and interactive examples are available at `/docs` while 
 
 ## Screenshots
 
-> **Homepage screenshot placeholder**  
-> Add a desktop capture of the DeltaZero landing page here.
+### Homepage
 
-> **Strategy Builder screenshot placeholder**  
-> Add a capture showing the preloaded form, recommendation, Safety Buffer, and raw JSON response.
+![DeltaZero homepage](docs/images/home.png)
 
-> **Auditor and Stress Test screenshot placeholder**  
-> Add captures showing actions, risk notes, and the stressed scenario result.
+### Strategy Builder
+
+![DeltaZero Strategy Builder](docs/images/builder.png)
+
+### Position Auditor
+
+![DeltaZero Position Auditor](docs/images/auditor.png)
+
+### Stress Test
+
+![DeltaZero Stress Test](docs/images/stress-test.png)
+
+## Deployment
+
+- **Frontend:** Deployed on [Vercel](https://vercel.com/) at [delta-zero-alpha.vercel.app](https://delta-zero-alpha.vercel.app).
+- **Backend:** Deployed on [Railway](https://railway.app/) at [deltazero-production.up.railway.app](https://deltazero-production.up.railway.app).
+- **Source Control:** Hosted on [GitHub](https://github.com/) at [Teecash96/DeltaZero](https://github.com/Teecash96/DeltaZero).
 
 ## Roadmap
 
