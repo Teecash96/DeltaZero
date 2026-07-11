@@ -138,8 +138,7 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
 .health-value, .action-value { display: inline-flex; align-items: center; width: fit-content; border-radius: 7px; font-family: var(--font-geist-mono); font-weight: 780; letter-spacing: .08em; text-transform: uppercase; }
 .action-value { min-height: 58px; padding: 0 22px; font-size: 29px; }
 .assessment-main h2 { max-width: 650px; margin: 18px 0 0; color: #f1f5f2; font-size: 20px; font-weight: 610; letter-spacing: -.018em; line-height: 1.45; }
-.recommendation-reason { max-width: 680px; margin: 17px 0 0; padding-top: 15px; display: flex; align-items: baseline; gap: 10px; border-top: 1px solid #2d382f; color: #aeb8b0; font-size: 12px; line-height: 1.6; }
-.recommendation-reason b { flex: 0 0 auto; color: #7f8b82; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.recommendation-reason { max-width: 680px; margin: 14px 0 0; color: #aeb8b0; font-size: 13px; line-height: 1.65; }
 .health-context { padding: 20px 30px; display: grid; grid-template-columns: 190px minmax(0, 1fr); align-items: center; gap: 25px; border-top: 1px solid #334035; background: #101611; }
 .health-context .decision-label { margin-bottom: 8px; }
 .health-value { min-height: 30px; padding: 0 9px; font-size: 10px; }
@@ -286,7 +285,6 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
   .summary-grid { grid-template-columns: 1fr; }
   .assessment-main { padding: 24px 21px 23px; }
   .assessment-main h2 { font-size: 18px; }
-  .recommendation-reason { align-items: flex-start; flex-direction: column; gap: 6px; }
   .health-context { padding: 19px 21px; grid-template-columns: 1fr; gap: 12px; }
   .decision-rationale { padding: 19px 21px 21px; }
   .safety-hero { min-height: 0; padding: 23px 21px; align-items: flex-start; flex-direction: column; gap: 20px; }

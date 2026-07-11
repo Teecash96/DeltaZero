@@ -129,7 +129,7 @@ function DecisionPanel({ result }: { result: ResultValue }) {
       <span className="decision-label">Recommended Action</span>
       <strong className={`action-value action-${result.recommendation.action.toLowerCase()}`}>{result.recommendation.action}</strong>
       <h2>{useSafetyMessage ? "The proposed strategy does not currently satisfy DeltaZero's minimum safety requirements." : result.recommendation.summary}</h2>
-      {useSafetyMessage && <p className="recommendation-reason"><b>Recommendation reason</b>{result.recommendation.summary}</p>}
+      {useSafetyMessage && <p className="recommendation-reason">{result.recommendation.summary}</p>}
     </div>
     <div className="health-context">
       <div><span className="decision-label">Strategy Health</span><strong className={`health-value health-${result.strategy_health}`}>{result.strategy_health}</strong></div>
