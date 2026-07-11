@@ -8,7 +8,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <header className="site-header"><Link href="/" className="logo"><span className="logo-mark">Δ</span>DELTA<span>ZERO</span></Link><nav><Link href="/builder">Builder</Link><Link href="/auditor">Auditor</Link><Link href="/stress-test">Stress Test</Link><Link href="/demo" className="nav-demo">Demo</Link></nav></header>
+        <header className="site-header">
+          <Link href="/" className="logo" aria-label="DeltaZero home">
+            <span className="logo-mark">Δ</span>DELTA<span>ZERO</span>
+          </Link>
+          <nav aria-label="Primary navigation">
+            <Link href="/builder">Builder</Link>
+            <Link href="/auditor">Auditor</Link>
+            <Link href="/stress-test">Stress Test</Link>
+            <Link href="/demo" className="nav-demo">Demo</Link>
+          </nav>
+        </header>
         <main>{children}</main>
         <footer><Link href="/" className="logo"><span className="logo-mark">Δ</span>DELTA<span>ZERO</span></Link><p>Decision support for neutral carry strategies.</p><span>Built for clear thinking.</span></footer>
       </body>
