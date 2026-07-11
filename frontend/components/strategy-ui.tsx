@@ -10,7 +10,7 @@ type FormValue = BuildRequest | AuditRequest | StressTestRequest;
 type ResultValue = BuildResponse | AuditResponse | StressTestResponse;
 
 const copy = {
-  builder: { kicker: "Design from first principles", title: "Strategy Builder", description: "Set your capital, carry assumptions, and risk posture. DeltaZero returns a balanced structure and an explicit entry decision.", endpoint: "POST /strategy/build", submit: "Analyze strategy" },
+  builder: { kicker: "Design from first principles", title: "Strategy Builder", description: "Set your capital, carry assumptions, and risk posture. DeltaZero returns a balanced structure and an explicit entry decision.", endpoint: "POST /strategy/build", submit: "Analyze Strategy" },
   auditor: { kicker: "Inspect the position", title: "Position Auditor", description: "Assess an existing long and short structure for hedge alignment, carry quality, and collateral resilience.", endpoint: "POST /strategy/audit", submit: "Audit position" },
   "stress-test": { kicker: "Pressure before the market", title: "Stress Test", description: "Apply a deterministic market shock and see how the position, health, and recommended action respond.", endpoint: "POST /strategy/stress-test", submit: "Run stress test" },
 };
@@ -62,12 +62,12 @@ function StrategyForm({ mode, value, setValue, submit, loading }: { mode: Mode; 
         <div className="field"><label htmlFor="scenario-magnitude">Magnitude (%)</label><input id="scenario-magnitude" type="number" min="0" step="any" required value={(value as StressTestRequest).scenario.magnitude_pct} onChange={(e) => setValue({ ...value, scenario: { ...(value as StressTestRequest).scenario, magnitude_pct: Number(e.target.value) } } as StressTestRequest)} /></div>
       </div>
     </section>}
-    <button className="button button-primary form-submit" disabled={loading}>{loading ? "Analyzing…" : copy[mode].submit}<span>→</span></button>
+    <button className="button button-primary form-submit" disabled={loading}>{loading ? "Analyzing strategy..." : <>{copy[mode].submit}<span>→</span></>}</button>
     <p className="form-note">Demo values are preloaded · Edit any input</p>
   </form>;
 }
 
-function MetricsView({ metrics }: { metrics: Metrics }) {
+function MetricsView({ metrics, health }: { metrics: Metrics; health: ResultValue["strategy_health"] }) {
   const values = [
     ["Safety Buffer", metrics.safety_buffer_score.toFixed(1), "Collateral resilience", true],
     ["Estimated net carry APY", `${metrics.estimated_net_carry_apy.toFixed(1)}%`, "After funding & fees", true],
@@ -81,7 +81,7 @@ function MetricsView({ metrics }: { metrics: Metrics }) {
     <div className="section-label-row"><h2 className="panel-title">Core metrics</h2><span>Deterministic output</span></div>
     <div className="metrics-grid">
       {values.map(([label, value, helper, primary]) => <div className={`metric ${primary ? "metric-primary" : "metric-secondary"}`} key={String(label)}>
-        <div className="metric-heading"><label>{label}</label>{label === "Safety Buffer" && <span>Primary risk signal</span>}</div>
+        <div className="metric-heading"><label>{label}</label>{label === "Safety Buffer" && <span className={`safety-status health-text-${health}`}>Strategy health: {health}</span>}</div>
         <strong>{value}</strong>
         <small>{helper}</small>
       </div>)}
@@ -99,11 +99,10 @@ function Summary({ result }: { result: ResultValue }) {
     ["Safety Buffer score", result.metrics.safety_buffer_score.toFixed(1)],
   ];
   return <section className="panel summary-card">
-    <div className="summary-heading"><div><span className="summary-meta">Analysis complete · {result.service}</span><h2>Strategy summary</h2></div><span className="summary-check">✓ Complete</span></div>
+    <div className="summary-heading"><div><span className="summary-meta">Analysis complete · {result.service}</span><h2>AI Strategy Report</h2></div><span className="summary-check">✓ Complete</span></div>
     <div className="summary-grid">{items.map(([label, value]) => <div key={label}><label>{label}</label><strong className={label === "Strategy health" ? `summary-state health-${result.strategy_health}` : label === "Recommended action" ? `summary-state action-${result.recommendation.action.toLowerCase()}` : ""}>{value}</strong></div>)}</div>
   </section>;
 }
-function RiskNotes({ notes }: { notes: string[] }) { return <section className="panel"><h2 className="panel-title">Risk notes</h2><ul className="risk-list">{notes.map((note) => <li key={note}>{note}</li>)}</ul></section>; }
 
 function DecisionPanel({ result }: { result: ResultValue }) {
   return <section className="panel decision-card">
@@ -112,14 +111,24 @@ function DecisionPanel({ result }: { result: ResultValue }) {
       <span className="decision-label">Recommended Action</span>
       <strong className={`action-value action-${result.recommendation.action.toLowerCase()}`}>{result.recommendation.action}</strong>
       <h2>{result.recommendation.summary}</h2>
-      <p className="assessment-risk"><b>Key risk signal</b>{result.risk_notes[0]}</p>
     </div>
     <div className="health-context">
       <div><span className="decision-label">Strategy Health</span><strong className={`health-value health-${result.strategy_health}`}>{result.strategy_health}</strong></div>
       <p>Health describes the current risk condition. Action describes the next decision.</p>
     </div>
+    <div className="decision-rationale">
+      <span>Why this decision</span>
+      <ul>{result.risk_notes.slice(0, 3).map((note) => <li key={note}>{note}</li>)}</ul>
+    </div>
   </section>;
 }
+
+const structureIcons: Record<string, string> = {
+  long_notional_usd: "↑",
+  short_notional_usd: "↓",
+  collateral_usd: "◇",
+  target_hedge_ratio: "⚖",
+};
 
 function Result({ mode, result }: { mode: Mode; result: ResultValue }) {
   const withActions = result as AuditResponse | StressTestResponse;
@@ -128,12 +137,11 @@ function Result({ mode, result }: { mode: Mode; result: ResultValue }) {
   return <div className="result-stack" aria-live="polite">
     <Summary result={result} />
     <DecisionPanel result={result} />
-    {mode === "builder" && <section className="panel"><h2 className="panel-title">Recommended structure</h2><div className="structure-grid">{Object.entries(build.recommended_structure).map(([key, value]) => <div className="structure-item" key={key}><label>{formatKey(key)}</label><strong>{key.includes("usd") ? usd(value) : value.toFixed(3)}</strong></div>)}</div></section>}
-    {mode === "stress-test" && <section className="panel"><h2 className="panel-title">Scenario result</h2><div className="structure-grid">{Object.entries(stress.scenario_result).filter(([key]) => !["stressed_metrics"].includes(key)).map(([key, value]) => <div className="structure-item" key={key}><label>{formatKey(key)}</label><strong>{typeof value === "number" ? (key.includes("usd") ? usd(value) : value) : String(value).replaceAll("_", " ")}</strong></div>)}</div></section>}
-    <MetricsView metrics={mode === "stress-test" ? stress.scenario_result.stressed_metrics : result.metrics} />
+    {mode === "builder" && <section className="panel"><h2 className="panel-title">Recommended structure</h2><div className="structure-grid">{Object.entries(build.recommended_structure).map(([key, value]) => <div className="structure-item" key={key}><div className="structure-label"><span aria-hidden="true">{structureIcons[key]}</span><label>{formatKey(key)}</label></div><strong>{key.includes("usd") ? usd(value) : value.toFixed(3)}</strong></div>)}</div></section>}
+    {mode === "stress-test" && <section className="panel scenario-card"><div className="section-label-row"><h2 className="panel-title">Scenario impact</h2><span>Post-stress result</span></div><div className="structure-grid">{Object.entries(stress.scenario_result).filter(([key]) => !["stressed_metrics"].includes(key)).map(([key, value]) => <div className="structure-item" key={key}><label>{formatKey(key)}</label><strong>{typeof value === "number" ? (key.includes("usd") ? usd(value) : value) : String(value).replaceAll("_", " ")}</strong></div>)}</div></section>}
+    <MetricsView metrics={mode === "stress-test" ? stress.scenario_result.stressed_metrics : result.metrics} health={result.strategy_health} />
     <div className="result-columns">
-      <RiskNotes notes={result.risk_notes} />
-      {mode !== "builder" && <section className="panel"><h2 className="panel-title">Action sequence</h2><p className="panel-copy">Ordered actions returned for this position.</p><div className="actions-row">{withActions.actions.map((action, index) => <span key={action}><b>{index + 1}</b>{action}</span>)}</div></section>}
+      {mode !== "builder" && <section className="panel corrective-actions"><h2 className="panel-title">Corrective actions</h2><p className="panel-copy">Ordered actions returned for this position.</p><div className="actions-row">{withActions.actions.map((action, index) => <span key={action}><b>{index + 1}</b>{action}</span>)}</div></section>}
       {mode === "builder" && <section className="panel context-card"><h2 className="panel-title">How to read this result</h2><p>Health measures the proposed structure&apos;s risk condition. Action determines whether the strategy should be opened now.</p></section>}
     </div>
     <details className="panel json-box"><summary><span><b>Raw JSON response</b><small>Developer payload</small></span><i aria-hidden="true">⌄</i></summary><pre>{JSON.stringify(result, null, 2)}</pre></details>
