@@ -67,9 +67,8 @@ function StrategyForm({ mode, value, setValue, submit, loading }: { mode: Mode; 
   </form>;
 }
 
-function MetricsView({ metrics, health }: { metrics: Metrics; health: ResultValue["strategy_health"] }) {
+function MetricsView({ metrics }: { metrics: Metrics }) {
   const values = [
-    ["Safety Buffer", metrics.safety_buffer_score.toFixed(1), "Collateral resilience", true],
     ["Estimated net carry APY", `${metrics.estimated_net_carry_apy.toFixed(1)}%`, "After funding & fees", true],
     ["Hedge ratio", metrics.hedge_ratio.toFixed(3), "Short ÷ long", true],
     ["Hedge drift", `${metrics.hedge_drift_pct.toFixed(1)}%`, "Distance from neutral", false],
@@ -81,11 +80,19 @@ function MetricsView({ metrics, health }: { metrics: Metrics; health: ResultValu
     <div className="section-label-row"><h2 className="panel-title">Core metrics</h2><span>Deterministic output</span></div>
     <div className="metrics-grid">
       {values.map(([label, value, helper, primary]) => <div className={`metric ${primary ? "metric-primary" : "metric-secondary"}`} key={String(label)}>
-        <div className="metric-heading"><label>{label}</label>{label === "Safety Buffer" && <span className={`safety-status health-text-${health}`}>Strategy health: {health}</span>}</div>
+        <div className="metric-heading"><label>{label}</label></div>
         <strong>{value}</strong>
         <small>{helper}</small>
       </div>)}
     </div>
+  </section>;
+}
+
+function SafetyBufferCard({ score }: { score: number }) {
+  const status = score >= 70 ? "strong" : score >= 55 ? "watch" : "weak";
+  return <section className={`panel safety-hero safety-${status}`}>
+    <div><span className="safety-kicker">Primary risk signal</span><h2>Safety Buffer</h2><p>Collateral resilience score</p></div>
+    <div className="safety-score"><strong>{score.toFixed(1)}</strong><span>{status}</span></div>
   </section>;
 }
 
@@ -105,16 +112,28 @@ function Summary({ result }: { result: ResultValue }) {
 }
 
 function DecisionPanel({ result }: { result: ResultValue }) {
+  const constrainedActions = ["WAIT", "REDUCE", "REBALANCE", "CLOSE"];
+  const useSafetyMessage = constrainedActions.includes(result.recommendation.action);
+  const healthMessage = result.recommendation.action === "REBALANCE"
+    ? "Adjust the hedge before maintaining or increasing exposure."
+    : result.recommendation.action === "REDUCE"
+      ? "Reduce risk before continuing."
+      : result.strategy_health === "critical" || result.recommendation.action === "CLOSE"
+        ? "Risk requires adjustment before execution."
+        : result.strategy_health === "healthy"
+          ? "Current risk posture is within acceptable limits."
+          : "Monitor the position and avoid increasing exposure.";
   return <section className="panel decision-card">
     <div className="assessment-main">
       <div className="assessment-heading"><span className="assessment-icon" aria-hidden="true">Δ</span><p className="decision-eyebrow">AI Assessment</p></div>
       <span className="decision-label">Recommended Action</span>
       <strong className={`action-value action-${result.recommendation.action.toLowerCase()}`}>{result.recommendation.action}</strong>
-      <h2>{result.recommendation.summary}</h2>
+      <h2>{useSafetyMessage ? "The proposed strategy does not currently satisfy DeltaZero's minimum safety requirements." : result.recommendation.summary}</h2>
+      {useSafetyMessage && <p className="recommendation-reason"><b>Recommendation reason</b>{result.recommendation.summary}</p>}
     </div>
     <div className="health-context">
       <div><span className="decision-label">Strategy Health</span><strong className={`health-value health-${result.strategy_health}`}>{result.strategy_health}</strong></div>
-      <p>Health describes the current risk condition. Action describes the next decision.</p>
+      <p>{healthMessage}</p>
     </div>
     <div className="decision-rationale">
       <span>Why this decision</span>
@@ -130,16 +149,31 @@ const structureIcons: Record<string, string> = {
   target_hedge_ratio: "⚖",
 };
 
+const reportNames: Record<Mode, string> = {
+  builder: "AI Strategy Report",
+  auditor: "Position Risk Report",
+  "stress-test": "Scenario Risk Report",
+};
+
+const reportSections: Record<Mode, string> = {
+  builder: "Builder",
+  auditor: "Auditor",
+  "stress-test": "Stress Test",
+};
+
 function Result({ mode, result }: { mode: Mode; result: ResultValue }) {
   const withActions = result as AuditResponse | StressTestResponse;
   const build = result as BuildResponse;
   const stress = result as StressTestResponse;
+  const displayedMetrics = mode === "stress-test" ? stress.scenario_result.stressed_metrics : result.metrics;
   return <div className="result-stack" aria-live="polite">
+    <div className="report-breadcrumb" aria-label="Report location"><span>{reportSections[mode]}</span><i aria-hidden="true">/</i><strong>{reportNames[mode]}</strong></div>
     <Summary result={result} />
     <DecisionPanel result={result} />
+    <SafetyBufferCard score={displayedMetrics.safety_buffer_score} />
     {mode === "builder" && <section className="panel"><h2 className="panel-title">Recommended structure</h2><div className="structure-grid">{Object.entries(build.recommended_structure).map(([key, value]) => <div className="structure-item" key={key}><div className="structure-label"><span aria-hidden="true">{structureIcons[key]}</span><label>{formatKey(key)}</label></div><strong>{key.includes("usd") ? usd(value) : value.toFixed(3)}</strong></div>)}</div></section>}
     {mode === "stress-test" && <section className="panel scenario-card"><div className="section-label-row"><h2 className="panel-title">Scenario impact</h2><span>Post-stress result</span></div><div className="structure-grid">{Object.entries(stress.scenario_result).filter(([key]) => !["stressed_metrics"].includes(key)).map(([key, value]) => <div className="structure-item" key={key}><label>{formatKey(key)}</label><strong>{typeof value === "number" ? (key.includes("usd") ? usd(value) : value) : String(value).replaceAll("_", " ")}</strong></div>)}</div></section>}
-    <MetricsView metrics={mode === "stress-test" ? stress.scenario_result.stressed_metrics : result.metrics} health={result.strategy_health} />
+    <MetricsView metrics={displayedMetrics} />
     <div className="result-columns">
       {mode !== "builder" && <section className="panel corrective-actions"><h2 className="panel-title">Corrective actions</h2><p className="panel-copy">Ordered actions returned for this position.</p><div className="actions-row">{withActions.actions.map((action, index) => <span key={action}><b>{index + 1}</b>{action}</span>)}</div></section>}
       {mode === "builder" && <section className="panel context-card"><h2 className="panel-title">How to read this result</h2><p>Health measures the proposed structure&apos;s risk condition. Action determines whether the strategy should be opened now.</p></section>}
