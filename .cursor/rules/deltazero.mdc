@@ -1,0 +1,27 @@
+---
+description: DeltaZero product and implementation rules
+alwaysApply: true
+---
+
+You are implementing DeltaZero, a hackathon MVP for pseudo-delta-neutral DeFi risk management.
+
+Follow these rules:
+
+1. Do not redesign the product.
+2. Do not invent extra features.
+3. Do not add authentication, wallet connection, a database, trading execution, or live protocol integrations.
+4. Preserve these exact backend routes:
+   POST /strategy/build
+   POST /strategy/audit
+   POST /strategy/stress-test
+5. Preserve all request and response field names.
+6. Use deterministic heuristic logic.
+7. Do not use an LLM to calculate financial metrics.
+8. Keep backend logic modular.
+9. Keep frontend and backend types synchronized.
+10. Run tests and type checks after meaningful changes.
+11. Explain every change before editing multiple files.
+12. Never delete working code merely to simplify the implementation.
+13. Prefer the smallest change that correctly solves the problem.
+14. Safety Buffer is the required product term. Do not rename it to liquidation buffer.
+15. Do not expand supported assets beyond SOL and ETH.
