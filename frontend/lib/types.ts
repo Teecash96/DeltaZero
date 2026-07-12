@@ -18,6 +18,21 @@ export type ScenarioType =
   | "price_drop"
   | "price_rise"
   | "yield_drops";
+export type WalletNetwork = "ethereum" | "arbitrum" | "hyperliquid";
+export type WalletProtocol = "hyperliquid" | "aave" | "morpho";
+export type WalletStressProfile = "standard" | "elevated" | "strict";
+export type WalletAction = "HOLD" | "REBALANCE" | "REDUCE" | "CLOSE";
+export type WalletStrategyHealth = "healthy" | "warning" | "fragile" | "critical";
+export type WalletDataQuality = "complete" | "partial" | "insufficient";
+export type PositionType =
+  | "spot"
+  | "lending_supply"
+  | "lending_borrow"
+  | "vault_deposit"
+  | "perpetual_long"
+  | "perpetual_short"
+  | "collateral"
+  | "unknown";
 
 export interface Metrics {
   hedge_ratio: number;
@@ -44,6 +59,11 @@ export interface RecommendedStructure {
 export interface Scenario {
   type: ScenarioType;
   magnitude_pct: number;
+  asset_price_change_pct?: number | null;
+  collateral_haircut_pct?: number | null;
+  exit_slippage_pct?: number | null;
+  liquidation_penalty_pct?: number | null;
+  protocol_loss_pct?: number | null;
 }
 
 export interface ScenarioResult {
@@ -56,6 +76,12 @@ export interface ScenarioResult {
   stressed_short_funding_apy: number;
   stressed_metrics: Metrics;
   health_after_stress: StrategyHealth;
+  pre_stress_equity_usd: number;
+  stressed_liabilities_usd: number;
+  estimated_impairment_loss_usd: number;
+  estimated_impairment_loss_pct: number;
+  post_impairment_equity_usd: number;
+  impairment_breakdown: ImpairmentBreakdown;
 }
 
 export interface BuildRequest {
@@ -88,6 +114,8 @@ export interface StressTestRequest {
   long_yield_apy: number;
   short_funding_apy: number;
   fee_drag_apy: number;
+  existing_unrealized_pnl_usd?: number;
+  liabilities_usd?: number;
   scenario: Scenario;
 }
 
@@ -113,4 +141,112 @@ export interface AuditResponse extends StrategyResponseBase {
 export interface StressTestResponse extends StrategyResponseBase {
   actions: StrategyAction[];
   scenario_result: ScenarioResult;
+  pre_stress_equity_usd: number;
+  stressed_liabilities_usd: number;
+  estimated_impairment_loss_usd: number;
+  estimated_impairment_loss_pct: number;
+  post_impairment_equity_usd: number;
+  impairment_breakdown: ImpairmentBreakdown;
+}
+
+export interface ImpairmentBreakdown {
+  asset_value_impact_usd: number;
+  hedge_pnl_impact_usd: number;
+  collateral_haircut_usd: number;
+  exit_slippage_usd: number;
+  liquidation_penalty_usd: number;
+  protocol_loss_assumption_usd: number;
+}
+
+export interface ImpairmentResult {
+  pre_stress_equity_usd: number;
+  post_stress_equity_usd: number;
+  estimated_impairment_loss_usd: number;
+  estimated_impairment_loss_pct: number;
+  post_impairment_equity_usd: number;
+  impairment_breakdown: ImpairmentBreakdown;
+}
+
+export interface NormalizedPosition {
+  protocol: WalletProtocol;
+  network: WalletNetwork;
+  position_type: PositionType;
+  asset: string;
+  quantity: number | null;
+  notional_usd: number | null;
+  current_value_usd: number | null;
+  entry_value_usd: number | null;
+  unrealized_pnl_usd: number | null;
+  collateral_usd: number | null;
+  debt_usd: number | null;
+  funding_apy: number | null;
+  liquidation_price: number | null;
+  health_factor: number | null;
+  data_timestamp: string | null;
+  data_quality: WalletDataQuality;
+  market_context?: Record<string, unknown> | null;
+}
+
+export interface WalletAnalyzeRequest {
+  wallet_address: string;
+  networks: WalletNetwork[];
+  protocols: WalletProtocol[];
+  stress_profile: WalletStressProfile;
+}
+
+export interface WalletPortfolioSummary {
+  current_position_value_usd: number;
+  gross_long_exposure_usd: number;
+  gross_short_exposure_usd: number;
+  net_delta_usd: number;
+  net_delta_pct: number;
+  unrealized_pnl_usd: number | null;
+  collateral_value_usd: number;
+  debt_value_usd: number;
+  estimated_funding_exposure_apy: number | null;
+}
+
+export interface WalletRiskMetrics {
+  hedge_ratio: number | null;
+  hedge_drift_pct: number | null;
+  collateral_health_score: number | null;
+  minimum_health_factor: number | null;
+  liquidation_proximity_pct: number | null;
+  safety_buffer_score: number;
+  capital_at_risk_proxy: number;
+  estimated_impairment_loss_usd: number;
+  estimated_impairment_loss_pct: number;
+  post_impairment_equity_usd: number;
+}
+
+export interface WalletRecommendation {
+  action: WalletAction;
+  summary: string;
+  confidence: number;
+}
+
+export interface ProtocolError {
+  protocol: WalletProtocol;
+  network: WalletNetwork;
+  message: string;
+  error_type: string;
+  retryable: boolean;
+}
+
+export interface WalletPortfolioResponse {
+  service: string;
+  wallet_address: string;
+  supported_positions_found: number;
+  unsupported_positions_found: number;
+  data_timestamp: string | null;
+  data_quality: WalletDataQuality;
+  portfolio_summary: WalletPortfolioSummary;
+  risk_metrics: WalletRiskMetrics;
+  strategy_health: WalletStrategyHealth;
+  recommendation: WalletRecommendation;
+  risk_notes: string[];
+  corrective_actions: string[];
+  positions: NormalizedPosition[];
+  protocol_errors: ProtocolError[];
+  warnings: string[];
 }

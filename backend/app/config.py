@@ -31,6 +31,21 @@ class DecisionProfile:
     capital_risk_critical_pct: float
     style_label: str
 
+
+@dataclass(frozen=True)
+class WalletRiskProfile:
+    """Deterministic thresholds for the read-only wallet auditor."""
+
+    hedge_drift_warning_pct: float
+    hedge_drift_critical_pct: float
+    safety_buffer_warning: float
+    safety_buffer_critical: float
+    capital_risk_warning_pct: float
+    capital_risk_critical_pct: float
+    impairment_warning_pct: float
+    impairment_critical_pct: float
+    minimum_health_factor: float
+
 SERVICE_NAME = "deltazero"
 
 # Capital allocation and decision thresholds by risk tolerance.
@@ -136,4 +151,71 @@ TARGET_STYLE_LABELS: dict[TargetStyle, str] = {
     "conservative_income": "Conservative Income",
     "aggressive_carry": "Aggressive Carry",
     "capital_preservation": "Capital Preservation",
+}
+
+WALLET_RISK_PROFILES: dict[str, WalletRiskProfile] = {
+    "standard": WalletRiskProfile(
+        hedge_drift_warning_pct=6.0,
+        hedge_drift_critical_pct=12.0,
+        safety_buffer_warning=60.0,
+        safety_buffer_critical=40.0,
+        capital_risk_warning_pct=18.0,
+        capital_risk_critical_pct=30.0,
+        impairment_warning_pct=8.0,
+        impairment_critical_pct=18.0,
+        minimum_health_factor=1.2,
+    ),
+    "elevated": WalletRiskProfile(
+        hedge_drift_warning_pct=5.0,
+        hedge_drift_critical_pct=10.0,
+        safety_buffer_warning=68.0,
+        safety_buffer_critical=48.0,
+        capital_risk_warning_pct=14.0,
+        capital_risk_critical_pct=24.0,
+        impairment_warning_pct=6.0,
+        impairment_critical_pct=14.0,
+        minimum_health_factor=1.3,
+    ),
+    "strict": WalletRiskProfile(
+        hedge_drift_warning_pct=4.0,
+        hedge_drift_critical_pct=8.0,
+        safety_buffer_warning=74.0,
+        safety_buffer_critical=56.0,
+        capital_risk_warning_pct=10.0,
+        capital_risk_critical_pct=18.0,
+        impairment_warning_pct=4.0,
+        impairment_critical_pct=10.0,
+        minimum_health_factor=1.4,
+    ),
+}
+
+IMPAIRMENT_DEFAULTS: dict[str, dict[str, float]] = {
+    "funding_worsens": {
+        "asset_price_change_pct": 0.0,
+        "collateral_haircut_pct": 0.0,
+        "exit_slippage_pct": 0.25,
+        "liquidation_penalty_pct": 0.5,
+        "protocol_loss_pct": 0.1,
+    },
+    "yield_drops": {
+        "asset_price_change_pct": 0.0,
+        "collateral_haircut_pct": 0.0,
+        "exit_slippage_pct": 0.2,
+        "liquidation_penalty_pct": 0.25,
+        "protocol_loss_pct": 0.35,
+    },
+    "price_drop": {
+        "asset_price_change_pct": -8.0,
+        "collateral_haircut_pct": 4.0,
+        "exit_slippage_pct": 0.45,
+        "liquidation_penalty_pct": 1.0,
+        "protocol_loss_pct": 0.4,
+    },
+    "price_rise": {
+        "asset_price_change_pct": 8.0,
+        "collateral_haircut_pct": 1.0,
+        "exit_slippage_pct": 0.35,
+        "liquidation_penalty_pct": 0.5,
+        "protocol_loss_pct": 0.2,
+    },
 }

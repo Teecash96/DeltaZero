@@ -18,6 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/auditor">Auditor</Link>
             <Link href="/stress-test">Stress Test</Link>
             <Link href="/#how-it-works">How It Works</Link>
+            <Link href="/wallet">Wallet Auditor</Link>
           </nav>
         </header>
         <main>{children}</main>

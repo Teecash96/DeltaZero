@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.config import SUPPORTED_ASSETS, ScenarioType, StrategyAction, StrategyHealth
+from app.models.impairment import ImpairmentBreakdown
 
 Asset = Literal["SOL", "ETH"]
 RiskTolerance = Literal["low", "medium", "high"]
@@ -41,6 +42,11 @@ class RecommendedStructure(BaseModel):
 class Scenario(BaseModel):
     type: ScenarioType
     magnitude_pct: float = Field(ge=0)
+    asset_price_change_pct: float | None = None
+    collateral_haircut_pct: float | None = None
+    exit_slippage_pct: float | None = None
+    liquidation_penalty_pct: float | None = None
+    protocol_loss_pct: float | None = None
 
 
 class ScenarioResult(BaseModel):
@@ -53,6 +59,12 @@ class ScenarioResult(BaseModel):
     stressed_short_funding_apy: float
     stressed_metrics: Metrics
     health_after_stress: StrategyHealth
+    pre_stress_equity_usd: float
+    stressed_liabilities_usd: float
+    estimated_impairment_loss_usd: float
+    estimated_impairment_loss_pct: float
+    post_impairment_equity_usd: float
+    impairment_breakdown: ImpairmentBreakdown
 
 
 class BuildRequest(BaseModel):
@@ -85,6 +97,8 @@ class StressTestRequest(BaseModel):
     long_yield_apy: float
     short_funding_apy: float
     fee_drag_apy: float = Field(ge=0)
+    existing_unrealized_pnl_usd: float = 0
+    liabilities_usd: float = 0
     scenario: Scenario
 
 
@@ -110,6 +124,12 @@ class AuditResponse(StrategyResponseBase):
 class StressTestResponse(StrategyResponseBase):
     actions: list[StrategyAction]
     scenario_result: ScenarioResult
+    pre_stress_equity_usd: float
+    stressed_liabilities_usd: float
+    estimated_impairment_loss_usd: float
+    estimated_impairment_loss_pct: float
+    post_impairment_equity_usd: float
+    impairment_breakdown: ImpairmentBreakdown
 
 
 def validate_asset(asset: str) -> None:

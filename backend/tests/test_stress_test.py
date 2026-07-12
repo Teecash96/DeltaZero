@@ -29,6 +29,12 @@ REQUIRED_TOP_LEVEL = {
     "risk_notes",
     "actions",
     "scenario_result",
+    "pre_stress_equity_usd",
+    "stressed_liabilities_usd",
+    "estimated_impairment_loss_usd",
+    "estimated_impairment_loss_pct",
+    "post_impairment_equity_usd",
+    "impairment_breakdown",
 }
 
 
@@ -43,6 +49,7 @@ def test_stress_test_response_shape(client: TestClient) -> None:
     assert data["service"] == "deltazero"
     assert data["asset"] == "SOL"
     assert 0 <= data["decision_confidence"] <= 100
+    assert 0 <= data["estimated_impairment_loss_pct"] <= 100
 
 
 def test_stress_test_scenario_result(client: TestClient) -> None:
@@ -63,6 +70,8 @@ def test_stress_test_scenario_result(client: TestClient) -> None:
     }
     assert data["metrics"] == result["stressed_metrics"]
     assert data["decision_confidence"] >= 40
+    assert 0 <= result["estimated_impairment_loss_pct"] <= 100
+    assert result["post_impairment_equity_usd"] >= 0
 
 
 def test_stress_test_funding_worsens_reduces_carry(client: TestClient) -> None:
@@ -104,6 +113,7 @@ def test_stress_test_materially_worsens_recommendation(client: TestClient) -> No
     assert stressed["metrics"]["estimated_net_carry_apy"] < 0
     assert "negative" in stressed["recommendation"]["summary"].lower() or "below" in stressed["recommendation"]["summary"].lower()
     assert stressed["decision_confidence"] > 70
+    assert 0 <= stressed["estimated_impairment_loss_pct"] <= 100
 
 
 def test_stress_test_price_drop_scenario(client: TestClient) -> None:

@@ -3,6 +3,8 @@ import type {
   AuditResponse,
   BuildRequest,
   BuildResponse,
+  WalletAnalyzeRequest,
+  WalletPortfolioResponse,
   StressTestRequest,
   StressTestResponse,
 } from "./types";
@@ -46,4 +48,10 @@ export function stressTestStrategy(
   body: StressTestRequest,
 ): Promise<StressTestResponse> {
   return post<StressTestResponse>("/strategy/stress-test", body);
+}
+
+export function analyzeWallet(
+  body: WalletAnalyzeRequest,
+): Promise<WalletPortfolioResponse> {
+  return post<WalletPortfolioResponse>("/wallet/analyze", body);
 }

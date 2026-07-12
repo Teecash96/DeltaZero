@@ -1,8 +1,10 @@
 """Stress test strategy under scenario shocks."""
 
-from app.config import SERVICE_NAME
+from app.config import IMPAIRMENT_DEFAULTS, SERVICE_NAME
+from app.models.impairment import ImpairmentResult
 from app.models.schemas import Scenario, ScenarioResult, StressTestRequest, StressTestResponse
 from app.services.metrics import compute_metrics
+from app.services.impairment import calculate_impairment
 from app.services.recommendation import (
     actions_for_recommendation,
     assess_strategy_health,
@@ -52,6 +54,20 @@ def apply_scenario(
         round(stressed_long_yield, 2),
         round(stressed_short_funding, 2),
     )
+
+
+def _scenario_assumptions(scenario: Scenario) -> dict[str, float]:
+    defaults = IMPAIRMENT_DEFAULTS.get(scenario.type, IMPAIRMENT_DEFAULTS["yield_drops"])
+    asset_price_change_pct = scenario.asset_price_change_pct
+    if asset_price_change_pct is None:
+        asset_price_change_pct = -abs(scenario.magnitude_pct) if scenario.type == "price_drop" else abs(scenario.magnitude_pct) if scenario.type == "price_rise" else defaults["asset_price_change_pct"]
+    return {
+        "asset_price_change_pct": asset_price_change_pct,
+        "collateral_haircut_pct": scenario.collateral_haircut_pct if scenario.collateral_haircut_pct is not None else defaults["collateral_haircut_pct"],
+        "exit_slippage_pct": scenario.exit_slippage_pct if scenario.exit_slippage_pct is not None else defaults["exit_slippage_pct"],
+        "liquidation_penalty_pct": scenario.liquidation_penalty_pct if scenario.liquidation_penalty_pct is not None else defaults["liquidation_penalty_pct"],
+        "protocol_loss_pct": scenario.protocol_loss_pct if scenario.protocol_loss_pct is not None else defaults["protocol_loss_pct"],
+    }
 
 
 def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
@@ -105,6 +121,14 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
     actions = actions_for_recommendation(recommendation, stressed_context)
     risk_notes = build_risk_notes(stressed_context)
     decision_confidence = calculate_decision_confidence(stressed_context, recommendation)
+    impairment = calculate_impairment(
+        long_notional_usd=stressed_long,
+        short_notional_usd=stressed_short,
+        collateral_usd=stressed_collateral,
+        existing_unrealized_pnl_usd=request.existing_unrealized_pnl_usd,
+        liabilities_usd=request.liabilities_usd,
+        **_scenario_assumptions(request.scenario),
+    )
 
     if stressed_health != base_health:
         risk_notes.insert(
@@ -123,6 +147,12 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
         stressed_short_funding_apy=stressed_short_funding,
         stressed_metrics=stressed_metrics,
         health_after_stress=stressed_health,
+        pre_stress_equity_usd=impairment.pre_stress_equity_usd,
+        stressed_liabilities_usd=request.liabilities_usd,
+        estimated_impairment_loss_usd=impairment.estimated_impairment_loss_usd,
+        estimated_impairment_loss_pct=impairment.estimated_impairment_loss_pct,
+        post_impairment_equity_usd=impairment.post_impairment_equity_usd,
+        impairment_breakdown=impairment.impairment_breakdown,
     )
 
     return StressTestResponse(
@@ -136,4 +166,10 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
         risk_notes=risk_notes,
         actions=actions,
         scenario_result=scenario_result,
+        pre_stress_equity_usd=impairment.pre_stress_equity_usd,
+        stressed_liabilities_usd=request.liabilities_usd,
+        estimated_impairment_loss_usd=impairment.estimated_impairment_loss_usd,
+        estimated_impairment_loss_pct=impairment.estimated_impairment_loss_pct,
+        post_impairment_equity_usd=impairment.post_impairment_equity_usd,
+        impairment_breakdown=impairment.impairment_breakdown,
     )
