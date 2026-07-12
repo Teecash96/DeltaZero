@@ -2,283 +2,241 @@
 
 <div align="center">
 
-Deterministic risk intelligence for pseudo delta-neutral DeFi strategies and read-only wallet portfolios.
+### Deterministic risk intelligence for pseudo delta-neutral DeFi strategies
+
+Build strategies, audit positions, simulate economic impairment, and assess supported public wallet portfolios through one transparent risk engine.
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-84CC16.svg)](LICENSE)
 [![OKX AI Hackathon](https://img.shields.io/badge/OKX_AI-Hackathon-000000)](https://www.okx.com/)
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-1f8f5f)](https://delta-zero-alpha.vercel.app)
-[![Documentation](https://img.shields.io/badge/Documentation-README-2d7d46)](https://github.com/Teecash96/DeltaZero#readme)
-[![SDK](https://img.shields.io/badge/SDK-Local%20Packages-4d9f6a)](#sdk)
-[![X](https://img.shields.io/badge/X-%40DeltaZeroASP-111111?logo=x&logoColor=white)](https://x.com/DeltaZeroASP)
+[Live Application](https://delta-zero-alpha.vercel.app) ·
+[API Documentation](https://deltazero-production.up.railway.app/docs) ·
+[SDK Preview](#sdk-preview) ·
+[X](https://x.com/DeltaZeroASP)
 
 </div>
 
-DeltaZero is an enterprise-style open-source project for deterministic DeFi risk analysis. It helps users and agents evaluate proposed carry strategies, audit existing positions, stress test scenarios, and inspect supported public wallet data without custody, signatures, or trade execution.
+DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
 
-The stack is intentionally straightforward: a Next.js App Router frontend, a FastAPI backend, a rule-based decision engine, read-only wallet adapters, and thin SDKs for TypeScript and Python. The product is built for hackathon-grade transparency, not for autonomous execution.
+The current product includes a Strategy Builder, Position Auditor, Stress Test, and read-only Wallet Auditor. It never requests private keys, seed phrases, signatures, approvals, or transaction permissions, and it does not execute trades.
 
 ## Why DeltaZero?
 
-DeltaZero solves the problem of turning uncertain pseudo delta-neutral DeFi assumptions into a clear deterministic risk decision.
+Pseudo delta-neutral strategies can look attractive while hiding hedge drift, weak collateral, negative carry, liquidation exposure, or severe scenario losses; DeltaZero makes those risks explicit before a user or agent acts.
 
-Differentiators:
+DeltaZero is differentiated by:
 
-1. One decision engine across Builder, Auditor, Stress Test, and Wallet Auditor.
-2. Explicit recommendation logic with strategy health, decision confidence, safety buffer, and impairment analysis.
-3. Read-only support for supported public wallet data sources without private keys, signatures, or transaction permissions.
-4. Local SDKs for agents and dashboards that call the same live API contracts as the web app.
+- **Deterministic decisions** — recommendations come from documented rules and evaluated thresholds rather than opaque generated calculations.
+- **One risk language** — Builder, Auditor, Stress Test, and Wallet Auditor consistently report health, action, Safety Buffer, risk notes, and Decision Confidence.
+- **Read-only portfolio analysis** — supported public protocol data is analyzed without custody or wallet permissions.
+- **Agent-ready contracts** — FastAPI schemas and local TypeScript and Python SDK packages expose structured responses for dashboards and automated workflows.
 
-## Current Capabilities
+## Feature Overview
 
-| Capability | What it does |
-| --- | --- |
-| Builder | Proposes a pseudo delta-neutral structure from capital, market assumptions, risk tolerance, and target style. |
-| Auditor | Evaluates an existing long, short, and collateral structure for hedge drift, capital risk, and corrective action. |
-| Stress Test | Applies deterministic shocks and returns post-stress metrics, impairment, health, and action. |
-| Wallet Auditor | Performs read-only portfolio analysis on supported public wallet and protocol data. |
-| Decision Engine | Centralizes carry, hedge, safety buffer, capital risk, and recommendation logic. |
-| Economic Impairment | Calculates scenario-based impairment loss, breakdown, and post-impairment equity. |
-| SDK | Ships local TypeScript and Python client packages for agents and internal tooling. |
-| Hyperliquid | Provides read-only perpetual position and account analysis for supported wallet workflows. |
-| Aave | Provides read-only supply, borrow, collateral, and health-factor analysis when RPC access is available. |
-| Morpho | Provides read-only market and vault position analysis through Morpho’s public API. |
-| Interactive Strategy Preview | Shows an illustrative frontend-only preview of style and market stress. |
-
-## Architecture
-
-```mermaid
-flowchart TB
-    U[User or Agent]
-    FE[Next.js Frontend]
-    SDK[TypeScript / Python SDKs]
-    API[FastAPI Backend]
-    DE[Deterministic Decision Engine]
-    IE[Economic Impairment Engine]
-    WA[Wallet Auditor]
-    HL[Hyperliquid]
-    AA[Aave]
-    MO[Morpho]
-    DOCS[Swagger / OpenAPI]
-
-    U --> FE
-    SDK --> API
-    FE --> API
-    API --> DE
-    API --> IE
-    API --> WA
-    WA --> HL
-    WA --> AA
-    WA --> MO
-    API --> DOCS
-    DE --> FE
-    IE --> FE
-```
-
-### Frontend
-
-The frontend uses the Next.js App Router, React, TypeScript, and Tailwind CSS. It provides:
-
-- `/` — product overview, quick links, integrations, FAQs, and agent SDK examples
-- `/builder` — strategy construction workflow
-- `/auditor` — existing-position audit workflow
-- `/stress-test` — scenario analysis workflow
-- `/wallet` — read-only wallet portfolio auditor
-- `/demo` — preloaded examples for the core services
-
-The browser talks to the API configured through `NEXT_PUBLIC_API_BASE`, which defaults to `http://localhost:8000`.
-
-### Backend
-
-The backend is a FastAPI application with Pydantic validation, deterministic decision services, impairment calculations, and read-only wallet adapters. It exposes OpenAPI documentation automatically and includes pytest coverage for the strategy workflows, wallet auditor, and impairment engine.
-
-### API
-
-The backend accepts JSON requests and returns deterministic risk reports.
-
-- `POST /strategy/build` — proposes a long, short, and collateral structure plus metrics, health, recommendation, and risk notes.
-- `POST /strategy/audit` — evaluates an existing structure and returns health, recommendation, actions, and risk notes.
-- `POST /strategy/stress-test` — applies deterministic scenario shocks and returns stressed metrics, impairment, and action.
-- `POST /wallet/analyze` — analyzes supported public wallet positions and returns a read-only portfolio report.
-
-### Risk Engine
-
-The risk engine is deterministic and rule-based. It derives carry, hedge ratio, hedge drift, net delta, safety buffer, capital risk, recommendation action, decision confidence, and scenario impairment outcomes from user inputs and supported read-only wallet data.
-
-It does not execute trades, request wallet signatures, or claim live autonomous market intelligence.
-
-## How It Works
-
-1. Input — provide asset, capital, risk tolerance, target style, yield assumptions, funding assumptions, fees, or existing position data.
-2. Analyze — DeltaZero calculates carry, hedge ratio, hedge drift, net delta, collateral resilience, capital at risk, safety buffer, and impairment where relevant.
-3. Assess — the deterministic engine compares metrics against thresholds based on risk tolerance, target style, service type, and stress scenario.
-4. Decide — DeltaZero returns strategy health, recommended action, decision confidence, risk notes, and a recommended structure or corrective actions.
-5. Act — the output can be used to `OPEN`, `WAIT`, `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`.
+| Capability | Status | Description |
+| --- | --- | --- |
+| Strategy Builder | Live | Constructs a deterministic pseudo delta-neutral structure from capital, risk tolerance, target style, and market assumptions. |
+| Position Auditor | Live | Evaluates an existing long, short, and collateral structure and recommends corrective action. |
+| Stress Test | Live | Applies deterministic shocks and calculates post-stress risk and scenario-based economic impairment. |
+| Wallet Auditor | Live · Pro Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
+| Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
+| Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
+| Interactive Strategy Preview | Live | Provides a clearly labelled illustrative simulation on the landing page. |
+| TypeScript SDK | SDK Preview | Supplies a typed local client for every current API service. |
+| Python SDK | SDK Preview | Supplies a typed local client for every current API service. |
+| Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
+| Aave | Live with RPC | Reads supported lending and collateral data when an RPC endpoint is configured. |
+| Morpho | Live | Reads supported market and vault positions from Morpho's public API. |
 
 ## Products
 
 ### Strategy Builder
 
-Builds a pseudo delta-neutral structure from capital, market assumptions, risk tolerance, and target style.
+The Builder creates a proposed structure from:
 
-Returns:
+- asset and deployable capital;
+- risk tolerance;
+- target style;
+- long-yield assumption;
+- short-funding assumption; and
+- fee-drag assumption.
 
-- recommended long notional
-- short notional
-- collateral allocation
-- target hedge ratio
-- carry metrics
-- safety buffer
-- recommendation action
+It returns recommended long notional, short notional, collateral allocation, target hedge ratio, carry metrics, Safety Buffer, strategy health, Decision Confidence, recommendation, and risk notes.
+
+Supported target styles are:
+
+- `neutral_yield`
+- `conservative_income`
+- `aggressive_carry`
+- `capital_preservation`
+
+Each style uses a distinct deterministic allocation and threshold profile.
 
 ### Position Auditor
 
-Analyzes an existing long, short, and collateral structure.
-
-Returns:
-
-- current health
-- hedge drift
-- capital risk
-- safety buffer
-- corrective action
+The Auditor evaluates a supplied long, short, and collateral structure. It measures hedge alignment, net delta, carry, collateral resilience, Safety Buffer, and capital at risk before returning an action such as `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`.
 
 ### Stress Test
 
-Applies deterministic scenario shocks such as funding worsening, yield drops, price changes, and collateral pressure.
+The Stress Test evaluates stressed rather than original metrics. It supports deterministic scenario inputs for funding deterioration, yield reduction, price movement, collateral pressure, exit slippage, liquidation penalties, and protocol-loss assumptions.
 
-Returns:
+Its report includes:
 
-- post-stress metrics
-- post-stress health
-- recommendation action
-- impairment analysis
-- scenario impact
-
-### Wallet Auditor
-
-The Wallet Auditor is a read-only public wallet analysis service.
-
-It accepts a wallet address, selected networks, selected protocols, and a stress profile, then returns a deterministic portfolio report based on supported public data.
-
-Key properties:
-
-- read-only by design
-- no seed phrases
-- no private keys
-- no signatures
-- no transaction approvals
-- explicit handling for no supported positions, partial data, and insufficient data
-
-Supported sources:
-
-- Hyperliquid public Info API
-- Aave read-only RPC patterns
-- Morpho public GraphQL API
-
-### Decision Engine
-
-DeltaZero uses one centralized decision context to evaluate carry state, hedge state, safety buffer state, capital risk state, and impairment state. The same evaluated context drives strategy health, recommendation action, recommendation summary, risk notes, and confidence.
-
-### Economic Impairment
-
-The stress test includes scenario-based economic impairment analysis. It estimates:
-
-- impairment loss in USD
-- impairment loss as a percentage
-- post-impairment equity
-- breakdown by asset impact, hedge PnL, collateral haircut, exit slippage, liquidation penalty, and protocol loss assumption
-
-This is scenario analysis, not formal accounting treatment.
+- scenario result;
+- post-stress metrics;
+- post-stress health;
+- recommended action;
+- Decision Confidence;
+- risk notes;
+- estimated impairment loss; and
+- post-impairment equity.
 
 ## Wallet Auditor
 
-Wallet Auditor is available at `/wallet` and is positioned as a PRO PREVIEW capability.
+The Wallet Auditor discovers and normalizes positions available through supported read-only integrations. It aggregates exposure, collateral, debt, unrealized PnL where reliable, hedge alignment, liquidation context, Safety Buffer, capital at risk, and estimated impairment.
 
-It is designed for read-only analysis of supported public wallet data. The report clearly distinguishes:
+The wallet report explicitly distinguishes:
 
-- no supported positions
-- partial data
-- insufficient data
-- positions found
+- `positions_found`
+- `no_supported_positions`
+- `partial_data`
+- `insufficient_data`
 
-It returns:
+No supported positions and incomplete data are terminal assessment states, not evidence of a healthy portfolio. Missing values remain nullable instead of being silently treated as zero risk.
 
-- portfolio summary
-- risk metrics
-- strategy health when meaningful
-- recommendation when meaningful
-- corrective actions
-- detected positions
-- protocol warnings
-- raw JSON
+Open the [Wallet Auditor](https://delta-zero-alpha.vercel.app/wallet) to analyze supported public data.
 
-If supported positions are not found, the service returns a dedicated empty state instead of forcing a portfolio risk recommendation.
+## Live Read-Only Integrations
 
-## Live Read Only Integrations
+### Hyperliquid — LIVE
 
-### Hyperliquid
+Read-only perpetual positions, margin data, account value, unrealized PnL, and liquidation context through public protocol data.
 
-Status: LIVE
+### Aave — LIVE WITH RPC
 
-Read only perpetual positions, margin data, account value, unrealized PnL, and liquidation context through public protocol data.
+Read-only supply, borrow, collateral, debt, and health-factor analysis when supported RPC access is configured.
 
-### Aave
+Set `ETHEREUM_RPC_URL` and `ARBITRUM_RPC_URL` in the backend environment to enable the configured network access. RPC credentials must never be committed.
 
-Status: LIVE WITH RPC
+### Morpho — LIVE
 
-Read only supply, borrow, collateral, debt, and health factor analysis when supported RPC access is configured.
+Read-only market and vault position analysis through Morpho's supported public API.
 
-### Morpho
+Live integrations are read-only. DeltaZero does not request signatures, private keys, approvals, or transaction permissions. Unsupported positions and unavailable data sources are reported explicitly and are not treated as zero risk.
 
-Status: LIVE
+## Architecture
 
-Read only market and vault position analysis through Morpho’s supported public API.
+```mermaid
+flowchart LR
+    subgraph Clients
+        WEB[Next.js Web App]
+        TS[TypeScript SDK]
+        PY[Python SDK]
+        AGENT[Agent or Dashboard]
+    end
 
-Live integrations are read only. DeltaZero does not request signatures, private keys, approvals, or transaction permissions.
+    subgraph API[FastAPI Service]
+        ROUTES[Validated API Routes]
+        STRATEGY[Strategy Services]
+        DECISION[Deterministic Decision Engine]
+        IMPAIRMENT[Economic Impairment Engine]
+        WALLET[Wallet Analyzer]
+        NORMALIZER[Position Normalizer]
+    end
 
-## Planned Integrations
+    subgraph Sources[Read-Only Data Sources]
+        HL[Hyperliquid]
+        AAVE[Aave via RPC]
+        MORPHO[Morpho Public API]
+    end
 
-- Pendle — fixed-yield, PT, YT, and maturity-risk analysis.
-- Ethena — synthetic-dollar and hedged-yield strategy analysis.
-- Live Funding Rates — real time perpetual funding inputs from supported venues.
-- Additional Wallet and Protocol Coverage — more networks, assets, protocols, LP positions, and portfolio adapters.
+    WEB --> ROUTES
+    TS --> ROUTES
+    PY --> ROUTES
+    AGENT --> TS
+    AGENT --> PY
+    ROUTES --> STRATEGY
+    ROUTES --> WALLET
+    STRATEGY --> DECISION
+    STRATEGY --> IMPAIRMENT
+    WALLET --> NORMALIZER
+    NORMALIZER --> DECISION
+    WALLET --> IMPAIRMENT
+    WALLET --> HL
+    WALLET --> AAVE
+    WALLET --> MORPHO
+```
 
-## SDK
+### Frontend
 
-DeltaZero ships local SDK packages for agents and internal automation.
+The web interface uses Next.js App Router, React, TypeScript, and Tailwind CSS. It connects to the backend through `NEXT_PUBLIC_API_BASE` and contains no authentication, wallet connection, transaction flow, database, or client-side calculation engine.
 
-Status:
+### Backend
 
-- Local SDK package
-- SDK Preview
+FastAPI and Pydantic validate requests and responses. Service modules own strategy construction, position auditing, stress testing, wallet analysis, normalized metrics, recommendations, and impairment calculations.
 
-The TypeScript and Python SDKs are available directly from this repository for local installation and agent integration. Public registry publication is planned after interface validation.
+### Decision Engine
+
+The centralized engine evaluates carry, hedge drift, Safety Buffer, capital risk, and impairment state. Strategy health, action, summary, risk notes, and Decision Confidence originate from the same evaluated context.
+
+Decision Confidence measures how clearly the current metrics support a recommendation. It is not a profitability forecast or a strategy-quality score.
+
+### Economic Impairment
+
+The impairment engine compares pre-stress and post-stress portfolio equity. Short-hedge gains offset long-leg losses where appropriate, while collateral haircuts, exit slippage, liquidation penalties, and protocol-loss assumptions are applied without blindly adding overlapping losses.
+
+This is scenario-based economic impairment analysis, not formal IFRS or accounting impairment.
+
+## How It Works
+
+```text
+Input assumptions or public wallet address
+                  ↓
+Validate and normalize the request
+                  ↓
+Calculate carry, hedge, collateral, and risk metrics
+                  ↓
+Evaluate deterministic thresholds and scenario impairment
+                  ↓
+Return health, action, confidence, notes, and structured JSON
+```
+
+The recommendation vocabulary depends on the service:
+
+- Builder: `OPEN`, `REBALANCE`, or `WAIT`
+- Auditor: `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`
+- Wallet Auditor: `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE` when an assessment is meaningful
+
+## SDK Preview
+
+DeltaZero includes thin, type-safe clients that call the existing deployed API. They do not duplicate backend calculations.
+
+The packages are available directly from this repository for local installation and agent integration. They are not currently published to npm or PyPI.
 
 ### TypeScript
 
-Package: `@deltazero/core`
+Package name: `@deltazero/core`
 
-Location: `sdk/typescript`
+Repository path: [`sdk/typescript`](sdk/typescript)
 
-Supported methods:
-
-- `buildStrategy()`
-- `auditPosition()`
-- `stressTest()`
-- `auditWallet()`
-
-Example:
+```bash
+cd sdk/typescript
+npm install
+npm run build
+npm test
+```
 
 ```ts
 import { DeltaZeroClient } from "@deltazero/core";
 
 const client = new DeltaZeroClient({
   baseUrl: "https://deltazero-production.up.railway.app",
+  timeoutMs: 10_000,
 });
 
 const report = await client.buildStrategy({
@@ -294,26 +252,33 @@ const report = await client.buildStrategy({
 console.log(report.recommendation.action);
 ```
 
+Available methods:
+
+- `buildStrategy()`
+- `auditPosition()`
+- `stressTest()`
+- `auditWallet()`
+
 ### Python
 
-Package: `deltazero-core`
+Package name: `deltazero-core`
 
-Location: `sdk/python`
+Repository path: [`sdk/python`](sdk/python)
 
-Supported methods:
-
-- `build_strategy()`
-- `audit_position()`
-- `stress_test()`
-- `audit_wallet()`
-
-Example:
+```bash
+cd sdk/python
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+python3 -m unittest discover -s tests -p "test_*.py"
+```
 
 ```python
 from deltazero import DeltaZeroClient
 
 client = DeltaZeroClient(
-    base_url="https://deltazero-production.up.railway.app"
+    base_url="https://deltazero-production.up.railway.app",
+    timeout_s=10,
 )
 
 report = client.build_strategy({
@@ -329,61 +294,89 @@ report = client.build_strategy({
 print(report["recommendation"]["action"])
 ```
 
-### Agent use cases
+Available methods:
 
-- portfolio automation with deterministic JSON responses
-- dashboards that need a live API client without duplicate business logic
-- offline workflows that call the Builder, Auditor, Stress Test, and Wallet Auditor endpoints
+- `build_strategy()`
+- `audit_position()`
+- `stress_test()`
+- `audit_wallet()`
 
-## API
+Agent and dashboard use cases include deterministic pre-trade checks, portfolio review workflows, scenario-risk gates, report generation, and structured inputs to broader orchestration systems. DeltaZero does not execute the resulting action.
 
-### Swagger
+## API Reference
 
-Interactive API documentation is available at:
+### Base URLs
 
-- Local: `http://localhost:8000/docs`
-- Production: `https://deltazero-production.up.railway.app/docs`
+| Environment | URL |
+| --- | --- |
+| Local | `http://localhost:8000` |
+| Production | `https://deltazero-production.up.railway.app` |
+| Swagger UI | [Production API documentation](https://deltazero-production.up.railway.app/docs) |
+| OpenAPI schema | `https://deltazero-production.up.railway.app/openapi.json` |
 
-OpenAPI schema:
+### Endpoints
 
-- `GET /openapi.json`
-
-### Base URL
-
-The frontend and SDKs use the same API base URL convention:
-
-- `http://localhost:8000` for local development
-- `https://deltazero-production.up.railway.app` for production
-
-### API Endpoints
-
-| Method | Path | Purpose |
+| Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/strategy/build` | Build a pseudo delta-neutral strategy. |
-| `POST` | `/strategy/audit` | Audit an existing position. |
-| `POST` | `/strategy/stress-test` | Stress test a proposed or existing structure. |
+| `GET` | `/health` | Check backend availability. |
+| `POST` | `/strategy/build` | Build and evaluate a proposed strategy. |
+| `POST` | `/strategy/audit` | Audit an existing position structure. |
+| `POST` | `/strategy/stress-test` | Apply a deterministic stress scenario and impairment model. |
 | `POST` | `/wallet/analyze` | Analyze supported public wallet positions. |
 
-## Roadmap
+### Builder example
 
-DeltaZero is intentionally narrow today. The near-term roadmap focuses on:
+```bash
+curl --request POST \
+  --url https://deltazero-production.up.railway.app/strategy/build \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "asset": "SOL",
+    "capital_usd": 5000,
+    "risk_tolerance": "medium",
+    "target_style": "neutral_yield",
+    "long_yield_apy": 14,
+    "short_funding_apy": 3,
+    "fee_drag_apy": 1
+  }'
+```
 
-- broader read-only wallet coverage
-- additional public protocol adapters
-- saved reports and export flows
-- continuous alerts for risk thresholds
-- public SDK publication after preview validation
-- additional agent-facing ergonomics
+### Wallet example
+
+```json
+{
+  "wallet_address": "0x0000000000000000000000000000000000000000",
+  "networks": ["ethereum", "arbitrum", "hyperliquid"],
+  "protocols": ["hyperliquid", "aave", "morpho"],
+  "stress_profile": "standard"
+}
+```
+
+Wallet analysis is read-only. Protocol failures are isolated and returned as warnings or errors so unavailable data is never represented as confirmed zero exposure.
+
+Detailed service documentation:
+
+- [Wallet Auditor](docs/WALLET_AUDITOR.md)
+- [Economic Impairment Engine](docs/IMPAIRMENT_ENGINE.md)
+- [OKX ASP Service](docs/OKX_ASP_SERVICE.md)
+- [Project specification](docs/PROJECT.md)
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 20+
+- Python 3.11 or newer
+- Node.js 20 or newer
 - npm
 
-### Backend
+### Clone the repository
+
+```bash
+git clone https://github.com/Teecash96/DeltaZero.git
+cd DeltaZero
+```
+
+### Start the backend
 
 ```bash
 cd backend
@@ -393,50 +386,150 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-If you use the wallet auditor with Aave support, set the configured RPC URLs in your environment:
+Optional Aave RPC configuration:
 
-- `ETHEREUM_RPC_URL`
-- `ARBITRUM_RPC_URL`
+```bash
+export ETHEREUM_RPC_URL="your-ethereum-rpc-url"
+export ARBITRUM_RPC_URL="your-arbitrum-rpc-url"
+```
 
-### Frontend
+Do not commit RPC URLs containing provider credentials.
+
+### Start the frontend
+
+In a second terminal:
 
 ```bash
 cd frontend
 npm install
-echo "NEXT_PUBLIC_API_BASE=http://localhost:8000" > .env.local
+cp .env.example .env.local
 npm run dev
 ```
 
-### Run both services locally
+Open `http://localhost:3000`. The example frontend environment points to the local backend at `http://localhost:8000`.
 
-1. Start the backend on port `8000`.
-2. Start the frontend on port `3000`.
-3. Open `http://localhost:3000`.
+### Run tests
 
-### SDKs from the local repository
-
-TypeScript:
+Backend:
 
 ```bash
-cd sdk/typescript
-npm install
-npm test
+cd backend
+pytest
 ```
 
-Python:
+Frontend:
 
 ```bash
-cd sdk/python
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-python3 -m unittest discover -s tests -p "test_*.py"
+cd frontend
+npm run lint
+npm run build
 ```
+
+SDK commands are documented in the [SDK Preview](#sdk-preview) section.
+
+## Deployment
+
+| Component | Platform | Address |
+| --- | --- | --- |
+| Frontend | Vercel | [delta-zero-alpha.vercel.app](https://delta-zero-alpha.vercel.app) |
+| Backend | Railway | [deltazero-production.up.railway.app](https://deltazero-production.up.railway.app) |
+| Source control | GitHub | [Teecash96/DeltaZero](https://github.com/Teecash96/DeltaZero) |
+
+Production CORS permits the deployed frontend plus local Next.js development origins. The frontend API origin is configured through `NEXT_PUBLIC_API_BASE`.
+
+## Security Model
+
+- DeltaZero never asks for a seed phrase or private key.
+- Wallet analysis does not request signatures, approvals, or transaction permissions.
+- Hyperliquid access uses read-only public information endpoints.
+- Aave access uses configured read-only RPC calls.
+- Morpho access uses its supported public API.
+- External-protocol failures are isolated and returned to the caller.
+- Short-lived in-memory caching is used; the current MVP has no database.
+- Recommendations are analytical outputs, not trade instructions or execution.
+
+## FAQ
+
+### Is DeltaZero non-custodial?
+
+Yes. The current product does not hold funds, connect wallets for signing, or execute transactions.
+
+### Does DeltaZero execute trades?
+
+No. DeltaZero provides deterministic risk analysis and structured recommendations only.
+
+### Which assets does the strategy interface support?
+
+The current Builder, Auditor, and Stress Test interfaces support SOL and ETH.
+
+### Which target styles are available?
+
+Neutral Yield, Conservative Income, Aggressive Carry, and Capital Preservation.
+
+### How is a recommendation generated?
+
+The backend evaluates carry, hedge alignment, Safety Buffer, capital risk, service-specific thresholds, and impairment where relevant through deterministic rules.
+
+### What is Decision Confidence?
+
+Decision Confidence measures how clearly the evaluated metrics support the recommendation. It does not measure expected profitability or guarantee strategy quality.
+
+### Which wallet integrations are live?
+
+Hyperliquid and Morpho are live read-only integrations. Aave is live with configured RPC access. Coverage is limited to the positions and networks supported by the current adapters.
+
+### What happens when no wallet positions are found?
+
+The Wallet Auditor returns `no_supported_positions` when all selected sources succeed but no supported positions are detected. It does not generate a risk recommendation for a nonexistent portfolio.
+
+### What happens when a data source fails?
+
+With no retrieved positions, the report is marked `insufficient_data`. If positions are retrieved from other sources, it is marked `partial_data`, warnings remain visible, and confidence is reduced.
+
+### Is submitted data stored?
+
+No. The current implementation has no database and does not retain submitted strategy or wallet inputs.
+
+### Can agents use DeltaZero?
+
+Yes. Agents, dashboards, and automated workflows can consume the structured API directly or use the repository-local SDK packages. DeltaZero does not autonomously execute the resulting recommendation.
+
+### Are the SDK packages published?
+
+No. Both SDKs are currently available as SDK Preview packages inside this repository for local installation and interface validation.
+
+## Roadmap
+
+Planned integrations:
+
+- **Pendle** — fixed-yield, PT, YT, and maturity-risk analysis.
+- **Ethena** — synthetic-dollar and hedged-yield strategy analysis.
+- **Live Funding Rates** — continuous funding inputs from supported venues.
+
+Additional planned product capabilities include broader read-only network and protocol coverage, multi-wallet monitoring, continuous risk alerts, funding alerts, Safety Buffer alerts, saved reports, and expanded ASP API access.
+
+Roadmap items are not presented as currently connected or available.
+
+## Contributing
+
+Contributions are welcome through GitHub issues and pull requests.
+
+Before submitting a change:
+
+1. Keep calculations deterministic and centralized.
+2. Preserve existing route and response contracts unless a versioned change is agreed.
+3. Add or update regression tests for decision behavior.
+4. Run backend tests, frontend lint, and the production frontend build where relevant.
+5. Do not commit secrets, private RPC URLs, build artifacts, or local environment files.
 
 ## License
 
-DeltaZero is released under the MIT License. See [LICENSE](LICENSE).
+DeltaZero is released under the [MIT License](LICENSE).
+
+Copyright (c) 2026 Akanbi Labs.
 
 ## Built by Akanbi Labs
 
-DeltaZero is built by Akanbi Labs.
+DeltaZero is designed and built by **Akanbi Labs** for the OKX AI Hackathon.
+
+Follow product updates on [X](https://x.com/DeltaZeroASP).
