@@ -18,12 +18,18 @@ from app.models.wallet import (
     NormalizedPosition,
     ProtocolError,
     WalletAnalyzeRequest,
+    WalletAllocationItem,
     WalletAssessmentStatus,
+    WalletExecutiveSummary,
+    WalletExposureAnalysis,
+    WalletPlanStep,
     WalletPortfolioResponse,
     WalletPortfolioSummary,
+    WalletPrimaryDriver,
     WalletRecommendation,
     WalletRiskMetrics,
     WalletStrategyHealth,
+    WalletStressSummary,
 )
 from app.services.impairment import calculate_impairment
 from app.services.position_normalizer import _coerce_float  # type: ignore[attr-defined]
@@ -32,6 +38,7 @@ from app.services.recommendation import (
     calculate_decision_confidence,
     evaluate_decision_context,
 )
+from app.services.wallet_report import build_wallet_intelligence_report
 
 WALLET_CACHE_TTL_SECONDS = 120.0
 WALLET_RATE_LIMIT_PER_MINUTE = 6
@@ -259,6 +266,12 @@ def _build_wallet_response(
     protocol_errors: list[ProtocolError],
     warnings: list[str],
     debug: dict[str, object] | None = None,
+    executive_summary: WalletExecutiveSummary | None = None,
+    primary_drivers: list[WalletPrimaryDriver] | None = None,
+    recommended_plan: list[WalletPlanStep] | None = None,
+    exposure_analysis: WalletExposureAnalysis | None = None,
+    portfolio_allocation: list[WalletAllocationItem] | None = None,
+    stress_summary: WalletStressSummary | None = None,
 ) -> WalletPortfolioResponse:
     return WalletPortfolioResponse(
         service="wallet_portfolio_auditor",
@@ -279,6 +292,12 @@ def _build_wallet_response(
         protocol_errors=protocol_errors,
         warnings=warnings,
         debug=debug,
+        executive_summary=executive_summary,
+        primary_drivers=primary_drivers or [],
+        recommended_plan=recommended_plan or [],
+        exposure_analysis=exposure_analysis,
+        portfolio_allocation=portfolio_allocation or [],
+        stress_summary=stress_summary,
     )
 
 
@@ -676,6 +695,21 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         corrective_actions.append("Resolve missing protocol data before treating the assessment as final.")
 
     assessment_status = "partial_data" if data_quality == "partial" else "positions_found"
+    intelligence = build_wallet_intelligence_report(
+        positions=positions,
+        summary=portfolio_summary,
+        risk=risk_metrics,
+        health=health,
+        action=action,
+        data_quality=data_quality,
+        stress_profile=request.stress_profile,
+        profile=profile,
+        wallet_profile=wallet_profile,
+        hedge_state=hedge_state,
+        safety_state=safety_state,
+        capital_state=capital_state,
+        impairment_state=impairment_state,
+    )
     result = _build_wallet_response(
         assessment_status=assessment_status,  # type: ignore[arg-type]
         request=request,
@@ -694,6 +728,12 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         protocol_errors=protocol_errors,
         warnings=warnings,
         debug=discovery_debug if _wallet_debug_enabled() else None,
+        executive_summary=intelligence.executive_summary,
+        primary_drivers=intelligence.primary_drivers,
+        recommended_plan=intelligence.recommended_plan,
+        exposure_analysis=intelligence.exposure_analysis,
+        portfolio_allocation=intelligence.portfolio_allocation,
+        stress_summary=intelligence.stress_summary,
     )
 
     with WALLET_LOCK:

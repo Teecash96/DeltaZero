@@ -190,6 +190,61 @@ export interface NormalizedPosition {
   data_timestamp: string | null;
   data_quality: WalletDataQuality;
   market_context?: Record<string, unknown> | null;
+  side: "long" | "short" | null;
+  subaccount_name: string | null;
+  subaccount_address: string | null;
+}
+
+export type WalletDriverState = "positive" | "warning" | "critical" | "unavailable";
+
+export interface WalletExecutiveSummary {
+  headline: string;
+  body: string;
+  position_count: number;
+  protocol_count: number;
+  risk_level: WalletStrategyHealth;
+}
+
+export interface WalletPrimaryDriver {
+  metric: string;
+  label: string;
+  state: WalletDriverState;
+  value: number | string | null;
+  unit: string | null;
+  explanation: string;
+}
+
+export interface WalletPlanStep {
+  priority: number;
+  action: string;
+  reason: string;
+  target: string | null;
+}
+
+export interface WalletExposureAnalysis {
+  gross_exposure_usd: number;
+  gross_long_exposure_usd: number;
+  gross_short_exposure_usd: number;
+  net_delta_usd: number;
+  net_delta_pct: number;
+  portfolio_equity_usd: number | null;
+  leverage_ratio: number | null;
+  position_count: number;
+}
+
+export interface WalletAllocationItem {
+  asset: string;
+  exposure_usd: number;
+  allocation_pct: number;
+}
+
+export interface WalletStressSummary {
+  stress_profile: WalletStressProfile;
+  estimated_impairment_loss_usd: number;
+  estimated_impairment_loss_pct: number;
+  post_impairment_equity_usd: number;
+  dominant_risk: string;
+  summary: string;
 }
 
 export interface WalletAnalyzeRequest {
@@ -256,4 +311,11 @@ export interface WalletPortfolioResponse {
   positions: NormalizedPosition[];
   protocol_errors: ProtocolError[];
   warnings: string[];
+  debug?: Record<string, unknown> | null;
+  executive_summary: WalletExecutiveSummary | null;
+  primary_drivers: WalletPrimaryDriver[];
+  recommended_plan: WalletPlanStep[];
+  exposure_analysis: WalletExposureAnalysis | null;
+  portfolio_allocation: WalletAllocationItem[];
+  stress_summary: WalletStressSummary | null;
 }

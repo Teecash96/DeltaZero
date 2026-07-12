@@ -21,6 +21,7 @@ PositionType = Literal[
     "collateral",
     "unknown",
 ]
+DriverState = Literal["positive", "warning", "critical", "unavailable"]
 
 
 class NormalizedPosition(BaseModel):
@@ -41,6 +42,59 @@ class NormalizedPosition(BaseModel):
     data_timestamp: str | None = None
     data_quality: WalletDataQuality = "complete"
     market_context: dict[str, object] | None = None
+    side: Literal["long", "short"] | None = None
+    subaccount_name: str | None = None
+    subaccount_address: str | None = None
+
+
+class WalletExecutiveSummary(BaseModel):
+    headline: str
+    body: str
+    position_count: int
+    protocol_count: int
+    risk_level: WalletStrategyHealth
+
+
+class WalletPrimaryDriver(BaseModel):
+    metric: str
+    label: str
+    state: DriverState
+    value: float | str | None
+    unit: str | None = None
+    explanation: str
+
+
+class WalletPlanStep(BaseModel):
+    priority: int
+    action: str
+    reason: str
+    target: str | None = None
+
+
+class WalletExposureAnalysis(BaseModel):
+    gross_exposure_usd: float
+    gross_long_exposure_usd: float
+    gross_short_exposure_usd: float
+    net_delta_usd: float
+    net_delta_pct: float
+    portfolio_equity_usd: float | None = None
+    leverage_ratio: float | None = None
+    position_count: int
+
+
+class WalletAllocationItem(BaseModel):
+    asset: str
+    exposure_usd: float
+    allocation_pct: float
+
+
+class WalletStressSummary(BaseModel):
+    stress_profile: WalletStressProfile
+    estimated_impairment_loss_usd: float
+    estimated_impairment_loss_pct: float
+    post_impairment_equity_usd: float
+    dominant_risk: str
+    summary: str
 
 
 class WalletAnalyzeRequest(BaseModel):
@@ -130,3 +184,9 @@ class WalletPortfolioResponse(BaseModel):
     protocol_errors: list[ProtocolError]
     warnings: list[str]
     debug: dict[str, object] | None = None
+    executive_summary: WalletExecutiveSummary | None = None
+    primary_drivers: list[WalletPrimaryDriver] = Field(default_factory=list)
+    recommended_plan: list[WalletPlanStep] = Field(default_factory=list)
+    exposure_analysis: WalletExposureAnalysis | None = None
+    portfolio_allocation: list[WalletAllocationItem] = Field(default_factory=list)
+    stress_summary: WalletStressSummary | None = None

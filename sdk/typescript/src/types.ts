@@ -171,7 +171,60 @@ export interface NormalizedPosition {
   health_factor: number | null;
   data_timestamp: string | null;
   data_quality: WalletDataQuality;
+  side?: "long" | "short" | null;
+  subaccount_name?: string | null;
+  subaccount_address?: string | null;
   market_context?: Record<string, unknown> | null;
+}
+
+export interface WalletExecutiveSummary {
+  headline: string;
+  body: string;
+  position_count: number;
+  protocol_count: number;
+  risk_level: WalletStrategyHealth;
+}
+
+export interface WalletPrimaryDriver {
+  metric: string;
+  label: string;
+  state: "positive" | "warning" | "critical" | "unavailable";
+  value: number | null;
+  unit: string | null;
+  explanation: string;
+}
+
+export interface WalletPlanStep {
+  priority: number;
+  action: string;
+  reason: string;
+  target: string | null;
+}
+
+export interface WalletExposureAnalysis {
+  gross_exposure_usd: number;
+  gross_long_exposure_usd: number;
+  gross_short_exposure_usd: number;
+  net_delta_usd: number;
+  net_delta_pct: number;
+  portfolio_equity_usd: number | null;
+  leverage_ratio: number | null;
+  position_count: number;
+}
+
+export interface WalletAllocationItem {
+  asset: string;
+  exposure_usd: number;
+  allocation_pct: number;
+}
+
+export interface WalletStressSummary {
+  stress_profile: WalletStressProfile;
+  estimated_impairment_loss_usd: number;
+  estimated_impairment_loss_pct: number;
+  post_impairment_equity_usd: number;
+  dominant_risk: string;
+  summary: string;
 }
 
 export interface WalletAnalyzeRequest {
@@ -233,6 +286,12 @@ export interface WalletPortfolioResponse {
   strategy_health: WalletStrategyHealth | null;
   decision_confidence: number | null;
   recommendation: WalletRecommendation | null;
+  executive_summary: WalletExecutiveSummary | null;
+  primary_drivers: WalletPrimaryDriver[];
+  recommended_plan: WalletPlanStep[];
+  exposure_analysis: WalletExposureAnalysis | null;
+  portfolio_allocation: WalletAllocationItem[];
+  stress_summary: WalletStressSummary | null;
   risk_notes: string[];
   corrective_actions: string[];
   positions: NormalizedPosition[];
@@ -244,4 +303,3 @@ export interface DeltaZeroClientOptions {
   baseUrl: string;
   timeoutMs?: number;
 }
-

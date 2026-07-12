@@ -52,11 +52,19 @@ The response includes:
 - `risk_metrics`
 - `strategy_health`
 - `recommendation`
+- `executive_summary`
+- `primary_drivers`
+- `recommended_plan`
+- `exposure_analysis`
+- `portfolio_allocation`
+- `stress_summary`
 - `risk_notes`
 - `corrective_actions`
 - `positions`
 - `protocol_errors`
 - `warnings`
+
+For successful and partial assessments, these report fields provide a deterministic executive narrative, the metrics driving the decision, an ordered corrective plan, non-overlapping exposure totals, absolute-exposure allocation, and the selected stress profile's impairment summary. Missing values remain `null`; they are never converted into favorable zero-risk readings.
 
 When `WALLET_DEBUG_MODE=true` is set in a development environment, the response also includes protocol discovery metadata in `debug`. Debug mode is disabled by default.
 

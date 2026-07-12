@@ -168,7 +168,60 @@ class NormalizedPosition(TypedDict, total=False):
     health_factor: float | None
     data_timestamp: str | None
     data_quality: WalletDataQuality
+    side: Literal["long", "short"] | None
+    subaccount_name: str | None
+    subaccount_address: str | None
     market_context: dict[str, object] | None
+
+
+class WalletExecutiveSummary(TypedDict):
+    headline: str
+    body: str
+    position_count: int
+    protocol_count: int
+    risk_level: WalletStrategyHealth
+
+
+class WalletPrimaryDriver(TypedDict):
+    metric: str
+    label: str
+    state: Literal["positive", "warning", "critical", "unavailable"]
+    value: float | None
+    unit: str | None
+    explanation: str
+
+
+class WalletPlanStep(TypedDict):
+    priority: int
+    action: str
+    reason: str
+    target: str | None
+
+
+class WalletExposureAnalysis(TypedDict):
+    gross_exposure_usd: float
+    gross_long_exposure_usd: float
+    gross_short_exposure_usd: float
+    net_delta_usd: float
+    net_delta_pct: float
+    portfolio_equity_usd: float | None
+    leverage_ratio: float | None
+    position_count: int
+
+
+class WalletAllocationItem(TypedDict):
+    asset: str
+    exposure_usd: float
+    allocation_pct: float
+
+
+class WalletStressSummary(TypedDict):
+    stress_profile: WalletStressProfile
+    estimated_impairment_loss_usd: float
+    estimated_impairment_loss_pct: float
+    post_impairment_equity_usd: float
+    dominant_risk: str
+    summary: str
 
 
 class WalletAnalyzeRequest(TypedDict):
@@ -230,9 +283,14 @@ class WalletPortfolioResponse(TypedDict):
     strategy_health: WalletStrategyHealth | None
     decision_confidence: int | None
     recommendation: WalletRecommendation | None
+    executive_summary: WalletExecutiveSummary | None
+    primary_drivers: list[WalletPrimaryDriver]
+    recommended_plan: list[WalletPlanStep]
+    exposure_analysis: WalletExposureAnalysis | None
+    portfolio_allocation: list[WalletAllocationItem]
+    stress_summary: WalletStressSummary | None
     risk_notes: list[str]
     corrective_actions: list[str]
     positions: list[NormalizedPosition]
     protocol_errors: list[ProtocolError]
     warnings: list[str]
-

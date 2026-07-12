@@ -88,6 +88,15 @@ def normalize_hyperliquid_positions(snapshot: dict[str, object]) -> list[Normali
                 data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
                 data_quality=quality,
                 market_context=raw.get("market_context") if isinstance(raw.get("market_context"), dict) else snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                side="short" if position_type == "perpetual_short" else "long",
+                subaccount_name=(raw.get("market_context") or {}).get("account_name")
+                if isinstance(raw.get("market_context"), dict)
+                and str((raw.get("market_context") or {}).get("source", "")).startswith("subaccount:")
+                else None,
+                subaccount_address=(raw.get("market_context") or {}).get("account_address")
+                if isinstance(raw.get("market_context"), dict)
+                and str((raw.get("market_context") or {}).get("source", "")).startswith("subaccount:")
+                else None,
             )
         )
 
@@ -113,6 +122,15 @@ def normalize_hyperliquid_positions(snapshot: dict[str, object]) -> list[Normali
                 data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
                 data_quality=_quality_from_fields([value]),
                 market_context=raw.get("market_context") if isinstance(raw.get("market_context"), dict) else snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                side="long",
+                subaccount_name=(raw.get("market_context") or {}).get("account_name")
+                if isinstance(raw.get("market_context"), dict)
+                and str((raw.get("market_context") or {}).get("source", "")).startswith("subaccount:")
+                else None,
+                subaccount_address=(raw.get("market_context") or {}).get("account_address")
+                if isinstance(raw.get("market_context"), dict)
+                and str((raw.get("market_context") or {}).get("source", "")).startswith("subaccount:")
+                else None,
             )
         )
 
@@ -149,6 +167,7 @@ def normalize_aave_positions(snapshot: dict[str, object]) -> list[NormalizedPosi
                     data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
                     data_quality=_quality_from_fields([borrowed, account_data.get("health_factor")]),
                     market_context=snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                    side="short",
                 )
             )
         if supplied and supplied > 0:
@@ -171,6 +190,7 @@ def normalize_aave_positions(snapshot: dict[str, object]) -> list[NormalizedPosi
                     data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
                     data_quality=_quality_from_fields([supplied, account_data.get("health_factor")]),
                     market_context=snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                    side="long",
                 )
             )
 
@@ -196,6 +216,7 @@ def normalize_aave_positions(snapshot: dict[str, object]) -> list[NormalizedPosi
                 data_timestamp=timestamp,
                 data_quality=_quality_from_fields([collateral, debt, account_data.get("health_factor")]),
                 market_context=snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                side=None,
             )
         )
 
@@ -233,6 +254,7 @@ def normalize_morpho_positions(snapshot: dict[str, object]) -> list[NormalizedPo
                 data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
                 data_quality=_quality_from_fields([supplied, borrowed, collateral]),
                 market_context=snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                side="short" if position_type == "lending_borrow" else "long",
             )
         )
 
