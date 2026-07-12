@@ -7,6 +7,7 @@ from app.services.recommendation import (
     actions_for_recommendation,
     assess_strategy_health,
     build_risk_notes,
+    evaluate_decision_context,
     recommend_for_audit,
     strategy_name_for,
 )
@@ -62,7 +63,12 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
         short_funding_apy=request.short_funding_apy,
         fee_drag_apy=request.fee_drag_apy,
     )
-    base_health = assess_strategy_health(base_metrics)
+    base_context = evaluate_decision_context(
+        metrics=base_metrics,
+        risk_tolerance=request.risk_tolerance,
+        capital_base_usd=request.long_notional_usd + request.collateral_usd,
+    )
+    base_health = assess_strategy_health(base_context)
 
     (
         stressed_long,
@@ -87,11 +93,16 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
         short_funding_apy=stressed_short_funding,
         fee_drag_apy=request.fee_drag_apy,
     )
-    stressed_health = assess_strategy_health(stressed_metrics)
+    stressed_context = evaluate_decision_context(
+        metrics=stressed_metrics,
+        risk_tolerance=request.risk_tolerance,
+        capital_base_usd=stressed_long + stressed_collateral,
+    )
+    stressed_health = assess_strategy_health(stressed_context)
 
-    recommendation = recommend_for_audit(stressed_metrics, stressed_health)
-    actions = actions_for_recommendation(recommendation, stressed_health)
-    risk_notes = build_risk_notes(stressed_metrics, stressed_health)
+    recommendation = recommend_for_audit(stressed_context)
+    actions = actions_for_recommendation(recommendation, stressed_context)
+    risk_notes = build_risk_notes(stressed_context)
 
     if stressed_health != base_health:
         risk_notes.insert(
@@ -117,7 +128,7 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
         strategy_name=strategy_name_for(request.asset),
         asset=request.asset,
         strategy_health=stressed_health,
-        metrics=base_metrics,
+        metrics=stressed_metrics,
         recommendation=recommendation,
         risk_notes=risk_notes,
         actions=actions,

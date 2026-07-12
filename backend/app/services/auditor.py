@@ -7,6 +7,7 @@ from app.services.recommendation import (
     actions_for_recommendation,
     assess_strategy_health,
     build_risk_notes,
+    evaluate_decision_context,
     recommend_for_audit,
     strategy_name_for,
 )
@@ -23,10 +24,15 @@ def audit_strategy(request: AuditRequest) -> AuditResponse:
         fee_drag_apy=request.fee_drag_apy,
     )
 
-    health = assess_strategy_health(metrics)
-    recommendation = recommend_for_audit(metrics, health)
-    actions = actions_for_recommendation(recommendation, health)
-    risk_notes = build_risk_notes(metrics, health)
+    context = evaluate_decision_context(
+        metrics=metrics,
+        risk_tolerance=request.risk_tolerance,
+        capital_base_usd=request.long_notional_usd + request.collateral_usd,
+    )
+    health = assess_strategy_health(context)
+    recommendation = recommend_for_audit(context)
+    actions = actions_for_recommendation(recommendation, context)
+    risk_notes = build_risk_notes(context)
 
     return AuditResponse(
         service=SERVICE_NAME,

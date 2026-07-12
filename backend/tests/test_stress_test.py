@@ -59,19 +59,47 @@ def test_stress_test_scenario_result(client: TestClient) -> None:
         "safety_buffer_score",
         "capital_at_risk_proxy",
     }
+    assert data["metrics"] == result["stressed_metrics"]
 
 
 def test_stress_test_funding_worsens_reduces_carry(client: TestClient) -> None:
     data = client.post("/strategy/stress-test", json=STRESS_PAYLOAD).json()
-    base_carry = data["metrics"]["estimated_net_carry_apy"]
-    stressed_carry = data["scenario_result"]["stressed_metrics"]["estimated_net_carry_apy"]
-    assert stressed_carry < base_carry
+    stressed_carry = data["metrics"]["estimated_net_carry_apy"]
+    assert stressed_carry == data["scenario_result"]["stressed_metrics"]["estimated_net_carry_apy"]
+    assert stressed_carry < 10.4
+    assert data["recommendation"]["action"] in {"HOLD", "REBALANCE", "REDUCE", "CLOSE"}
 
 
 def test_stress_test_actions(client: TestClient) -> None:
     data = client.post("/strategy/stress-test", json=STRESS_PAYLOAD).json()
     assert isinstance(data["actions"], list)
     assert len(data["actions"]) >= 1
+
+
+def test_stress_test_materially_worsens_recommendation(client: TestClient) -> None:
+    base_payload = {
+        "asset": "SOL",
+        "long_notional_usd": 4000,
+        "short_notional_usd": 3840,
+        "collateral_usd": 1200,
+        "risk_tolerance": "medium",
+        "long_yield_apy": 12,
+        "short_funding_apy": 4,
+        "fee_drag_apy": 1,
+    }
+    base_action = client.post("/strategy/audit", json=base_payload).json()["recommendation"]["action"]
+    stressed_payload = {
+        **base_payload,
+        "scenario": {
+            "type": "funding_worsens",
+            "magnitude_pct": 12,
+        },
+    }
+    stressed = client.post("/strategy/stress-test", json=stressed_payload).json()
+    assert base_action == "HOLD"
+    assert stressed["recommendation"]["action"] in {"WAIT", "REDUCE", "CLOSE"}
+    assert stressed["metrics"]["estimated_net_carry_apy"] < 0
+    assert "negative" in stressed["recommendation"]["summary"].lower() or "below" in stressed["recommendation"]["summary"].lower()
 
 
 def test_stress_test_price_drop_scenario(client: TestClient) -> None:

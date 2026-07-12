@@ -1,11 +1,12 @@
 """Build neutral carry strategy from capital and yield inputs."""
 
-from app.config import BUILD_ALLOCATION, SERVICE_NAME
+from app.config import DECISION_PROFILES, SERVICE_NAME
 from app.models.schemas import BuildRequest, BuildResponse, RecommendedStructure
 from app.services.metrics import compute_metrics
 from app.services.recommendation import (
     assess_strategy_health,
     build_risk_notes,
+    evaluate_decision_context,
     recommend_for_build,
     strategy_name_for,
 )
@@ -13,15 +14,12 @@ from app.services.recommendation import (
 
 def build_strategy(request: BuildRequest) -> BuildResponse:
     """Construct a recommended pseudo-delta-neutral structure."""
-    allocation = BUILD_ALLOCATION[request.risk_tolerance]
+    profile = DECISION_PROFILES[request.risk_tolerance]
 
-    long_notional_usd = round(request.capital_usd * allocation["long_pct"], 2)
-    short_notional_usd = round(request.capital_usd * allocation["short_pct"], 2)
-    collateral_usd = round(request.capital_usd * allocation["collateral_pct"], 2)
-    target_hedge_ratio = round(
-        short_notional_usd / long_notional_usd if long_notional_usd > 0 else 0.0,
-        4,
-    )
+    collateral_usd = round(request.capital_usd * profile.collateral_reserve_pct, 2)
+    long_notional_usd = round(request.capital_usd - collateral_usd, 2)
+    short_notional_usd = round(long_notional_usd * profile.target_hedge_ratio, 2)
+    target_hedge_ratio = round(profile.target_hedge_ratio, 4)
 
     metrics = compute_metrics(
         long_notional_usd=long_notional_usd,
@@ -32,9 +30,14 @@ def build_strategy(request: BuildRequest) -> BuildResponse:
         fee_drag_apy=request.fee_drag_apy,
     )
 
-    health = assess_strategy_health(metrics)
-    recommendation = recommend_for_build(metrics, health)
-    risk_notes = build_risk_notes(metrics, health)
+    context = evaluate_decision_context(
+        metrics=metrics,
+        risk_tolerance=request.risk_tolerance,
+        capital_base_usd=request.capital_usd,
+    )
+    health = assess_strategy_health(context)
+    recommendation = recommend_for_build(context)
+    risk_notes = build_risk_notes(context)
 
     return BuildResponse(
         service=SERVICE_NAME,
