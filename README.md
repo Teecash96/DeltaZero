@@ -355,7 +355,7 @@ The frontend and SDKs use the same API base URL convention:
 - `http://localhost:8000` for local development
 - `https://deltazero-production.up.railway.app` for production
 
-### Endpoints
+### API Endpoints
 
 | Method | Path | Purpose |
 | --- | --- | --- |
