@@ -64,7 +64,11 @@ def normalize_hyperliquid_positions(snapshot: dict[str, object]) -> list[Normali
         position_type = _position_type(raw.get("position_type"))
         if position_type == "unknown":
             position_type = "perpetual_short" if (side in {"sell", "short"} or (size is not None and size < 0)) else "perpetual_long"
-        quality = _quality_from_fields([size, notional])
+        quality = (
+            _quality_from_fields([notional])
+            if position_type == "vault_deposit"
+            else _quality_from_fields([size, notional])
+        )
         positions.append(
             NormalizedPosition(
                 protocol="hyperliquid",
@@ -83,7 +87,7 @@ def normalize_hyperliquid_positions(snapshot: dict[str, object]) -> list[Normali
                 health_factor=_coerce_float(raw.get("health_factor")),
                 data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
                 data_quality=quality,
-                market_context=snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                market_context=raw.get("market_context") if isinstance(raw.get("market_context"), dict) else snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
             )
         )
 
@@ -108,7 +112,7 @@ def normalize_hyperliquid_positions(snapshot: dict[str, object]) -> list[Normali
                 health_factor=_coerce_float(raw.get("health_factor")),
                 data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
                 data_quality=_quality_from_fields([value]),
-                market_context=snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
+                market_context=raw.get("market_context") if isinstance(raw.get("market_context"), dict) else snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None,
             )
         )
 

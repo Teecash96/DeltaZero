@@ -129,3 +129,4 @@ class WalletPortfolioResponse(BaseModel):
     positions: list[NormalizedPosition]
     protocol_errors: list[ProtocolError]
     warnings: list[str]
+    debug: dict[str, object] | None = None

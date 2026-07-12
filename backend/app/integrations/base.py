@@ -20,6 +20,8 @@ class ProtocolSnapshot:
     market_context: dict[str, object] = field(default_factory=dict)
     data_timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     warnings: list[str] = field(default_factory=list)
+    discovery_complete: bool = True
+    discovery_metadata: dict[str, object] = field(default_factory=dict)
 
 
 class WalletAdapter(ABC):

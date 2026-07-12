@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
+import os
 from threading import Lock
 from time import time
 
@@ -44,8 +45,13 @@ def _cache_key(request: WalletAnalyzeRequest) -> str:
             ",".join(request.networks),
             ",".join(request.protocols),
             request.stress_profile,
+            str(_wallet_debug_enabled()),
         ]
     )
+
+
+def _wallet_debug_enabled() -> bool:
+    return os.getenv("WALLET_DEBUG_MODE", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _normalise_profile(stress_profile: str) -> DecisionProfile:
@@ -252,6 +258,7 @@ def _build_wallet_response(
     positions: list[NormalizedPosition],
     protocol_errors: list[ProtocolError],
     warnings: list[str],
+    debug: dict[str, object] | None = None,
 ) -> WalletPortfolioResponse:
     return WalletPortfolioResponse(
         service="wallet_portfolio_auditor",
@@ -271,6 +278,7 @@ def _build_wallet_response(
         positions=positions,
         protocol_errors=protocol_errors,
         warnings=warnings,
+        debug=debug,
     )
 
 
@@ -362,12 +370,25 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     protocol_errors: list[ProtocolError] = []
     warnings: list[str] = []
     data_timestamps: list[str] = []
+    discovery_debug: dict[str, object] = {}
 
     for adapter in adapters:
         try:
             snapshot = adapter.fetch_wallet_data(request.wallet_address)
             data_timestamps.append(snapshot.data_timestamp)
             warnings.extend(snapshot.warnings)
+            if snapshot.discovery_metadata:
+                discovery_debug[f"{adapter.protocol}:{adapter.network}"] = snapshot.discovery_metadata
+            if not snapshot.discovery_complete:
+                protocol_errors.append(
+                    ProtocolError(
+                        protocol=adapter.protocol,  # type: ignore[arg-type]
+                        network=adapter.network,  # type: ignore[arg-type]
+                        message=f"{adapter.protocol.title()} discovery was incomplete.",
+                        error_type="DiscoveryIncomplete",
+                        retryable=True,
+                    )
+                )
             normalized = adapter.normalize_positions(snapshot)
             positions.extend(normalized)
         except Exception as exc:
@@ -434,6 +455,7 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
             positions=positions,
             protocol_errors=protocol_errors,
             warnings=warnings,
+            debug=discovery_debug if _wallet_debug_enabled() else None,
         )
 
     impairment_total = ImpairmentResult(
@@ -671,6 +693,7 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         positions=positions,
         protocol_errors=protocol_errors,
         warnings=warnings,
+        debug=discovery_debug if _wallet_debug_enabled() else None,
     )
 
     with WALLET_LOCK:

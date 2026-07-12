@@ -43,6 +43,7 @@ The response includes:
 
 - `service`
 - `wallet_address`
+- `assessment_status`
 - `supported_positions_found`
 - `unsupported_positions_found`
 - `data_timestamp`
@@ -56,6 +57,8 @@ The response includes:
 - `positions`
 - `protocol_errors`
 - `warnings`
+
+When `WALLET_DEBUG_MODE=true` is set in a development environment, the response also includes protocol discovery metadata in `debug`. Debug mode is disabled by default.
 
 ## Supported Networks
 
@@ -80,6 +83,14 @@ RPC access is used only where public read calls are required. Missing RPC config
 - Hyperliquid public Info API for read-only account and position data.
 - Aave read-only RPC patterns using configured RPC endpoints.
 - Morpho GraphQL API for market and vault position data.
+
+### Hyperliquid Account Discovery
+
+Hyperliquid discovery begins with `userRole` and distinguishes master users, agents, vaults, subaccounts, and missing accounts. Master users are inspected across direct state, returned subaccounts, spot balances, vault equities, account-abstraction mode, and all currently reported perpetual DEXs. Vault and subaccount addresses are queried as their actual account addresses.
+
+Agent or API wallet addresses are not treated as empty accounts. They produce incomplete discovery because the public account state must be queried with the actual master or subaccount address.
+
+The adapter recognizes only current supported positions: non-zero perpetual positions, supported spot balances, vault equity, and subaccount positions. Historical volume, leaderboard rank, fills, and portfolio PnL history are never used as evidence of an open position. A centralized `MIN_POSITION_VALUE_USD = 1.00` threshold filters USD-valued dust.
 
 ## Example Request
 
