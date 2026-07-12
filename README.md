@@ -1,10 +1,10 @@
 # Δ DeltaZero
 
-<div align="center">
-
-### Deterministic risk intelligence for pseudo delta-neutral DeFi strategies
+## Deterministic risk intelligence for pseudo delta neutral DeFi strategies
 
 Build strategies, audit positions, simulate economic impairment, and assess supported public wallet portfolios through one transparent risk engine.
+
+<div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
