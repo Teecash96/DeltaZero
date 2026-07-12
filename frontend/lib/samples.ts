@@ -23,12 +23,12 @@ export const AUDIT_SAMPLE: AuditRequest = {
 
 export const STRESS_TEST_SAMPLE: StressTestRequest = {
   asset: "SOL",
-  long_notional_usd: 3500,
-  short_notional_usd: 3150,
-  collateral_usd: 1500,
+  long_notional_usd: 4000,
+  short_notional_usd: 3840,
+  collateral_usd: 1200,
   risk_tolerance: "medium",
-  long_yield_apy: 14,
-  short_funding_apy: 3,
+  long_yield_apy: 12,
+  short_funding_apy: 4,
   fee_drag_apy: 1,
   scenario: {
     type: "funding_worsens",

@@ -1,6 +1,10 @@
 export type Asset = "SOL" | "ETH";
 export type RiskTolerance = "low" | "medium" | "high";
-export type TargetStyle = "neutral_yield";
+export type TargetStyle =
+  | "neutral_yield"
+  | "conservative_income"
+  | "aggressive_carry"
+  | "capital_preservation";
 export type StrategyAction =
   | "OPEN"
   | "WAIT"
@@ -92,6 +96,7 @@ export interface StrategyResponseBase {
   strategy_name: string;
   asset: Asset;
   strategy_health: StrategyHealth;
+  decision_confidence: number;
   metrics: Metrics;
   recommendation: Recommendation;
   risk_notes: string[];

@@ -19,6 +19,7 @@ REQUIRED_TOP_LEVEL = {
     "strategy_name",
     "asset",
     "strategy_health",
+    "decision_confidence",
     "metrics",
     "recommendation",
     "risk_notes",
@@ -47,6 +48,7 @@ def test_audit_response_shape(client: TestClient) -> None:
     assert set(data["metrics"].keys()) == REQUIRED_METRICS
     assert data["service"] == "deltazero"
     assert data["asset"] == "SOL"
+    assert 0 <= data["decision_confidence"] <= 100
 
 
 def test_audit_metrics_computed(client: TestClient) -> None:
@@ -55,6 +57,7 @@ def test_audit_metrics_computed(client: TestClient) -> None:
     assert metrics["hedge_ratio"] == pytest.approx(0.7895, rel=1e-3)
     assert metrics["safety_buffer_score"] == 80.0
     assert data["strategy_health"] == "critical"
+    assert data["decision_confidence"] >= 40
 
 
 def test_audit_actions(client: TestClient) -> None:
@@ -80,6 +83,7 @@ def test_audit_healthy_existing_position_holds(client: TestClient) -> None:
     data = client.post("/strategy/audit", json=payload).json()
     assert data["strategy_health"] == "healthy"
     assert data["recommendation"]["action"] == "HOLD"
+    assert data["decision_confidence"] > 70
 
 
 def test_audit_severe_existing_position_reduces_or_closes(client: TestClient) -> None:
@@ -96,6 +100,7 @@ def test_audit_severe_existing_position_reduces_or_closes(client: TestClient) ->
     assert data["strategy_health"] == "critical"
     assert data["recommendation"]["action"] in {"REDUCE", "CLOSE"}
     assert any(term in data["recommendation"]["summary"].lower() for term in {"reduce", "close"})
+    assert data["decision_confidence"] > 70
 
 
 def test_audit_weak_safety_buffer_reduces(client: TestClient) -> None:

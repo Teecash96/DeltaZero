@@ -8,7 +8,12 @@ from app.config import SUPPORTED_ASSETS, ScenarioType, StrategyAction, StrategyH
 
 Asset = Literal["SOL", "ETH"]
 RiskTolerance = Literal["low", "medium", "high"]
-TargetStyle = Literal["neutral_yield"]
+TargetStyle = Literal[
+    "neutral_yield",
+    "conservative_income",
+    "aggressive_carry",
+    "capital_preservation",
+]
 
 
 class Metrics(BaseModel):
@@ -88,6 +93,7 @@ class StrategyResponseBase(BaseModel):
     strategy_name: str
     asset: Asset
     strategy_health: StrategyHealth
+    decision_confidence: int = Field(ge=0, le=100)
     metrics: Metrics
     recommendation: Recommendation
     risk_notes: list[str]

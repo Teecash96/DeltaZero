@@ -134,11 +134,22 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
 .assessment-heading { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; }
 .assessment-icon { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid #536945; border-radius: 7px; color: var(--green); font-size: 11px; }
 .decision-eyebrow { margin: 0; color: var(--green); font-size: 10px; font-weight: 750; letter-spacing: .17em; text-transform: uppercase; }
+.decision-summary-row { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 16px; align-items: start; }
+.decision-confidence { min-width: 0; padding: 17px; border: 1px solid #334035; border-radius: 12px; background: #0f1510; }
+.decision-confidence strong { display: block; color: var(--green); font: 34px var(--font-geist-mono); letter-spacing: -.05em; }
+.decision-confidence p { margin: 7px 0 0; color: #879289; font-size: 11px; line-height: 1.5; }
 .decision-label { display: block; margin-bottom: 10px; color: #bac4bc; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
 .health-value, .action-value { display: inline-flex; align-items: center; width: fit-content; border-radius: 7px; font-family: var(--font-geist-mono); font-weight: 780; letter-spacing: .08em; text-transform: uppercase; }
 .action-value { min-height: 58px; padding: 0 22px; font-size: 29px; }
 .assessment-main h2 { max-width: 650px; margin: 18px 0 0; color: #f1f5f2; font-size: 20px; font-weight: 610; letter-spacing: -.018em; line-height: 1.45; }
 .recommendation-reason { max-width: 680px; margin: 14px 0 0; color: #aeb8b0; font-size: 13px; line-height: 1.65; }
+.assessment-signals { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+.signal-chip { min-height: 32px; padding: 0 10px 0 8px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #3a453d; border-radius: 999px; color: #d8dfd9; font-size: 10px; font-weight: 650; letter-spacing: .04em; text-transform: none; background: #101611; }
+.signal-chip b { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 999px; font-size: 9px; }
+.signal-positive { border-color: #485e43; background: rgba(185,246,90,.05); }
+.signal-positive b { color: #18220f; background: var(--green); }
+.signal-warning { border-color: #6b5a31; background: rgba(244,206,105,.05); }
+.signal-warning b { color: #2a210d; background: var(--warning); }
 .health-context { padding: 20px 30px; display: grid; grid-template-columns: 190px minmax(0, 1fr); align-items: center; gap: 25px; border-top: 1px solid #334035; background: #101611; }
 .health-context .decision-label { margin-bottom: 8px; }
 .health-value { min-height: 30px; padding: 0 9px; font-size: 10px; }
@@ -163,9 +174,12 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
 .safety-score span { min-width: 72px; padding: 8px 10px; border-radius: 6px; text-align: center; font: 750 10px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
 .safety-strong { border-color: #557047; }
 .safety-strong .safety-score span { color: #18220f; background: var(--green); }
-.safety-watch { border-color: #6b5a31; }
-.safety-watch .safety-score strong { color: var(--warning); }
-.safety-watch .safety-score span { color: #251f0d; background: var(--warning); }
+.safety-healthy { border-color: #5b7347; }
+.safety-healthy .safety-score strong { color: #c7e06d; }
+.safety-healthy .safety-score span { color: #18220f; background: #c7e06d; }
+.safety-acceptable { border-color: #6b5a31; }
+.safety-acceptable .safety-score strong { color: var(--warning); }
+.safety-acceptable .safety-score span { color: #251f0d; background: var(--warning); }
 .safety-weak { border-color: #74413e; }
 .safety-weak .safety-score strong { color: var(--danger); }
 .safety-weak .safety-score span { color: #2b100e; background: var(--danger); }
@@ -173,17 +187,18 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
 .section-label-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 5px 1px 10px; }
 .section-label-row .panel-title { margin: 0; }
 .section-label-row > span { color: #6f7b72; font: 9px var(--font-geist-mono); letter-spacing: .09em; text-transform: uppercase; }
-.metrics-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--line); }
-.metric { min-width: 0; min-height: 125px; padding: 18px; display: flex; flex-direction: column; background: #101611; }
-.metric-primary { grid-column: span 3; min-height: 152px; background: #1b291b; }
-.metric-secondary { grid-column: span 3; }
-.metric-heading { min-height: 28px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.metric label { color: #a7b1a9; font-size: 10px; font-weight: 700; line-height: 1.35; letter-spacing: .04em; text-transform: uppercase; }
-.metric-heading span { color: #86a26e; font: 8px/1.35 var(--font-geist-mono); letter-spacing: .07em; text-align: right; text-transform: uppercase; }
-.metric strong { margin-top: auto; overflow-wrap: anywhere; color: #f4f7f4; font: 20px var(--font-geist-mono); letter-spacing: -.035em; }
-.metric-primary strong { color: var(--green); font-size: 32px; }
+.primary-metrics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--line); }
+.secondary-metrics-grid { margin-top: 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--line); }
+.metric-card { min-width: 0; min-height: 132px; padding: 18px; display: flex; flex-direction: column; background: #101611; }
+.metric-primary { min-height: 166px; background: #1b291b; }
+.metric-secondary { min-height: 126px; }
+.metric-topline { min-height: 28px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.metric-card label { color: #a7b1a9; font-size: 10px; font-weight: 700; line-height: 1.35; letter-spacing: .04em; text-transform: uppercase; }
+.metric-topline span { color: #86a26e; font: 8px/1.35 var(--font-geist-mono); letter-spacing: .07em; text-align: right; text-transform: uppercase; }
+.metric-card strong { margin-top: auto; overflow-wrap: anywhere; color: #f4f7f4; font: 20px var(--font-geist-mono); letter-spacing: -.035em; }
+.metric-primary strong { color: var(--green); font-size: 36px; }
 .metric-secondary strong { font-size: 22px; }
-.metric small { margin-top: 7px; color: #717d73; font-size: 9px; line-height: 1.35; }
+.metric-card small { margin-top: 7px; color: #717d73; font-size: 9px; line-height: 1.35; }
 
 .structure-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .structure-item { min-width: 0; padding: 14px; border: 1px solid #29332b; border-radius: 8px; background: #0e130f; }
@@ -226,8 +241,8 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
 
 @media (max-width: 960px) {
   .workspace-grid { grid-template-columns: 340px minmax(0, 1fr); }
-  .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .metric-primary, .metric-secondary { grid-column: span 1; }
+  .primary-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .secondary-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tool-card { min-height: 290px; padding: 25px; }
   .demo-card { padding: 23px; }
@@ -285,16 +300,21 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
   .summary-grid { grid-template-columns: 1fr; }
   .assessment-main { padding: 24px 21px 23px; }
   .assessment-main h2 { font-size: 18px; }
+  .decision-summary-row { grid-template-columns: 1fr; gap: 12px; }
+  .decision-confidence { padding: 15px; }
+  .decision-confidence strong { font-size: 30px; }
   .health-context { padding: 19px 21px; grid-template-columns: 1fr; gap: 12px; }
   .decision-rationale { padding: 19px 21px 21px; }
+  .assessment-signals { gap: 7px; }
   .safety-hero { min-height: 0; padding: 23px 21px; align-items: flex-start; flex-direction: column; gap: 20px; }
   .safety-score { width: 100%; justify-content: space-between; }
   .safety-score strong { font-size: 40px; }
-  .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .metric { min-height: 120px; padding: 15px; }
-  .metric-heading span { max-width: 72px; }
-  .metric strong { font-size: 18px; }
-  .metric-primary { min-height: 135px; }
+  .primary-metrics-grid { grid-template-columns: 1fr; }
+  .secondary-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric-card { min-height: 120px; padding: 15px; }
+  .metric-topline span { max-width: 72px; }
+  .metric-card strong { font-size: 18px; }
+  .metric-primary { min-height: 146px; }
   .metric-primary strong { font-size: 25px; }
   .structure-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .result-columns { grid-template-columns: 1fr; }
@@ -308,8 +328,10 @@ footer > span { letter-spacing: .13em; text-transform: uppercase; }
   .workspace { width: calc(100% - 28px); }
   .panel { padding: 18px; }
   .decision-card, .json-box { padding: 0; }
-  .metric { padding: 13px; }
-  .metric label { font-size: 9px; }
+  .metric-card { padding: 13px; }
+  .metric-card label { font-size: 9px; }
   .structure-item { padding: 12px; }
   .stat-row div { padding-left: 12px; }
+  .secondary-metrics-grid { grid-template-columns: 1fr; }
+  .decision-confidence strong { font-size: 27px; }
 }

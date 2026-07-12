@@ -1,9 +1,16 @@
-"""Strategy health, recommendations, and action selection."""
+"""Strategy health, recommendations, confidence, and action selection."""
 
 from dataclasses import dataclass
 from typing import Literal
 
-from app.config import DECISION_PROFILES, DecisionProfile, StrategyAction, StrategyHealth
+from app.config import (
+    BUILDER_STYLE_PROFILES,
+    DECISION_PROFILES,
+    DecisionProfile,
+    StrategyAction,
+    StrategyHealth,
+    TARGET_STYLE_LABELS,
+)
 from app.models.schemas import Metrics, Recommendation
 
 CarryState = Literal["negative", "insufficient", "positive"]
@@ -26,13 +33,53 @@ class DecisionContext:
     capital_risk_state: CapitalRiskState
 
 
+def _clamp(value: float, lower: float = 0.0, upper: float = 1.0) -> float:
+    return max(lower, min(upper, value))
+
+
+def builder_profile_for(risk_tolerance: str, target_style: str) -> DecisionProfile:
+    """Resolve a builder profile from the chosen target style and risk band."""
+    profile = BUILDER_STYLE_PROFILES[target_style]
+
+    if risk_tolerance == "low":
+        return DecisionProfile(
+            target_hedge_ratio=min(0.995, profile.target_hedge_ratio + 0.005),
+            collateral_reserve_pct=min(0.48, profile.collateral_reserve_pct + 0.02),
+            hedge_drift_warning_pct=max(2.5, profile.hedge_drift_warning_pct - 1.0),
+            hedge_drift_critical_pct=max(5.0, profile.hedge_drift_critical_pct - 1.5),
+            safety_buffer_warning=min(90.0, profile.safety_buffer_warning + 4.0),
+            safety_buffer_critical=min(80.0, profile.safety_buffer_critical + 3.0),
+            min_net_carry_apy_for_open=max(0.5, profile.min_net_carry_apy_for_open + 0.5),
+            capital_risk_warning_pct=max(8.0, profile.capital_risk_warning_pct - 2.0),
+            capital_risk_critical_pct=max(12.0, profile.capital_risk_critical_pct - 3.0),
+            style_label=profile.style_label,
+        )
+
+    if risk_tolerance == "high":
+        return DecisionProfile(
+            target_hedge_ratio=max(0.9, profile.target_hedge_ratio - 0.005),
+            collateral_reserve_pct=max(0.16, profile.collateral_reserve_pct - 0.02),
+            hedge_drift_warning_pct=profile.hedge_drift_warning_pct + 1.0,
+            hedge_drift_critical_pct=profile.hedge_drift_critical_pct + 2.0,
+            safety_buffer_warning=max(45.0, profile.safety_buffer_warning - 4.0),
+            safety_buffer_critical=max(30.0, profile.safety_buffer_critical - 3.0),
+            min_net_carry_apy_for_open=max(0.25, profile.min_net_carry_apy_for_open - 0.25),
+            capital_risk_warning_pct=profile.capital_risk_warning_pct + 2.0,
+            capital_risk_critical_pct=profile.capital_risk_critical_pct + 3.0,
+            style_label=profile.style_label,
+        )
+
+    return profile
+
+
 def evaluate_decision_context(
     metrics: Metrics,
     risk_tolerance: str,
     capital_base_usd: float,
+    profile: DecisionProfile | None = None,
 ) -> DecisionContext:
     """Evaluate all decision states once and reuse them everywhere."""
-    profile = DECISION_PROFILES[risk_tolerance]
+    profile = profile or DECISION_PROFILES[risk_tolerance]
 
     if metrics.estimated_net_carry_apy < 0:
         carry_state: CarryState = "negative"
@@ -100,15 +147,100 @@ def assess_strategy_health(context: DecisionContext) -> StrategyHealth:
     return "healthy"
 
 
-def _severe_condition_count(context: DecisionContext) -> int:
-    return sum(
-        [
-            context.carry_state == "negative",
-            context.hedge_state == "severe",
-            context.safety_buffer_state == "weak",
-            context.capital_risk_state == "severe",
-        ]
+def _carry_strength(context: DecisionContext) -> float:
+    carry = context.metrics.estimated_net_carry_apy
+    threshold = context.profile.min_net_carry_apy_for_open
+    if context.carry_state == "positive":
+        return _clamp((carry - threshold) / max(threshold, 1.0))
+    if context.carry_state == "insufficient":
+        return _clamp((threshold - carry) / max(threshold, 1.0))
+    return _clamp(abs(carry) / max(threshold, 1.0))
+
+
+def _hedge_strength(context: DecisionContext) -> float:
+    drift = context.metrics.hedge_drift_pct
+    warning = context.profile.hedge_drift_warning_pct
+    critical = context.profile.hedge_drift_critical_pct
+    if context.hedge_state == "aligned":
+        return _clamp((warning - drift) / max(warning, 1.0))
+    if context.hedge_state == "watch":
+        return _clamp((drift - warning) / max(critical - warning, 1.0))
+    return _clamp((drift - critical) / max(critical, 1.0))
+
+
+def _safety_strength(context: DecisionContext) -> float:
+    score = context.metrics.safety_buffer_score
+    warning = context.profile.safety_buffer_warning
+    critical = context.profile.safety_buffer_critical
+    if context.safety_buffer_state == "strong":
+        return _clamp((score - warning) / max(100.0 - warning, 1.0))
+    if context.safety_buffer_state == "watch":
+        return _clamp((score - critical) / max(warning - critical, 1.0))
+    return _clamp((critical - score) / max(critical, 1.0))
+
+
+def _capital_strength(context: DecisionContext) -> float:
+    capital_pct = (
+        (context.metrics.capital_at_risk_proxy / context.capital_base_usd) * 100.0
+        if context.capital_base_usd > 0
+        else 0.0
     )
+    warning = context.profile.capital_risk_warning_pct
+    critical = context.profile.capital_risk_critical_pct
+    if context.capital_risk_state == "manageable":
+        return _clamp((warning - capital_pct) / max(warning, 1.0))
+    if context.capital_risk_state == "elevated":
+        return _clamp((capital_pct - warning) / max(critical - warning, 1.0))
+    return _clamp((capital_pct - critical) / max(critical, 1.0))
+
+
+def calculate_decision_confidence(context: DecisionContext, recommendation: Recommendation) -> int:
+    """Score certainty from threshold distance, agreement, and borderline states.
+
+    Confidence reflects how clearly the current metrics support the selected action.
+    It is deterministic and uses the already evaluated decision context only.
+    """
+    carry = _carry_strength(context)
+    hedge = _hedge_strength(context)
+    safety = _safety_strength(context)
+    capital = _capital_strength(context)
+
+    if recommendation.action in {"OPEN", "HOLD"}:
+        relevant_strengths = [
+            carry if context.carry_state == "positive" else 0.0,
+            hedge if context.hedge_state == "aligned" else 0.0,
+            safety if context.safety_buffer_state == "strong" else 0.0,
+            capital if context.capital_risk_state == "manageable" else 0.0,
+        ]
+    elif recommendation.action == "REBALANCE":
+        relevant_strengths = [
+            hedge if context.hedge_state != "aligned" else 0.0,
+            carry if context.carry_state == "positive" else 0.0,
+            safety if context.safety_buffer_state == "strong" else 0.0,
+            capital if context.capital_risk_state == "manageable" else 0.0,
+        ]
+    else:
+        relevant_strengths = [
+            carry if context.carry_state != "positive" else 0.0,
+            hedge if context.hedge_state != "aligned" else 0.0,
+            safety if context.safety_buffer_state != "strong" else 0.0,
+            capital if context.capital_risk_state != "manageable" else 0.0,
+        ]
+
+    active_strengths = [strength for strength in relevant_strengths if strength > 0]
+    if not active_strengths:
+        active_strengths = [0.0]
+
+    strongest = max(active_strengths)
+    average_strength = sum(active_strengths) / len(active_strengths)
+    borderline_count = sum(0.35 <= strength <= 0.65 for strength in active_strengths)
+    consensus = sum(strength >= 0.65 for strength in active_strengths) / 4.0
+    borderline_ratio = borderline_count / 4.0
+
+    confidence = (
+        (0.55 * strongest) + (0.25 * average_strength) + (0.12 * consensus) + (0.08 * (1.0 - borderline_ratio))
+    ) * 100.0
+    return int(round(_clamp(confidence, 0.0, 100.0)))
 
 
 def _carry_summary(context: DecisionContext) -> str:
@@ -146,10 +278,19 @@ def _capital_risk_summary(context: DecisionContext) -> str:
         else 0.0
     )
     if context.capital_risk_state == "severe":
-        return f"Capital at risk proxy is {capital_risk:.1f} ({capital_pct:.1f}% of deployed capital) — reduce size or add collateral."
+        return (
+            f"Capital at risk proxy is {capital_risk:.1f} "
+            f"({capital_pct:.1f}% of deployed capital) — reduce size or add collateral."
+        )
     if context.capital_risk_state == "elevated":
-        return f"Capital at risk proxy is {capital_risk:.1f} ({capital_pct:.1f}% of deployed capital) — monitor exposure carefully."
-    return f"Capital at risk proxy is {capital_risk:.1f} ({capital_pct:.1f}% of deployed capital) — exposure remains manageable."
+        return (
+            f"Capital at risk proxy is {capital_risk:.1f} "
+            f"({capital_pct:.1f}% of deployed capital) — monitor exposure carefully."
+        )
+    return (
+        f"Capital at risk proxy is {capital_risk:.1f} "
+        f"({capital_pct:.1f}% of deployed capital) — exposure remains manageable."
+    )
 
 
 def build_risk_notes(context: DecisionContext) -> list[str]:
@@ -200,8 +341,7 @@ def recommend_for_build(context: DecisionContext) -> Recommendation:
         return Recommendation(
             action="REBALANCE",
             summary=(
-                "Carry is acceptable, but hedge drift is outside tolerance. "
-                "Rebalance the short leg before opening."
+                f"Hedge drift is {context.metrics.hedge_drift_pct:.1f}% — rebalance the short hedge toward the long notional."
             ),
         )
 
@@ -216,7 +356,14 @@ def recommend_for_build(context: DecisionContext) -> Recommendation:
 
 def recommend_for_audit(context: DecisionContext) -> Recommendation:
     """Recommend a management action for an existing strategy."""
-    severe_count = _severe_condition_count(context)
+    severe_count = sum(
+        [
+            context.carry_state == "negative",
+            context.hedge_state == "severe",
+            context.safety_buffer_state == "weak",
+            context.capital_risk_state == "severe",
+        ]
+    )
 
     if severe_count >= 2:
         return Recommendation(
@@ -301,5 +448,5 @@ def actions_for_recommendation(
 
 def strategy_name_for(asset: str, target_style: str = "neutral_yield") -> str:
     """Generate a deterministic strategy name."""
-    style_label = "Neutral Yield Carry" if target_style == "neutral_yield" else target_style
-    return f"{asset} {style_label}"
+    style_label = TARGET_STYLE_LABELS.get(target_style, target_style.replace("_", " ").title())
+    return f"{asset} {style_label} Carry"

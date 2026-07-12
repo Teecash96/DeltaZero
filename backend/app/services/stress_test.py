@@ -7,6 +7,7 @@ from app.services.recommendation import (
     actions_for_recommendation,
     assess_strategy_health,
     build_risk_notes,
+    calculate_decision_confidence,
     evaluate_decision_context,
     recommend_for_audit,
     strategy_name_for,
@@ -103,6 +104,7 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
     recommendation = recommend_for_audit(stressed_context)
     actions = actions_for_recommendation(recommendation, stressed_context)
     risk_notes = build_risk_notes(stressed_context)
+    decision_confidence = calculate_decision_confidence(stressed_context, recommendation)
 
     if stressed_health != base_health:
         risk_notes.insert(
@@ -128,6 +130,7 @@ def stress_test_strategy(request: StressTestRequest) -> StressTestResponse:
         strategy_name=strategy_name_for(request.asset),
         asset=request.asset,
         strategy_health=stressed_health,
+        decision_confidence=decision_confidence,
         metrics=stressed_metrics,
         recommendation=recommendation,
         risk_notes=risk_notes,

@@ -2,6 +2,13 @@
 
 FastAPI backend for pseudo-delta-neutral DeFi risk management.
 
+Supported build target styles:
+
+- `neutral_yield`
+- `conservative_income`
+- `aggressive_carry`
+- `capital_preservation`
+
 ## Requirements
 
 - Python 3.11+
@@ -27,7 +34,7 @@ API docs: http://localhost:8000/docs
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| POST | `/strategy/build` | Build a neutral carry strategy |
+| POST | `/strategy/build` | Build a style-aware neutral carry strategy |
 | POST | `/strategy/audit` | Audit an existing position |
 | POST | `/strategy/stress-test` | Stress test under a scenario |
 | GET | `/health` | Health check |
@@ -41,6 +48,8 @@ pytest -v
 ```
 
 ## Example requests
+
+All strategy responses include a deterministic `decision_confidence` score from 0 to 100.
 
 ### Build
 

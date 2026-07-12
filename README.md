@@ -31,6 +31,7 @@ The project combines a focused Next.js interface with a typed FastAPI service an
 - **Position Auditor** — evaluates an existing position for hedge alignment, carry quality, directional exposure, and collateral support.
 - **Scenario Stress Testing** — applies deterministic `funding_worsens`, `yield_drops`, `price_drop`, or `price_rise` shocks.
 - **Seven core metrics** — hedge ratio, hedge drift, net delta estimate, estimated net carry APY, carry efficiency, Safety Buffer, and capital-at-risk proxy.
+- **Decision confidence** — deterministic certainty score from 0 to 100 for the recommended action.
 - **Actionable recommendations** — returns a strategy health state, primary recommendation, ordered actions where applicable, and risk notes.
 - **Typed API contract** — Pydantic request and response models mirrored by TypeScript interfaces.
 - **Responsive dark interface** — dedicated Builder, Auditor, Stress Test, and Demo workflows with loading, error, and raw JSON states.
@@ -248,7 +249,14 @@ The frontend expects the backend on port `8000` and runs on port `3000`. The bac
 
 ### Builder
 
-`POST /strategy/build` accepts capital, risk tolerance, target style, long yield, short funding, and fee drag. It returns a recommended long notional, short notional, collateral allocation, target hedge ratio, metrics, health, recommendation, and risk notes.
+`POST /strategy/build` accepts capital, risk tolerance, target style, long yield, short funding, and fee drag. It returns a recommended long notional, short notional, collateral allocation, target hedge ratio, metrics, decision confidence, health, recommendation, and risk notes.
+
+Supported target styles:
+
+- `neutral_yield`
+- `conservative_income`
+- `aggressive_carry`
+- `capital_preservation`
 
 ```bash
 curl -X POST http://localhost:8000/strategy/build \
@@ -316,7 +324,7 @@ The current repository is a focused hackathon MVP. Potential next steps, not imp
 - Metrics, health states, and actions are deterministic heuristics rather than forecasts or guarantees.
 - Inputs are supplied manually; there are no live market, exchange, protocol, or blockchain integrations.
 - Only SOL and ETH are accepted.
-- The only target style is `neutral_yield`.
+- Supported target styles are `neutral_yield`, `conservative_income`, `aggressive_carry`, and `capital_preservation`.
 - Stress tests apply one scenario at a time from four supported scenario types.
 - There is no authentication, wallet connection, database, user account, or saved strategy history.
 - The application does not execute or simulate real trades.

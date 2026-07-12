@@ -5,7 +5,12 @@ from typing import Literal
 
 SUPPORTED_ASSETS = ("SOL", "ETH")
 RiskTolerance = Literal["low", "medium", "high"]
-TargetStyle = Literal["neutral_yield"]
+TargetStyle = Literal[
+    "neutral_yield",
+    "conservative_income",
+    "aggressive_carry",
+    "capital_preservation",
+]
 StrategyAction = Literal["OPEN", "WAIT", "HOLD", "REBALANCE", "REDUCE", "CLOSE"]
 StrategyHealth = Literal["healthy", "warning", "critical"]
 ScenarioType = Literal["funding_worsens", "price_drop", "price_rise", "yield_drops"]
@@ -24,6 +29,7 @@ class DecisionProfile:
     min_net_carry_apy_for_open: float
     capital_risk_warning_pct: float
     capital_risk_critical_pct: float
+    style_label: str
 
 SERVICE_NAME = "deltazero"
 
@@ -44,6 +50,7 @@ DECISION_PROFILES: dict[str, DecisionProfile] = {
         min_net_carry_apy_for_open=3.0,
         capital_risk_warning_pct=12.0,
         capital_risk_critical_pct=20.0,
+        style_label="Low Risk",
     ),
     "medium": DecisionProfile(
         target_hedge_ratio=0.96,
@@ -55,6 +62,7 @@ DECISION_PROFILES: dict[str, DecisionProfile] = {
         min_net_carry_apy_for_open=2.0,
         capital_risk_warning_pct=18.0,
         capital_risk_critical_pct=28.0,
+        style_label="Medium Risk",
     ),
     "high": DecisionProfile(
         target_hedge_ratio=0.98,
@@ -66,7 +74,66 @@ DECISION_PROFILES: dict[str, DecisionProfile] = {
         min_net_carry_apy_for_open=1.0,
         capital_risk_warning_pct=22.0,
         capital_risk_critical_pct=32.0,
+        style_label="High Risk",
     ),
 }
 
 MIN_MARGIN_RATIO = 0.10
+
+BUILDER_STYLE_PROFILES: dict[TargetStyle, DecisionProfile] = {
+    "neutral_yield": DecisionProfile(
+        target_hedge_ratio=0.96,
+        collateral_reserve_pct=0.24,
+        hedge_drift_warning_pct=6.0,
+        hedge_drift_critical_pct=12.0,
+        safety_buffer_warning=60.0,
+        safety_buffer_critical=40.0,
+        min_net_carry_apy_for_open=2.0,
+        capital_risk_warning_pct=18.0,
+        capital_risk_critical_pct=28.0,
+        style_label="Neutral Yield",
+    ),
+    "conservative_income": DecisionProfile(
+        target_hedge_ratio=0.985,
+        collateral_reserve_pct=0.34,
+        hedge_drift_warning_pct=4.0,
+        hedge_drift_critical_pct=8.0,
+        safety_buffer_warning=75.0,
+        safety_buffer_critical=58.0,
+        min_net_carry_apy_for_open=1.0,
+        capital_risk_warning_pct=14.0,
+        capital_risk_critical_pct=22.0,
+        style_label="Conservative Income",
+    ),
+    "aggressive_carry": DecisionProfile(
+        target_hedge_ratio=0.94,
+        collateral_reserve_pct=0.22,
+        hedge_drift_warning_pct=7.0,
+        hedge_drift_critical_pct=14.0,
+        safety_buffer_warning=55.0,
+        safety_buffer_critical=38.0,
+        min_net_carry_apy_for_open=3.0,
+        capital_risk_warning_pct=24.0,
+        capital_risk_critical_pct=34.0,
+        style_label="Aggressive Carry",
+    ),
+    "capital_preservation": DecisionProfile(
+        target_hedge_ratio=0.99,
+        collateral_reserve_pct=0.42,
+        hedge_drift_warning_pct=3.0,
+        hedge_drift_critical_pct=6.0,
+        safety_buffer_warning=82.0,
+        safety_buffer_critical=68.0,
+        min_net_carry_apy_for_open=0.5,
+        capital_risk_warning_pct=10.0,
+        capital_risk_critical_pct=18.0,
+        style_label="Capital Preservation",
+    ),
+}
+
+TARGET_STYLE_LABELS: dict[TargetStyle, str] = {
+    "neutral_yield": "Neutral Yield",
+    "conservative_income": "Conservative Income",
+    "aggressive_carry": "Aggressive Carry",
+    "capital_preservation": "Capital Preservation",
+}

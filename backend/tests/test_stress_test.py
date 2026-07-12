@@ -23,6 +23,7 @@ REQUIRED_TOP_LEVEL = {
     "strategy_name",
     "asset",
     "strategy_health",
+    "decision_confidence",
     "metrics",
     "recommendation",
     "risk_notes",
@@ -41,6 +42,7 @@ def test_stress_test_response_shape(client: TestClient) -> None:
     assert set(data.keys()) == REQUIRED_TOP_LEVEL
     assert data["service"] == "deltazero"
     assert data["asset"] == "SOL"
+    assert 0 <= data["decision_confidence"] <= 100
 
 
 def test_stress_test_scenario_result(client: TestClient) -> None:
@@ -60,6 +62,7 @@ def test_stress_test_scenario_result(client: TestClient) -> None:
         "capital_at_risk_proxy",
     }
     assert data["metrics"] == result["stressed_metrics"]
+    assert data["decision_confidence"] >= 40
 
 
 def test_stress_test_funding_worsens_reduces_carry(client: TestClient) -> None:
@@ -100,6 +103,7 @@ def test_stress_test_materially_worsens_recommendation(client: TestClient) -> No
     assert stressed["recommendation"]["action"] in {"WAIT", "REDUCE", "CLOSE"}
     assert stressed["metrics"]["estimated_net_carry_apy"] < 0
     assert "negative" in stressed["recommendation"]["summary"].lower() or "below" in stressed["recommendation"]["summary"].lower()
+    assert stressed["decision_confidence"] > 70
 
 
 def test_stress_test_price_drop_scenario(client: TestClient) -> None:
