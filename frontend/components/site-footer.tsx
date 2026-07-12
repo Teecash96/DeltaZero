@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 const quickLinks = [
-  { label: "Home", href: "#home" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Products", href: "#products" },
-  { label: "Integrations", href: "#integrations" },
-  { label: "Docs", href: "#docs" },
-  { label: "FAQs", href: "#faqs" },
+  { label: "Home", href: "/#home" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Products", href: "/#products" },
+  { label: "Integrations", href: "/#integrations" },
+  { label: "Docs", href: "/#docs" },
+  { label: "FAQs", href: "/#faqs" },
 ];
 
 const externalLinks = [
@@ -19,12 +19,20 @@ export function SiteFooter() {
   return (
     <footer className="site-footer">
       <div className="footer-brand">
-        <Link href="/" className="logo" aria-label="DeltaZero home">
+        <Link href="/" className="logo footer-logo" aria-label="DeltaZero home">
           <span className="logo-mark">Δ</span>
           DELTA<span>ZERO</span>
         </Link>
         <p>AI risk analyst for pseudo delta neutral DeFi strategies. Build. Audit. Stress test.</p>
-        <span>Built by Akanbi Labs</span>
+        <div className="footer-labs">
+          <span className="footer-label">BUILT BY</span>
+          <span className="footer-labs-brand">
+            <span className="footer-labs-icon" aria-hidden="true">
+              ⚗
+            </span>
+            AKANBI LABS
+          </span>
+        </div>
       </div>
 
       <div className="footer-columns">
