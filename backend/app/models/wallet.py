@@ -9,6 +9,7 @@ WalletProtocol = Literal["hyperliquid", "aave", "morpho"]
 WalletStressProfile = Literal["standard", "elevated", "strict"]
 WalletAction = Literal["HOLD", "REBALANCE", "REDUCE", "CLOSE"]
 WalletStrategyHealth = Literal["healthy", "warning", "fragile", "critical"]
+WalletAssessmentStatus = Literal["positions_found", "no_supported_positions", "partial_data", "insufficient_data"]
 WalletDataQuality = Literal["complete", "partial", "insufficient"]
 PositionType = Literal[
     "spot",
@@ -84,16 +85,16 @@ class WalletPortfolioSummary(BaseModel):
 
 
 class WalletRiskMetrics(BaseModel):
-    hedge_ratio: float | None
-    hedge_drift_pct: float | None
-    collateral_health_score: float | None
-    minimum_health_factor: float | None
-    liquidation_proximity_pct: float | None
-    safety_buffer_score: float
-    capital_at_risk_proxy: float
-    estimated_impairment_loss_usd: float
-    estimated_impairment_loss_pct: float
-    post_impairment_equity_usd: float
+    hedge_ratio: float | None = None
+    hedge_drift_pct: float | None = None
+    collateral_health_score: float | None = None
+    minimum_health_factor: float | None = None
+    liquidation_proximity_pct: float | None = None
+    safety_buffer_score: float | None = None
+    capital_at_risk_proxy: float | None = None
+    estimated_impairment_loss_usd: float | None = None
+    estimated_impairment_loss_pct: float | None = None
+    post_impairment_equity_usd: float | None = None
 
 
 class WalletRecommendation(BaseModel):
@@ -113,14 +114,16 @@ class ProtocolError(BaseModel):
 class WalletPortfolioResponse(BaseModel):
     service: str
     wallet_address: str
+    assessment_status: WalletAssessmentStatus
     supported_positions_found: int
     unsupported_positions_found: int
     data_timestamp: str | None
     data_quality: WalletDataQuality
     portfolio_summary: WalletPortfolioSummary
     risk_metrics: WalletRiskMetrics
-    strategy_health: WalletStrategyHealth
-    recommendation: WalletRecommendation
+    strategy_health: WalletStrategyHealth | None
+    decision_confidence: int | None = None
+    recommendation: WalletRecommendation | None = None
     risk_notes: list[str]
     corrective_actions: list[str]
     positions: list[NormalizedPosition]

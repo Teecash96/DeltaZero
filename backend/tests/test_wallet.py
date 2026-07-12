@@ -100,6 +100,7 @@ def test_valid_wallet_request_returns_200(client: TestClient, monkeypatch: pytes
     assert response.status_code == 200
     data = response.json()
     assert data["service"] == "wallet_portfolio_auditor"
+    assert data["assessment_status"] == "positions_found"
     assert data["supported_positions_found"] == 2
     assert 0 <= data["recommendation"]["confidence"] <= 100
 
@@ -264,8 +265,10 @@ def test_one_protocol_fails_while_others_succeed(client: TestClient, monkeypatch
         },
     ).json()
     assert data["data_quality"] == "partial"
+    assert data["assessment_status"] == "partial_data"
     assert data["protocol_errors"]
     assert data["warnings"]
+    assert data["decision_confidence"] < 100
 
 
 def test_partial_data_warning(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -316,6 +319,7 @@ def test_partial_data_warning(client: TestClient, monkeypatch: pytest.MonkeyPatc
         },
     ).json()
     assert data["data_quality"] == "partial"
+    assert data["assessment_status"] == "partial_data"
     assert data["warnings"]
 
 
@@ -370,6 +374,7 @@ def test_healthy_hedged_portfolio_returns_hold(client: TestClient, monkeypatch: 
             "stress_profile": "standard",
         },
     ).json()
+    assert data["assessment_status"] == "positions_found"
     assert data["strategy_health"] == "healthy"
     assert data["recommendation"]["action"] == "HOLD"
 
@@ -425,6 +430,7 @@ def test_poor_hedge_returns_rebalance(client: TestClient, monkeypatch: pytest.Mo
             "stress_profile": "standard",
         },
     ).json()
+    assert data["assessment_status"] == "positions_found"
     assert data["recommendation"]["action"] == "REBALANCE"
     assert data["risk_metrics"]["hedge_drift_pct"] > 0
 
@@ -461,6 +467,7 @@ def test_weak_collateral_returns_reduce(client: TestClient, monkeypatch: pytest.
             "stress_profile": "strict",
         },
     ).json()
+    assert data["assessment_status"] == "positions_found"
     assert data["recommendation"]["action"] == "REDUCE"
 
 
@@ -515,8 +522,72 @@ def test_multiple_severe_conditions_return_close(client: TestClient, monkeypatch
             "stress_profile": "strict",
         },
     ).json()
+    assert data["assessment_status"] == "positions_found"
     assert data["recommendation"]["action"] == "CLOSE"
     assert data["strategy_health"] == "critical"
+
+
+def test_zero_positions_and_successful_adapters_return_no_supported_positions(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(wallet_analyzer, "_select_adapters", lambda networks, protocols: [DummyAdapter("aave", "ethereum", [])])
+    monkeypatch.setattr(
+        wallet_analyzer,
+        "evaluate_decision_context",
+        lambda *args, **kwargs: pytest.fail("decision engine must not run for empty wallets"),
+    )
+    data = client.post(
+        "/wallet/analyze",
+        json={
+            "wallet_address": "0x1234567890abcdef1234567890abcdef12345678",
+            "networks": ["ethereum"],
+            "protocols": ["aave"],
+            "stress_profile": "standard",
+        },
+    ).json()
+    assert data["assessment_status"] == "no_supported_positions"
+    assert data["recommendation"] is None
+    assert data["strategy_health"] is None
+    assert data["decision_confidence"] is None
+    assert data["risk_metrics"]["hedge_ratio"] is None
+    assert data["risk_metrics"]["safety_buffer_score"] is None
+    assert data["risk_metrics"]["capital_at_risk_proxy"] is None
+
+
+def test_zero_positions_and_failed_adapter_return_insufficient_data(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FailingAdapter(DummyAdapter):
+        def fetch_wallet_data(self, wallet_address: str) -> ProtocolSnapshot:  # type: ignore[override]
+            raise RuntimeError("boom")
+
+    monkeypatch.setattr(
+        wallet_analyzer,
+        "_select_adapters",
+        lambda networks, protocols: [FailingAdapter("aave", "ethereum", [])],
+    )
+    monkeypatch.setattr(
+        wallet_analyzer,
+        "evaluate_decision_context",
+        lambda *args, **kwargs: pytest.fail("decision engine must not run for empty wallets"),
+    )
+    data = client.post(
+        "/wallet/analyze",
+        json={
+            "wallet_address": "0x1234567890abcdef1234567890abcdef12345678",
+            "networks": ["ethereum"],
+            "protocols": ["aave"],
+            "stress_profile": "standard",
+        },
+    ).json()
+    assert data["assessment_status"] == "insufficient_data"
+    assert data["recommendation"] is None
+    assert data["strategy_health"] is None
+    assert data["decision_confidence"] is None
+    assert data["protocol_errors"]
+    assert any("unavailable" in warning.lower() for warning in data["warnings"])
 
 
 def test_no_missing_data_is_not_silently_zero_risk(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -530,9 +601,10 @@ def test_no_missing_data_is_not_silently_zero_risk(client: TestClient, monkeypat
             "stress_profile": "standard",
         },
     ).json()
+    assert data["assessment_status"] == "no_supported_positions"
     assert data["data_quality"] == "insufficient"
-    assert data["strategy_health"] == "critical"
-    assert data["recommendation"]["action"] != "HOLD"
+    assert data["strategy_health"] is None
+    assert data["recommendation"] is None
 
 
 def test_decision_confidence_remains_bounded(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:

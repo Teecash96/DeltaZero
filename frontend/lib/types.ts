@@ -24,6 +24,11 @@ export type WalletStressProfile = "standard" | "elevated" | "strict";
 export type WalletAction = "HOLD" | "REBALANCE" | "REDUCE" | "CLOSE";
 export type WalletStrategyHealth = "healthy" | "warning" | "fragile" | "critical";
 export type WalletDataQuality = "complete" | "partial" | "insufficient";
+export type WalletAssessmentStatus =
+  | "positions_found"
+  | "no_supported_positions"
+  | "partial_data"
+  | "insufficient_data";
 export type PositionType =
   | "spot"
   | "lending_supply"
@@ -212,11 +217,11 @@ export interface WalletRiskMetrics {
   collateral_health_score: number | null;
   minimum_health_factor: number | null;
   liquidation_proximity_pct: number | null;
-  safety_buffer_score: number;
-  capital_at_risk_proxy: number;
-  estimated_impairment_loss_usd: number;
-  estimated_impairment_loss_pct: number;
-  post_impairment_equity_usd: number;
+  safety_buffer_score: number | null;
+  capital_at_risk_proxy: number | null;
+  estimated_impairment_loss_usd: number | null;
+  estimated_impairment_loss_pct: number | null;
+  post_impairment_equity_usd: number | null;
 }
 
 export interface WalletRecommendation {
@@ -236,14 +241,16 @@ export interface ProtocolError {
 export interface WalletPortfolioResponse {
   service: string;
   wallet_address: string;
+  assessment_status: WalletAssessmentStatus;
   supported_positions_found: number;
   unsupported_positions_found: number;
   data_timestamp: string | null;
   data_quality: WalletDataQuality;
   portfolio_summary: WalletPortfolioSummary;
   risk_metrics: WalletRiskMetrics;
-  strategy_health: WalletStrategyHealth;
-  recommendation: WalletRecommendation;
+  strategy_health: WalletStrategyHealth | null;
+  decision_confidence: number | null;
+  recommendation: WalletRecommendation | null;
   risk_notes: string[];
   corrective_actions: string[];
   positions: NormalizedPosition[];

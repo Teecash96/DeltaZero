@@ -66,6 +66,7 @@ function toggleValue<T extends string>(items: T[], value: T): T[] {
 }
 
 function walletHealthCopy(health: WalletPortfolioResponse["strategy_health"]) {
+  if (!health) return "No strategy health is available for this wallet assessment.";
   switch (health) {
     case "healthy":
       return "Current risk posture is within acceptable limits.";
@@ -84,7 +85,7 @@ function WalletAssessment({
 }: {
   result: WalletPortfolioResponse;
 }) {
-  const action = result.recommendation.action;
+  const action = result.recommendation?.action ?? "REBALANCE";
   const actionCopy =
     action === "HOLD"
       ? "The portfolio currently meets the read-only risk criteria."
@@ -95,11 +96,13 @@ function WalletAssessment({
           : "The wallet has multiple severe conditions and should be de-risked.";
 
   const incomplete = result.data_quality !== "complete";
+  const safetyBufferScore = result.risk_metrics.safety_buffer_score;
+  const impairmentLossPct = result.risk_metrics.estimated_impairment_loss_pct;
   const signals = [
     { label: "Supported positions", positive: result.supported_positions_found > 0 },
     { label: "Partial data", positive: result.data_quality === "partial" },
-    { label: "Collateral healthy", positive: result.risk_metrics.safety_buffer_score >= 60 },
-    { label: "Impairment contained", positive: result.risk_metrics.estimated_impairment_loss_pct < 10 },
+    { label: "Collateral healthy", positive: (safetyBufferScore ?? 0) >= 60 },
+    { label: "Impairment contained", positive: (impairmentLossPct ?? 100) < 10 },
   ];
 
   return (
@@ -118,12 +121,12 @@ function WalletAssessment({
           </div>
           <div className="decision-confidence">
             <span className="decision-label">Decision Confidence</span>
-            <strong>{result.recommendation.confidence}%</strong>
+            <strong>{result.decision_confidence === null ? "—" : `${result.decision_confidence}%`}</strong>
             <p>Confidence reflects how clearly the current metrics support the recommended action.</p>
           </div>
         </div>
         <h2>{actionCopy}</h2>
-        <p className="recommendation-reason">{result.recommendation.summary}</p>
+        {result.recommendation ? <p className="recommendation-reason">{result.recommendation.summary}</p> : null}
         <div className="assessment-signals" aria-label="Portfolio signals">
           {signals.map((signal) => (
             <span key={signal.label} className={`signal-chip ${metricStateClass(signal.positive)}`}>
@@ -142,7 +145,9 @@ function WalletAssessment({
       <div className="health-context">
         <div>
           <span className="decision-label">Strategy Health</span>
-          <strong className={`health-value health-${result.strategy_health}`}>{result.strategy_health}</strong>
+          <strong className={`health-value ${result.strategy_health ? `health-${result.strategy_health}` : ""}`}>
+            {result.strategy_health ?? "—"}
+          </strong>
         </div>
         <p>{walletHealthCopy(result.strategy_health)}</p>
       </div>
@@ -159,35 +164,28 @@ function WalletAssessment({
 }
 
 function walletStatusMessage(result: WalletPortfolioResponse) {
-  if (result.data_quality === "insufficient" || result.supported_positions_found === 0) {
+  if (result.assessment_status === "no_supported_positions") {
     return {
       title: "No supported positions found",
-      body: "DeltaZero could not identify supported public positions for the selected networks and protocols.",
-      tone: "warning" as const,
+      body: "DeltaZero checked the selected networks and protocols but found no supported open positions for this wallet.",
     };
   }
-  if (
-    result.protocol_errors.some((error) => error.message.toLowerCase().includes("rpc")) ||
-    result.warnings.some((warning) => warning.toLowerCase().includes("rpc"))
-  ) {
+  if (result.assessment_status === "insufficient_data") {
     return {
-      title: "RPC unavailable",
-      body: "One or more protocol views could not be reached through the configured read-only endpoints.",
-      tone: "warning" as const,
+      title: "Assessment incomplete",
+      body: "DeltaZero could not complete the wallet assessment because one or more selected data sources were unavailable.",
     };
   }
-  if (result.data_quality === "partial" || result.protocol_errors.length > 0) {
+  if (result.assessment_status === "partial_data") {
     return {
-      title: "Partial protocol failure",
-      body: "One or more protocol adapters returned incomplete data. The report is useful, but not exhaustive.",
-      tone: "warning" as const,
+      title: "Partial portfolio coverage",
+      body: "This assessment includes only the supported positions successfully retrieved. Do not treat it as a complete wallet inventory.",
     };
   }
   if (result.unsupported_positions_found > 0) {
     return {
       title: "Unsupported positions found",
       body: "DeltaZero detected additional positions that are outside the currently supported protocol set.",
-      tone: "warning" as const,
     };
   }
   return null;
@@ -223,31 +221,41 @@ function WalletMetrics({ result }: { result: WalletPortfolioResponse }) {
   const currentValue = usd(summary.current_position_value_usd);
   const impairment = usd(risk.estimated_impairment_loss_usd);
   const postImpairment = usd(risk.post_impairment_equity_usd);
+  const safetyBuffer = risk.safety_buffer_score;
+  const estimatedImpairmentPct = risk.estimated_impairment_loss_pct;
+  const hedgeRatio = risk.hedge_ratio;
+  const hedgeDrift = risk.hedge_drift_pct;
+  const collateralHealth = risk.collateral_health_score;
+  const liquidationProximity = risk.liquidation_proximity_pct;
+  const capitalAtRisk = risk.capital_at_risk_proxy;
 
   const primary = [
     {
       label: "Safety Buffer",
-      value: risk.safety_buffer_score.toFixed(1),
-      helper: `Collateral resilience · ${risk.safety_buffer_score >= 70 ? "Healthy" : risk.safety_buffer_score >= 60 ? "Acceptable" : "Weak"}`,
-      state: risk.safety_buffer_score >= 60,
+      value: safetyBuffer === null ? "—" : safetyBuffer.toFixed(1),
+      helper:
+        safetyBuffer === null
+          ? "No supported positions found"
+          : `Collateral resilience · ${safetyBuffer >= 70 ? "Healthy" : safetyBuffer >= 60 ? "Acceptable" : "Weak"}`,
+      state: (safetyBuffer ?? 0) >= 60,
     },
     {
       label: "Estimated Impairment Loss",
       value: impairment,
-      helper: `${percent(risk.estimated_impairment_loss_pct)} of pre-stress equity`,
-      state: risk.estimated_impairment_loss_pct < 10,
+      helper: estimatedImpairmentPct === null ? "No supported positions found" : `${percent(estimatedImpairmentPct)} of pre-stress equity`,
+      state: (estimatedImpairmentPct ?? 100) < 10,
     },
     {
       label: "Post-Impairment Equity",
       value: postImpairment,
-      helper: risk.post_impairment_equity_usd > 0 ? "Equity remains above zero" : "Equity is critically weak",
-      state: risk.post_impairment_equity_usd > 0,
+      helper: postImpairment === "—" ? "No supported positions found" : (risk.post_impairment_equity_usd ?? 0) > 0 ? "Equity remains above zero" : "Equity is critically weak",
+      state: (risk.post_impairment_equity_usd ?? 0) > 0,
     },
     {
       label: "Hedge Ratio",
-      value: risk.hedge_ratio === null ? "—" : risk.hedge_ratio.toFixed(3),
-      helper: risk.hedge_ratio === null ? "No supported hedge data" : `Drift ${percent(risk.hedge_drift_pct)}`,
-      state: (risk.hedge_drift_pct ?? 100) <= 8,
+      value: hedgeRatio === null ? "—" : hedgeRatio.toFixed(3),
+      helper: hedgeRatio === null ? "No supported hedge data" : `Drift ${percent(hedgeDrift)}`,
+      state: (hedgeDrift ?? 100) <= 8,
     },
   ];
 
@@ -284,21 +292,27 @@ function WalletMetrics({ result }: { result: WalletPortfolioResponse }) {
     },
     {
       label: "Collateral health",
-      value: risk.collateral_health_score === null ? "—" : risk.collateral_health_score.toFixed(1),
+      value: collateralHealth === null ? "—" : collateralHealth.toFixed(1),
       helper: risk.minimum_health_factor === null ? "No debt or collateral data" : `Min HF ${risk.minimum_health_factor.toFixed(2)}`,
-      state: (risk.collateral_health_score ?? 0) >= 60,
+      state: (collateralHealth ?? 0) >= 60,
     },
     {
       label: "Liquidation proximity",
-      value: percent(risk.liquidation_proximity_pct),
-      helper: risk.liquidation_proximity_pct === null ? "Health factor unavailable" : "Closer to liquidation is worse",
-      state: (risk.liquidation_proximity_pct ?? 100) <= 35,
+      value: percent(liquidationProximity),
+      helper: liquidationProximity === null ? "Health factor unavailable" : "Closer to liquidation is worse",
+      state: (liquidationProximity ?? 100) <= 35,
     },
     {
       label: "Funding exposure",
       value: summary.estimated_funding_exposure_apy === null ? "—" : `${summary.estimated_funding_exposure_apy.toFixed(1)}%`,
       helper: summary.estimated_funding_exposure_apy === null ? "Not enough data" : "Estimated carry/funding bias",
       state: (summary.estimated_funding_exposure_apy ?? 0) >= 0,
+    },
+    {
+      label: "Capital at risk",
+      value: capitalAtRisk === null ? "—" : usd(capitalAtRisk),
+      helper: capitalAtRisk === null ? "No supported positions found" : "Read-only proxy from supported positions",
+      state: (capitalAtRisk ?? 0) < 2000,
     },
   ];
 
@@ -501,8 +515,7 @@ export function WalletPortfolioWorkspace() {
   const [loading, setLoading] = useState(false);
   const statusMessage = result ? walletStatusMessage(result) : null;
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
+  async function runAnalysis() {
     setLoading(true);
     setError(null);
     try {
@@ -515,6 +528,16 @@ export function WalletPortfolioWorkspace() {
       setLoading(false);
     }
   }
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    await runAnalysis();
+  }
+
+  const successfulProtocols = result
+    ? value.protocols.filter((protocol) => !result.protocol_errors.some((error) => error.protocol === protocol))
+    : [];
+  const failedProtocols = result ? result.protocol_errors.map((error) => `${error.protocol} · ${error.network}`) : [];
 
   return (
     <div className="workspace">
@@ -557,79 +580,149 @@ export function WalletPortfolioWorkspace() {
             </div>
           ) : result ? (
             <div className="result-stack">
-              {statusMessage ? (
-                <section className="panel wallet-status-banner">
-                  <div>
-                    <span className="decision-label">{statusMessage.title}</span>
-                    <p>{statusMessage.body}</p>
+              {result.assessment_status === "no_supported_positions" ? (
+                <section className="panel wallet-empty-card wallet-portfolio-status-card">
+                  <span className="decision-label">PORTFOLIO STATUS</span>
+                  <h2>NO SUPPORTED POSITIONS</h2>
+                  <p>
+                    DeltaZero checked the selected networks and protocols but found no supported open positions for this
+                    wallet.
+                  </p>
+                  <div className="wallet-empty-meta">
+                    {[
+                      ["Wallet address", result.wallet_address],
+                      ["Protocols checked", value.protocols.join(", ")],
+                      ["Networks checked", value.networks.join(", ")],
+                      ["Supported positions", String(result.supported_positions_found)],
+                      ["Assessment time", result.data_timestamp ?? "—"],
+                    ].map(([label, text]) => (
+                      <div key={label}>
+                        <label>{label}</label>
+                        <strong>{text}</strong>
+                      </div>
+                    ))}
                   </div>
+                  <div className="wallet-empty-action">Try another wallet or select different networks and protocols.</div>
                 </section>
-              ) : null}
-              <div className="report-breadcrumb" aria-label="Report location">
-                <span>Wallet Auditor</span>
-                <i aria-hidden="true">/</i>
-                <strong>PRO Preview</strong>
-              </div>
-              <section className="panel summary-card">
-                <div className="summary-heading">
-                  <div>
-                    <span className="summary-meta">Analysis complete · {result.service}</span>
-                    <h2>AI Portfolio Assessment</h2>
-                  </div>
-                  <span className="summary-check">Read only</span>
-                </div>
-                <div className="summary-grid wallet-summary-grid">
-                  {[
-                    ["Wallet", result.wallet_address],
-                    ["Data quality", result.data_quality],
-                    ["Supported positions", String(result.supported_positions_found)],
-                    ["Unsupported positions", String(result.unsupported_positions_found)],
-                    ["Protocol warnings", String(result.protocol_errors.length)],
-                    ["Assessment time", result.data_timestamp ?? "—"],
-                  ].map(([label, value]) => (
-                    <div key={label}>
-                      <label>{label}</label>
-                      <strong>{value}</strong>
+              ) : result.assessment_status === "insufficient_data" ? (
+                <section className="panel wallet-empty-card wallet-incomplete-card">
+                  <span className="decision-label">ASSESSMENT INCOMPLETE</span>
+                  <h2>
+                    DeltaZero could not verify whether this wallet holds supported positions because one or more data
+                    sources failed.
+                  </h2>
+                  <p>
+                    DeltaZero could not complete the wallet assessment because one or more selected data sources were
+                    unavailable.
+                  </p>
+                  <div className="wallet-empty-meta">
+                    <div>
+                      <label>Successful protocol checks</label>
+                      <strong>{successfulProtocols.length > 0 ? successfulProtocols.join(", ") : "None"}</strong>
                     </div>
-                  ))}
-                </div>
-              </section>
-              <WalletAssessment result={result} />
-              <section className={`panel safety-hero ${result.risk_metrics.safety_buffer_score >= 80 ? "safety-strong" : result.risk_metrics.safety_buffer_score >= 70 ? "safety-healthy" : result.risk_metrics.safety_buffer_score >= 60 ? "safety-acceptable" : "safety-weak"}`}>
-                <div>
-                  <span className="safety-kicker">Primary risk signal</span>
-                  <h2>Safety Buffer</h2>
-                  <p>Collateral resilience score</p>
-                </div>
-                <div className="safety-score">
-                  <strong>{result.risk_metrics.safety_buffer_score.toFixed(1)}</strong>
-                  <span>{result.risk_metrics.safety_buffer_score >= 80 ? "Strong" : result.risk_metrics.safety_buffer_score >= 70 ? "Healthy" : result.risk_metrics.safety_buffer_score >= 60 ? "Acceptable" : "Weak"}</span>
-                </div>
-              </section>
-              <WalletMetrics result={result} />
-              <section className="panel wallet-actions-panel">
-                <h2 className="panel-title">Corrective actions</h2>
-                <div className="actions-row">
-                  {result.corrective_actions.map((action, index) => (
-                    <span key={action}>
-                      <b>{index + 1}</b>
-                      {action}
-                    </span>
-                  ))}
-                </div>
-              </section>
-              <PositionList positions={result.positions} />
-              <ProtocolWarnings protocolErrors={result.protocol_errors} warnings={result.warnings} />
-              <details className="panel json-box">
-                <summary>
-                  <span>
-                    <b>Raw JSON</b>
-                    <small>Developer payload</small>
-                  </span>
-                  <i aria-hidden="true">⌄</i>
-                </summary>
-                <pre>{JSON.stringify(result, null, 2)}</pre>
-              </details>
+                    <div>
+                      <label>Failed protocol checks</label>
+                      <strong>{failedProtocols.length > 0 ? failedProtocols.join(", ") : "None"}</strong>
+                    </div>
+                    <div>
+                      <label>Warnings</label>
+                      <strong>{result.warnings.length > 0 ? result.warnings.join(" · ") : "None"}</strong>
+                    </div>
+                  </div>
+                  <button className="button button-primary form-submit" type="button" onClick={() => void runAnalysis()}>
+                    Retry Analysis
+                    <span>→</span>
+                  </button>
+                </section>
+              ) : (
+                <>
+                  {statusMessage ? (
+                    <section className="panel wallet-status-banner">
+                      <div>
+                        <span className="decision-label">{statusMessage.title}</span>
+                        <p>{statusMessage.body}</p>
+                      </div>
+                    </section>
+                  ) : null}
+                  {result.assessment_status === "partial_data" ? (
+                    <section className="panel wallet-status-banner wallet-partial-banner">
+                      <div>
+                        <span className="decision-label">PARTIAL PORTFOLIO COVERAGE</span>
+                        <p>
+                          This assessment includes only the supported positions successfully retrieved. Do not treat it
+                          as a complete wallet inventory.
+                        </p>
+                      </div>
+                    </section>
+                  ) : null}
+                  <div className="report-breadcrumb" aria-label="Report location">
+                    <span>Wallet Auditor</span>
+                    <i aria-hidden="true">/</i>
+                    <strong>PRO Preview</strong>
+                  </div>
+                  <section className="panel summary-card">
+                    <div className="summary-heading">
+                      <div>
+                        <span className="summary-meta">Analysis complete · {result.service}</span>
+                        <h2>AI Portfolio Assessment</h2>
+                      </div>
+                      <span className="summary-check">Read only</span>
+                    </div>
+                    <div className="summary-grid wallet-summary-grid">
+                      {[
+                        ["Wallet", result.wallet_address],
+                        ["Data quality", result.data_quality],
+                        ["Assessment status", result.assessment_status],
+                        ["Supported positions", String(result.supported_positions_found)],
+                        ["Unsupported positions", String(result.unsupported_positions_found)],
+                        ["Protocol warnings", String(result.protocol_errors.length)],
+                        ["Assessment time", result.data_timestamp ?? "—"],
+                      ].map(([label, value]) => (
+                        <div key={label}>
+                          <label>{label}</label>
+                          <strong>{value}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                  <WalletAssessment result={result} />
+                  <section className={`panel safety-hero ${((result.risk_metrics.safety_buffer_score ?? 0) >= 80 ? "safety-strong" : (result.risk_metrics.safety_buffer_score ?? 0) >= 70 ? "safety-healthy" : (result.risk_metrics.safety_buffer_score ?? 0) >= 60 ? "safety-acceptable" : "safety-weak")}`}>
+                    <div>
+                      <span className="safety-kicker">Primary risk signal</span>
+                      <h2>Safety Buffer</h2>
+                      <p>Collateral resilience score</p>
+                    </div>
+                    <div className="safety-score">
+                      <strong>{(result.risk_metrics.safety_buffer_score ?? 0).toFixed(1)}</strong>
+                      <span>{(result.risk_metrics.safety_buffer_score ?? 0) >= 80 ? "Strong" : (result.risk_metrics.safety_buffer_score ?? 0) >= 70 ? "Healthy" : (result.risk_metrics.safety_buffer_score ?? 0) >= 60 ? "Acceptable" : "Weak"}</span>
+                    </div>
+                  </section>
+                  <WalletMetrics result={result} />
+                  <section className="panel wallet-actions-panel">
+                    <h2 className="panel-title">Corrective actions</h2>
+                    <div className="actions-row">
+                      {result.corrective_actions.map((action, index) => (
+                        <span key={action}>
+                          <b>{index + 1}</b>
+                          {action}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                  <PositionList positions={result.positions} />
+                  <ProtocolWarnings protocolErrors={result.protocol_errors} warnings={result.warnings} />
+                  <details className="panel json-box">
+                    <summary>
+                      <span>
+                        <b>Raw JSON</b>
+                        <small>Developer payload</small>
+                      </span>
+                      <i aria-hidden="true">⌄</i>
+                    </summary>
+                    <pre>{JSON.stringify(result, null, 2)}</pre>
+                  </details>
+                </>
+              )}
             </div>
           ) : (
             <div className="panel empty-state">

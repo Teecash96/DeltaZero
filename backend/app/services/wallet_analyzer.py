@@ -17,6 +17,7 @@ from app.models.wallet import (
     NormalizedPosition,
     ProtocolError,
     WalletAnalyzeRequest,
+    WalletAssessmentStatus,
     WalletPortfolioResponse,
     WalletPortfolioSummary,
     WalletRecommendation,
@@ -133,11 +134,16 @@ def _impairment_for_cluster(asset: str, cluster: list[NormalizedPosition], stres
     )
 
 
-def _wallet_safety_buffer_score(collateral_value_usd: float, debt_value_usd: float, impairment_pct: float, hedge_drift_pct: float) -> float:
+def _wallet_safety_buffer_score(
+    collateral_value_usd: float,
+    debt_value_usd: float,
+    impairment_pct: float,
+    hedge_drift_pct: float | None,
+) -> float:
     if collateral_value_usd <= 0 and debt_value_usd <= 0:
         return 0.0
     coverage = 100.0 if debt_value_usd <= 0 else min(100.0, (collateral_value_usd / max(debt_value_usd, 1.0)) * 100.0)
-    drift_penalty = min(30.0, hedge_drift_pct * 2.5)
+    drift_penalty = min(30.0, (hedge_drift_pct or 0.0) * 2.5)
     impairment_penalty = min(40.0, impairment_pct * 1.5)
     return round(max(0.0, coverage - drift_penalty - impairment_penalty), 2)
 
@@ -222,6 +228,50 @@ def _wallet_confidence(synthetic_context: DecisionContext, action: str, data_qua
     if impairment_state == "severe":
         confidence = min(100, confidence + 8)
     return confidence
+
+
+def _empty_risk_metrics() -> WalletRiskMetrics:
+    return WalletRiskMetrics()
+
+
+def _build_wallet_response(
+    *,
+    assessment_status: WalletAssessmentStatus,
+    request: WalletAnalyzeRequest,
+    supported_positions_found: int,
+    unsupported_positions_found: int,
+    data_timestamp: str | None,
+    data_quality: str,
+    portfolio_summary: WalletPortfolioSummary,
+    risk_metrics: WalletRiskMetrics,
+    strategy_health: WalletStrategyHealth | None,
+    recommendation: WalletRecommendation | None,
+    decision_confidence: int | None,
+    risk_notes: list[str],
+    corrective_actions: list[str],
+    positions: list[NormalizedPosition],
+    protocol_errors: list[ProtocolError],
+    warnings: list[str],
+) -> WalletPortfolioResponse:
+    return WalletPortfolioResponse(
+        service="wallet_portfolio_auditor",
+        wallet_address=request.wallet_address,
+        assessment_status=assessment_status,
+        supported_positions_found=supported_positions_found,
+        unsupported_positions_found=unsupported_positions_found,
+        data_timestamp=data_timestamp,
+        data_quality=data_quality,  # type: ignore[arg-type]
+        portfolio_summary=portfolio_summary,
+        risk_metrics=risk_metrics,
+        strategy_health=strategy_health,
+        decision_confidence=decision_confidence,
+        recommendation=recommendation,
+        risk_notes=risk_notes,
+        corrective_actions=corrective_actions,
+        positions=positions,
+        protocol_errors=protocol_errors,
+        warnings=warnings,
+    )
 
 
 def _portfolio_summary(
@@ -347,6 +397,45 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     else:
         data_quality = "complete"
 
+    data_timestamp = max(data_timestamps) if data_timestamps else None
+    if supported_positions_found == 0:
+        assessment_status: WalletAssessmentStatus = (
+            "insufficient_data" if protocol_errors else "no_supported_positions"
+        )
+        no_position_warning = (
+            "DeltaZero could not complete the wallet assessment because one or more selected data sources were unavailable."
+            if protocol_errors
+            else "DeltaZero checked the selected networks and protocols but found no supported open positions for this wallet."
+        )
+        warnings.insert(0, no_position_warning)
+        risk_notes = [no_position_warning]
+        corrective_actions = [
+            "Try another wallet or select different networks and protocols."
+        ]
+        if protocol_errors:
+            assessment_warning = "Assessment is incomplete because one or more selected data sources were unavailable."
+        else:
+            assessment_warning = "No supported positions were detected for the selected networks and protocols."
+        warnings.append(assessment_warning)
+        return _build_wallet_response(
+            assessment_status=assessment_status,
+            request=request,
+            supported_positions_found=supported_positions_found,
+            unsupported_positions_found=unsupported_positions_found,
+            data_timestamp=data_timestamp,
+            data_quality=data_quality,  # type: ignore[arg-type]
+            portfolio_summary=portfolio_summary,
+            risk_metrics=_empty_risk_metrics(),
+            strategy_health=None,
+            recommendation=None,
+            decision_confidence=None,
+            risk_notes=risk_notes,
+            corrective_actions=corrective_actions,
+            positions=positions,
+            protocol_errors=protocol_errors,
+            warnings=warnings,
+        )
+
     impairment_total = ImpairmentResult(
         pre_stress_equity_usd=0.0,
         post_stress_equity_usd=0.0,
@@ -414,13 +503,13 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     hedge_ratio = (
         round(portfolio_summary.gross_short_exposure_usd / portfolio_summary.gross_long_exposure_usd, 4)
         if portfolio_summary.gross_long_exposure_usd > 0
-        else 0.0
+        else None
     )
-    hedge_drift_pct = round(abs(1.0 - hedge_ratio) * 100.0, 2)
+    hedge_drift_pct = round(abs(1.0 - hedge_ratio) * 100.0, 2) if hedge_ratio is not None else None
     collateral_health_score = (
         round(min(100.0, (portfolio_summary.collateral_value_usd / max(portfolio_summary.debt_value_usd, 1.0)) * 100.0), 2)
         if portfolio_summary.debt_value_usd > 0
-        else (100.0 if portfolio_summary.collateral_value_usd > 0 else 0.0)
+        else (100.0 if portfolio_summary.collateral_value_usd > 0 else None)
     )
     minimum_health_factor = None
     if positions:
@@ -431,24 +520,29 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     if minimum_health_factor is not None:
         liquidation_proximity_pct = round(max(0.0, min(100.0, (1.5 - minimum_health_factor) / 1.5 * 100.0)), 2)
 
+    hedge_ratio_for_engine = hedge_ratio if hedge_ratio is not None else 0.0
+    hedge_drift_for_engine = hedge_drift_pct if hedge_drift_pct is not None else 100.0
+    safety_buffer_score = _wallet_safety_buffer_score(
+        portfolio_summary.collateral_value_usd,
+        portfolio_summary.debt_value_usd,
+        impairment_total.estimated_impairment_loss_pct,
+        hedge_drift_for_engine,
+    )
+    capital_at_risk_proxy = _wallet_capital_at_risk_proxy(
+        portfolio_summary.net_delta_usd,
+        portfolio_summary.debt_value_usd,
+        impairment_total.estimated_impairment_loss_usd,
+        unsupported_positions_found,
+    )
+
     risk_metrics = WalletRiskMetrics(
         hedge_ratio=hedge_ratio if positions else None,
         hedge_drift_pct=hedge_drift_pct if positions else None,
         collateral_health_score=collateral_health_score if positions else None,
         minimum_health_factor=minimum_health_factor,
         liquidation_proximity_pct=liquidation_proximity_pct,
-        safety_buffer_score=_wallet_safety_buffer_score(
-            portfolio_summary.collateral_value_usd,
-            portfolio_summary.debt_value_usd,
-            impairment_total.estimated_impairment_loss_pct,
-            hedge_drift_pct,
-        ),
-        capital_at_risk_proxy=_wallet_capital_at_risk_proxy(
-            portfolio_summary.net_delta_usd,
-            portfolio_summary.debt_value_usd,
-            impairment_total.estimated_impairment_loss_usd,
-            unsupported_positions_found,
-        ),
+        safety_buffer_score=safety_buffer_score,
+        capital_at_risk_proxy=capital_at_risk_proxy,
         estimated_impairment_loss_usd=impairment_total.estimated_impairment_loss_usd,
         estimated_impairment_loss_pct=impairment_total.estimated_impairment_loss_pct,
         post_impairment_equity_usd=impairment_total.post_impairment_equity_usd,
@@ -466,9 +560,9 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
 
     hedge_state = (
         "severe"
-        if hedge_drift_pct >= profile.hedge_drift_critical_pct
+        if hedge_drift_for_engine >= profile.hedge_drift_critical_pct
         else "watch"
-        if hedge_drift_pct >= profile.hedge_drift_warning_pct
+        if hedge_drift_for_engine >= profile.hedge_drift_warning_pct
         else "aligned"
     )
     safety_state = (
@@ -492,9 +586,9 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     )
     impairment_state = (
         "severe"
-        if risk_metrics.estimated_impairment_loss_pct >= wallet_profile.impairment_critical_pct or risk_metrics.post_impairment_equity_usd <= 0
+        if (risk_metrics.estimated_impairment_loss_pct or 0.0) >= wallet_profile.impairment_critical_pct or (risk_metrics.post_impairment_equity_usd or 0.0) <= 0
         else "material"
-        if risk_metrics.estimated_impairment_loss_pct >= wallet_profile.impairment_warning_pct
+        if (risk_metrics.estimated_impairment_loss_pct or 0.0) >= wallet_profile.impairment_warning_pct
         else "light"
     )
 
@@ -521,17 +615,19 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         data_quality=data_quality_for_health,
         impairment_state=impairment_state,
     )
+    if data_quality == "partial":
+        confidence = max(0, confidence - 12)
     risk_notes = []
     if data_quality == "insufficient":
         risk_notes.append("Assessment is incomplete because no supported wallet positions were found.")
     elif data_quality == "partial":
-        risk_notes.append("Assessment is partial because one or more protocol views returned incomplete data.")
+        risk_notes.append("This assessment includes only the supported positions successfully retrieved.")
     if impairment_state != "light":
         risk_notes.append(
             f"Estimated impairment loss is {risk_metrics.estimated_impairment_loss_pct:.1f}% of pre-stress equity."
         )
     if hedge_state != "aligned":
-        risk_notes.append(f"Hedge drift is {hedge_drift_pct:.1f}% against the current exposure mix.")
+        risk_notes.append(f"Hedge drift is {hedge_drift_for_engine:.1f}% against the current exposure mix.")
     if safety_state != "strong":
         risk_notes.append(f"Safety Buffer score is {risk_metrics.safety_buffer_score:.1f}.")
     if capital_state != "manageable":
@@ -540,6 +636,9 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         )
     if not risk_notes:
         risk_notes.append("Current public wallet positions appear adequately hedged, collateralized, and resilient.")
+
+    if data_quality == "partial":
+        summary = f"{summary} Coverage is incomplete because one or more selected data sources were unavailable."
 
     corrective_actions: list[str] = []
     if action == "HOLD":
@@ -554,10 +653,10 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     if data_quality != "complete":
         corrective_actions.append("Resolve missing protocol data before treating the assessment as final.")
 
-    data_timestamp = max(data_timestamps) if data_timestamps else None
-    result = WalletPortfolioResponse(
-        service="wallet_portfolio_auditor",
-        wallet_address=request.wallet_address,
+    assessment_status = "partial_data" if data_quality == "partial" else "positions_found"
+    result = _build_wallet_response(
+        assessment_status=assessment_status,  # type: ignore[arg-type]
+        request=request,
         supported_positions_found=supported_positions_found,
         unsupported_positions_found=unsupported_positions_found,
         data_timestamp=data_timestamp,
@@ -566,6 +665,7 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         risk_metrics=risk_metrics,
         strategy_health=health,
         recommendation=WalletRecommendation(action=action, summary=summary, confidence=confidence),
+        decision_confidence=confidence,
         risk_notes=risk_notes,
         corrective_actions=corrective_actions,
         positions=positions,
