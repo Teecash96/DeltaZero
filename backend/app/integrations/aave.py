@@ -62,6 +62,7 @@ class AaveAdapter(WalletAdapter):
                 raw_positions=[],
                 market_context={"warning": warnings[-1]},
                 warnings=warnings,
+                discovery_complete=False,
             )
 
         try:
@@ -97,6 +98,7 @@ class AaveAdapter(WalletAdapter):
             raw_positions=raw_positions,
             market_context={"account_data": account_data},
             warnings=warnings,
+            discovery_complete=not warnings,
         )
 
     def normalize_positions(self, snapshot: ProtocolSnapshot) -> list[NormalizedPosition]:

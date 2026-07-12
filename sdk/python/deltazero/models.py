@@ -222,6 +222,22 @@ class WalletStressSummary(TypedDict):
     post_impairment_equity_usd: float
     dominant_risk: str
     summary: str
+    impairment_level: Literal["LOW", "MEDIUM", "HIGH"]
+    impairment_label: Literal["Contained", "Elevated", "Critical"]
+
+
+class WalletRiskContributor(TypedDict):
+    asset: str
+    protocol: WalletProtocol
+    exposure_usd: float
+    risk_contribution_pct: float
+    primary_risk: str
+
+
+class WalletRiskTimelineItem(TypedDict):
+    metric: str
+    state: Literal["healthy", "warning", "critical", "unavailable"]
+    explanation: str
 
 
 class WalletAnalyzeRequest(TypedDict):
@@ -289,6 +305,9 @@ class WalletPortfolioResponse(TypedDict):
     exposure_analysis: WalletExposureAnalysis | None
     portfolio_allocation: list[WalletAllocationItem]
     stress_summary: WalletStressSummary | None
+    largest_risk_contributors: list[WalletRiskContributor]
+    portfolio_observations: list[str]
+    risk_timeline: list[WalletRiskTimelineItem]
     risk_notes: list[str]
     corrective_actions: list[str]
     positions: list[NormalizedPosition]

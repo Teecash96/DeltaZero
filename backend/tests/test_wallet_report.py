@@ -12,6 +12,7 @@ from app.services.wallet_analyzer import _normalise_profile
 from app.services.wallet_report import (
     build_wallet_intelligence_report,
     calculate_exposure_analysis,
+    calculate_largest_risk_contributors,
     calculate_portfolio_allocation,
 )
 
@@ -89,6 +90,7 @@ def report_for(action: str, *, partial: bool = False, missing: bool = False):
         safety_state="weak" if severe else "strong",
         capital_state="severe" if severe else "manageable",
         impairment_state="severe" if severe else "light",
+        impairment_by_asset={"ETH": 3000.0 if severe else 200.0},
     )
 
 
@@ -181,3 +183,36 @@ def test_position_report_fields_remain_nullable() -> None:
     assert item.subaccount_address is None
     assert item.liquidation_price is None
     assert item.health_factor is None
+
+
+def test_largest_risk_contributors_use_exposure_and_impairment() -> None:
+    positions = [position("BTC", "spot", 7000), position("ETH", "spot", 3000)]
+    contributors = calculate_largest_risk_contributors(positions, {"ETH": 4000, "BTC": 0})
+    assert len(contributors) == 2
+    assert contributors[0].risk_contribution_pct == pytest.approx(50.0)
+    assert contributors[1].risk_contribution_pct == pytest.approx(50.0)
+    assert next(item for item in contributors if item.asset == "ETH").primary_risk == "Impairment"
+
+
+def test_portfolio_observations_and_timeline_are_deterministic() -> None:
+    report = report_for("CLOSE")
+    assert 3 <= len(report.portfolio_observations) <= 6
+    assert any("exposure" in observation.lower() for observation in report.portfolio_observations)
+    assert {item.metric for item in report.risk_timeline} >= {"Safety Buffer", "Directional exposure", "Impairment risk"}
+    assert any(item.state == "critical" for item in report.risk_timeline)
+
+
+def test_impairment_badge_matches_evaluated_state() -> None:
+    healthy = report_for("HOLD")
+    severe = report_for("CLOSE")
+    assert (healthy.stress_summary.impairment_level, healthy.stress_summary.impairment_label) == ("LOW", "Contained")
+    assert (severe.stress_summary.impairment_level, severe.stress_summary.impairment_label) == ("HIGH", "Critical")
+
+
+def test_executive_summary_includes_coverage_risk_and_driver() -> None:
+    report = report_for("CLOSE")
+    body = report.executive_summary.body
+    assert "2 live supported positions" in body
+    assert "1 protocol" in body
+    assert "risk level is critical" in body
+    assert "primary risk" in body

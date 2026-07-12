@@ -78,6 +78,7 @@ class MorphoAdapter(WalletAdapter):
             raw_positions=raw_positions,
             market_context=market_context,
             warnings=warnings,
+            discovery_complete=not warnings,
         )
 
     def normalize_positions(self, snapshot: ProtocolSnapshot) -> list[NormalizedPosition]:

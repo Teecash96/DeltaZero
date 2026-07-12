@@ -310,7 +310,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .wallet-clarity-details p, .wallet-clarity-details li { color: #929e95; font-size: 12px; line-height: 1.6; }
 .wallet-executive-summary { padding: 28px; border-color: #415744; background: #162018; }
 .wallet-executive-summary h2 { max-width: 740px; margin: 9px 0 10px; font-size: 25px; letter-spacing: -.035em; }
-.wallet-executive-summary > p { max-width: 780px; margin: 0; color: #b2bdb5; line-height: 1.75; }
+.wallet-executive-summary > p { max-width: 780px; margin: 0; color: #b2bdb5; line-height: 1.75; white-space: pre-line; }
 .wallet-summary-facts { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; }
 .wallet-summary-facts span { padding: 7px 10px; border: 1px solid #334437; border-radius: 999px; color: #b7c1b9; font: 10px var(--font-geist-mono); text-transform: capitalize; }
 .wallet-report-section { min-width: 0; }
@@ -334,6 +334,26 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .wallet-exposure-grid span, .wallet-risk-grid span { color: #909b93; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .wallet-exposure-grid strong, .wallet-risk-grid strong { margin-top: auto; color: #eef4ef; font: 17px var(--font-geist-mono); overflow-wrap: anywhere; }
 .wallet-exposure-grid p, .wallet-risk-grid p { min-height: 29px; margin: 8px 0 0; color: #748077; font-size: 9px; line-height: 1.45; }
+.wallet-risk-grid article > b { margin-top: 8px; color: #dce6de; font: 700 10px var(--font-geist-mono); letter-spacing: .06em; text-transform: uppercase; }
+.wallet-risk-grid article > b i { margin-left: 5px; color: #95a098; font-style: normal; }
+.wallet-impairment-card.impairment-low { box-shadow: inset 3px 0 #58b87a; }
+.wallet-impairment-card.impairment-medium { box-shadow: inset 3px 0 #d7b64a; }
+.wallet-impairment-card.impairment-high { box-shadow: inset 3px 0 #e05b5b; }
+.wallet-contributors-panel, .wallet-observations-panel, .wallet-timeline-panel { border-color: #354438; }
+.wallet-contributors-table { width: 100%; min-width: 660px; border-collapse: collapse; }
+.wallet-contributors-table th, .wallet-contributors-table td { padding: 13px 14px; border-bottom: 1px solid #253128; color: #aeb9b0; font-size: 11px; text-align: left; }
+.wallet-contributors-table th { color: #7f8b82; font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
+.wallet-contributors-table td strong { color: var(--green); font-family: var(--font-geist-mono); }
+.wallet-observations-panel ul { margin: 0; padding: 0; display: grid; gap: 9px; list-style: none; }
+.wallet-observations-panel li { padding: 12px 14px 12px 34px; position: relative; border: 1px solid #29362c; border-radius: 9px; color: #b2bdb5; background: #101611; line-height: 1.55; }
+.wallet-observations-panel li::before { content: "◇"; position: absolute; left: 13px; color: var(--green); }
+.wallet-timeline-panel > div { display: grid; gap: 1px; border: 1px solid #2b382e; border-radius: 11px; overflow: hidden; background: #2b382e; }
+.wallet-timeline-panel article { min-width: 0; padding: 14px 16px; display: grid; grid-template-columns: 10px 150px 90px minmax(0, 1fr); align-items: center; gap: 12px; background: #101611; }
+.wallet-timeline-panel article strong { color: #e4ebe5; font-size: 12px; }
+.wallet-timeline-panel article b { color: #9aa59d; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.wallet-timeline-panel article p { margin: 0; color: #89958c; font-size: 11px; line-height: 1.45; }
+.timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: #69736b; }
+.timeline-healthy { background: #58b87a; }.timeline-warning { background: #d7b64a; }.timeline-critical { background: #e05b5b; }
 .wallet-allocation-panel, .wallet-plan-panel, .wallet-positions-panel, .wallet-stress-panel { border-color: #354438; }
 .wallet-allocation-list { display: grid; gap: 15px; }
 .wallet-allocation-row > div:first-child { margin-bottom: 7px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -609,6 +629,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .wallet-executive-summary { padding: 23px 21px; }
   .wallet-executive-summary h2 { font-size: 21px; }
   .wallet-allocation-row > div:first-child { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .wallet-timeline-panel article { grid-template-columns: 10px 1fr auto; gap: 9px; }
+  .wallet-timeline-panel article p { grid-column: 2 / -1; }
   .integration-group-head { align-items: flex-start; flex-direction: column; gap: 6px; }
 }
 

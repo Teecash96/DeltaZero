@@ -281,6 +281,7 @@ def test_partial_data_warning(client: TestClient, monkeypatch: pytest.MonkeyPatc
                 raw_positions=[position.model_dump() for position in self._positions],
                 market_context={},
                 warnings=["RPC unavailable"],
+                discovery_complete=False,
             )
 
     positions = [
@@ -321,6 +322,41 @@ def test_partial_data_warning(client: TestClient, monkeypatch: pytest.MonkeyPatc
     assert data["data_quality"] == "partial"
     assert data["assessment_status"] == "partial_data"
     assert data["warnings"]
+
+
+def test_informational_warning_does_not_create_partial_coverage(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    positions = [
+        NormalizedPosition(
+            protocol="hyperliquid",
+            network="hyperliquid",
+            position_type="spot",
+            asset="ETH",
+            quantity=1,
+            notional_usd=1000,
+            current_value_usd=1000,
+            entry_value_usd=1000,
+            unrealized_pnl_usd=0,
+            collateral_usd=0,
+            debt_usd=0,
+            data_quality="complete",
+        )
+    ]
+    monkeypatch.setattr(
+        wallet_analyzer,
+        "_select_adapters",
+        lambda networks, protocols: [DummyAdapter("hyperliquid", "hyperliquid", positions, ["Informational notice"])],
+    )
+    data = client.post(
+        "/wallet/analyze",
+        json={
+            "wallet_address": "0x1234567890abcdef1234567890abcdef12345678",
+            "networks": ["hyperliquid"],
+            "protocols": ["hyperliquid"],
+            "stress_profile": "standard",
+        },
+    ).json()
+    assert data["assessment_status"] == "positions_found"
+    assert data["data_quality"] == "complete"
 
 
 def test_healthy_hedged_portfolio_returns_hold(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:

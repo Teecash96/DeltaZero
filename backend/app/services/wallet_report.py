@@ -14,7 +14,9 @@ from app.models.wallet import (
     WalletPlanStep,
     WalletPortfolioSummary,
     WalletPrimaryDriver,
+    WalletRiskContributor,
     WalletRiskMetrics,
+    WalletRiskTimelineItem,
     WalletStrategyHealth,
     WalletStressProfile,
     WalletStressSummary,
@@ -29,6 +31,9 @@ class WalletIntelligenceReport:
     exposure_analysis: WalletExposureAnalysis
     portfolio_allocation: list[WalletAllocationItem]
     stress_summary: WalletStressSummary
+    largest_risk_contributors: list[WalletRiskContributor]
+    portfolio_observations: list[str]
+    risk_timeline: list[WalletRiskTimelineItem]
 
 
 LONG_TYPES = {"spot", "lending_supply", "vault_deposit", "perpetual_long", "collateral"}
@@ -126,6 +131,109 @@ def calculate_portfolio_allocation(positions: list[NormalizedPosition]) -> list[
             allocation_pct=round(exposure / total * 100.0, 2),
         )
         for asset, exposure in visible
+    ]
+
+
+def calculate_largest_risk_contributors(
+    positions: list[NormalizedPosition], impairment_by_asset: dict[str, float]
+) -> list[WalletRiskContributor]:
+    """Rank assets using measured exposure plus their calculated impairment loss.
+
+    Exposure and impairment are aggregated separately before being combined, so
+    collateral and derivative notionals are not counted twice. The percentage
+    expresses contribution to this deterministic risk-weighted total.
+    """
+    grouped: dict[tuple[str, str], dict[str, float | bool]] = defaultdict(
+        lambda: {"exposure": 0.0, "long": 0.0, "short": 0.0}
+    )
+    for position in positions:
+        exposure = _position_exposure(position)
+        if exposure is None or exposure <= 0:
+            continue
+        key = (position.asset.upper(), position.protocol)
+        grouped[key]["exposure"] = float(grouped[key]["exposure"]) + exposure
+        if position.position_type in LONG_TYPES:
+            grouped[key]["long"] = float(grouped[key]["long"]) + exposure
+        elif position.position_type in SHORT_TYPES:
+            grouped[key]["short"] = float(grouped[key]["short"]) + exposure
+
+    impairment_lookup = {asset.upper(): value for asset, value in impairment_by_asset.items()}
+    scored: list[tuple[tuple[str, str], float, float, str]] = []
+    for (asset, protocol), values in grouped.items():
+        exposure = float(values["exposure"])
+        impairment = max(0.0, impairment_lookup.get(asset, 0.0))
+        long_value = float(values["long"])
+        short_value = float(values["short"])
+        drift = abs(long_value - short_value) / exposure * 100.0 if exposure else 0.0
+        primary_risk = "Impairment" if impairment > exposure * 0.1 else "Hedge Drift" if long_value and short_value and drift > 10 else "Directional"
+        scored.append(((asset, protocol), exposure, exposure + impairment, primary_risk))
+
+    total_score = sum(item[2] for item in scored)
+    if total_score <= 0:
+        return []
+    ranked = sorted(scored, key=lambda item: (-item[2], item[0][0]))[:5]
+    return [
+        WalletRiskContributor(
+            asset=asset,
+            protocol=protocol,  # type: ignore[arg-type]
+            exposure_usd=round(exposure, 2),
+            risk_contribution_pct=round(score / total_score * 100.0, 2),
+            primary_risk=primary_risk,
+        )
+        for (asset, protocol), exposure, score, primary_risk in ranked
+    ]
+
+
+def build_portfolio_observations(
+    *,
+    allocation: list[WalletAllocationItem],
+    summary: WalletPortfolioSummary,
+    risk: WalletRiskMetrics,
+    protocol_count: int,
+    profile: DecisionProfile,
+    wallet_profile: WalletRiskProfile,
+) -> list[str]:
+    observations: list[str] = []
+    if allocation:
+        largest = allocation[0]
+        observations.append(f"{largest.asset} accounts for {largest.allocation_pct:.1f}% of supported portfolio exposure.")
+    if abs(summary.net_delta_pct) >= profile.hedge_drift_warning_pct:
+        observations.append(f"Directional exposure of {abs(summary.net_delta_pct):.1f}% exceeds the configured threshold.")
+    elif risk.hedge_drift_pct is not None:
+        observations.append("Directional exposure remains within the configured threshold.")
+    if risk.estimated_impairment_loss_pct is not None:
+        if risk.estimated_impairment_loss_pct >= wallet_profile.impairment_critical_pct:
+            observations.append(f"Estimated impairment of {risk.estimated_impairment_loss_pct:.1f}% exceeds the critical limit.")
+        elif risk.estimated_impairment_loss_pct >= wallet_profile.impairment_warning_pct:
+            observations.append(f"Estimated impairment of {risk.estimated_impairment_loss_pct:.1f}% is above the acceptable range.")
+        else:
+            observations.append(f"Estimated impairment remains contained at {risk.estimated_impairment_loss_pct:.1f}%.")
+    observations.append(
+        "All retrieved supported positions are concentrated in one protocol."
+        if protocol_count == 1
+        else f"Retrieved positions span {protocol_count} supported protocols."
+    )
+    if summary.estimated_funding_exposure_apy is None:
+        observations.append("Funding exposure is unavailable from the retrieved position data.")
+    elif abs(summary.estimated_funding_exposure_apy) < 1:
+        observations.append(f"Estimated funding exposure is limited at {summary.estimated_funding_exposure_apy:.1f}% APY.")
+    else:
+        observations.append(f"Estimated funding exposure is {summary.estimated_funding_exposure_apy:.1f}% APY.")
+    return observations[:6]
+
+
+def build_risk_timeline(drivers: list[WalletPrimaryDriver]) -> list[WalletRiskTimelineItem]:
+    state_map = {"positive": "healthy", "warning": "warning", "critical": "critical", "unavailable": "unavailable"}
+    preferred = ["safety_buffer_score", "net_delta_pct", "estimated_impairment_loss_pct", "hedge_drift_pct"]
+    by_metric = {driver.metric: driver for driver in drivers}
+    selected = [by_metric[metric] for metric in preferred if metric in by_metric]
+    return [
+        WalletRiskTimelineItem(
+            metric=driver.label,
+            state=state_map[driver.state],  # type: ignore[arg-type]
+            explanation=driver.explanation,
+        )
+        for driver in selected
     ]
 
 
@@ -309,8 +417,9 @@ def _executive_summary(
         "CLOSE": "Closing or materially de-risking the most severe positions is recommended.",
     }.get(action, "Review the recommended plan before changing exposure.")
     body = (
-        f"DeltaZero analyzed {position_count} supported positions across {protocol_count} {protocol_word}. "
-        f"Current risk level is {health}. {primary_driver.explanation} {action_text}"
+        f"DeltaZero analyzed {position_count} live supported positions across {protocol_count} {protocol_word}.\n\n"
+        f"The portfolio risk level is {health}. The primary risk is {primary_driver.label.lower()}: "
+        f"{primary_driver.explanation[0].lower() + primary_driver.explanation[1:]}\n\n{action_text}"
     )
     if data_quality == "partial":
         body += " This assessment covers only successfully retrieved supported positions and may not represent the full wallet inventory."
@@ -338,6 +447,7 @@ def build_wallet_intelligence_report(
     safety_state: str,
     capital_state: str,
     impairment_state: str,
+    impairment_by_asset: dict[str, float],
 ) -> WalletIntelligenceReport:
     exposure = calculate_exposure_analysis(positions)
     allocation = calculate_portfolio_allocation(positions)
@@ -354,6 +464,16 @@ def build_wallet_intelligence_report(
     )
     primary = next((driver for driver in drivers if driver.state in {"critical", "warning"}), drivers[0])
     protocol_count = len({position.protocol for position in positions})
+    contributors = calculate_largest_risk_contributors(positions, impairment_by_asset)
+    observations = build_portfolio_observations(
+        allocation=allocation,
+        summary=summary,
+        risk=risk,
+        protocol_count=protocol_count,
+        profile=profile,
+        wallet_profile=wallet_profile,
+    )
+    timeline = build_risk_timeline(drivers)
     executive = _executive_summary(
         action=action,
         health=health,
@@ -372,6 +492,8 @@ def build_wallet_intelligence_report(
         post_impairment_equity_usd=post_equity,
         dominant_risk=primary.label,
         summary=f"Under the {stress_profile} profile, {primary.explanation} The resulting recommendation is {action}.",
+        impairment_level="HIGH" if impairment_state == "severe" else "MEDIUM" if impairment_state == "material" else "LOW",
+        impairment_label="Critical" if impairment_state == "severe" else "Elevated" if impairment_state == "material" else "Contained",
     )
     return WalletIntelligenceReport(
         executive_summary=executive,
@@ -380,4 +502,7 @@ def build_wallet_intelligence_report(
         exposure_analysis=exposure,
         portfolio_allocation=allocation,
         stress_summary=stress,
+        largest_risk_contributors=contributors,
+        portfolio_observations=observations,
+        risk_timeline=timeline,
     )

@@ -245,6 +245,22 @@ export interface WalletStressSummary {
   post_impairment_equity_usd: number;
   dominant_risk: string;
   summary: string;
+  impairment_level: "LOW" | "MEDIUM" | "HIGH";
+  impairment_label: "Contained" | "Elevated" | "Critical";
+}
+
+export interface WalletRiskContributor {
+  asset: string;
+  protocol: WalletProtocol;
+  exposure_usd: number;
+  risk_contribution_pct: number;
+  primary_risk: string;
+}
+
+export interface WalletRiskTimelineItem {
+  metric: string;
+  state: "healthy" | "warning" | "critical" | "unavailable";
+  explanation: string;
 }
 
 export interface WalletAnalyzeRequest {
@@ -318,4 +334,7 @@ export interface WalletPortfolioResponse {
   exposure_analysis: WalletExposureAnalysis | null;
   portfolio_allocation: WalletAllocationItem[];
   stress_summary: WalletStressSummary | null;
+  largest_risk_contributors: WalletRiskContributor[];
+  portfolio_observations: string[];
+  risk_timeline: WalletRiskTimelineItem[];
 }

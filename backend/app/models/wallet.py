@@ -95,6 +95,22 @@ class WalletStressSummary(BaseModel):
     post_impairment_equity_usd: float
     dominant_risk: str
     summary: str
+    impairment_level: Literal["LOW", "MEDIUM", "HIGH"]
+    impairment_label: Literal["Contained", "Elevated", "Critical"]
+
+
+class WalletRiskContributor(BaseModel):
+    asset: str
+    protocol: WalletProtocol
+    exposure_usd: float
+    risk_contribution_pct: float
+    primary_risk: str
+
+
+class WalletRiskTimelineItem(BaseModel):
+    metric: str
+    state: Literal["healthy", "warning", "critical", "unavailable"]
+    explanation: str
 
 
 class WalletAnalyzeRequest(BaseModel):
@@ -190,3 +206,6 @@ class WalletPortfolioResponse(BaseModel):
     exposure_analysis: WalletExposureAnalysis | None = None
     portfolio_allocation: list[WalletAllocationItem] = Field(default_factory=list)
     stress_summary: WalletStressSummary | None = None
+    largest_risk_contributors: list[WalletRiskContributor] = Field(default_factory=list)
+    portfolio_observations: list[str] = Field(default_factory=list)
+    risk_timeline: list[WalletRiskTimelineItem] = Field(default_factory=list)

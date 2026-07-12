@@ -190,9 +190,9 @@ function AssessmentHeader({ result, protocols }: { result: WalletPortfolioRespon
           />
         </div>
       </div>
-      <p className="wallet-clarity-copy">Decision Clarity measures how strongly the available metrics support the recommended action. It does not predict profitability.</p>
+      <p className="wallet-clarity-copy">Measures how strongly the available portfolio metrics support the recommendation.</p>
       <details className="wallet-clarity-details">
-        <summary>Why this score?</summary>
+        <summary>Why this decision?</summary>
         <p>The score reflects how consistently the evaluated carry, hedge, Safety Buffer, capital-risk, impairment, and data-quality conditions support {action}.</p>
         <ul>{result.primary_drivers.filter((driver) => driver.state !== "unavailable").slice(0, 4).map((driver) => <li key={driver.metric}>{driver.explanation}</li>)}</ul>
       </details>
@@ -260,12 +260,10 @@ function RiskBreakdown({ result }: { result: WalletPortfolioResponse }) {
   const summary = result.portfolio_summary;
   const metrics = [
     ["Safety Buffer", number(risk.safety_buffer_score, 1), "Collateral resilience after hedge and impairment penalties."],
-    ["Estimated Impairment", `${usd(risk.estimated_impairment_loss_usd)} · ${percent(risk.estimated_impairment_loss_pct)}`, "Scenario loss relative to pre-stress equity."],
     ["Post-Impairment Equity", usd(risk.post_impairment_equity_usd), "Estimated equity remaining after the selected stress profile."],
     ["Hedge Ratio", number(risk.hedge_ratio, 3), "Short exposure relative to supported long exposure."],
     ["Hedge Drift", percent(risk.hedge_drift_pct), "Distance from the configured hedge relationship."],
     ["Funding Exposure", percent(summary.estimated_funding_exposure_apy), "Estimated annualized funding bias when reliable."],
-    ["Collateral Health", number(risk.collateral_health_score, 1), "Collateral coverage from supported protocol data."],
     ["Liquidation Proximity", percent(risk.liquidation_proximity_pct), "Higher values indicate greater proximity to liquidation."],
     ["Capital at Risk", usd(risk.capital_at_risk_proxy), "Deterministic proxy combining delta, debt, and impairment."],
   ];
@@ -273,10 +271,44 @@ function RiskBreakdown({ result }: { result: WalletPortfolioResponse }) {
     <section className="wallet-report-section">
       <div className="wallet-section-heading"><div><span>Risk diagnostics</span><h2>Risk Breakdown</h2></div></div>
       <div className="wallet-risk-grid">
+        <article className={`wallet-impairment-card impairment-${result.stress_summary?.impairment_level.toLowerCase()}`}>
+          <span>Estimated Impairment</span>
+          <strong>{usd(risk.estimated_impairment_loss_usd)} · {percent(risk.estimated_impairment_loss_pct)}</strong>
+          <b>{result.stress_summary?.impairment_level ?? "Unavailable"} <i>{result.stress_summary?.impairment_label ?? ""}</i></b>
+          <p>Scenario loss relative to pre-stress equity.</p>
+        </article>
+        <article>
+          <span>Collateral Health</span>
+          <strong>{risk.minimum_health_factor === null ? "Unavailable" : number(risk.minimum_health_factor, 2)}</strong>
+          {risk.minimum_health_factor !== null ? <b>{risk.minimum_health_factor >= 1.5 ? "Healthy" : risk.minimum_health_factor >= 1.2 ? "Warning" : "Critical"}</b> : null}
+          <p>{risk.minimum_health_factor === null ? "Health factor or collateral ratio was not available." : "Minimum reported protocol health factor."}</p>
+        </article>
         {metrics.map(([label, value, copy]) => <article key={label}><span>{label}</span><strong>{value}</strong><p>{copy}</p></article>)}
       </div>
     </section>
   );
+}
+
+function LargestRiskContributors({ result }: { result: WalletPortfolioResponse }) {
+  return (
+    <section className="panel wallet-contributors-panel">
+      <div className="wallet-section-heading"><div><span>Position-level attribution</span><h2>Largest Risk Contributors</h2></div></div>
+      {result.largest_risk_contributors.length ? (
+        <div className="wallet-table-scroll"><table className="wallet-contributors-table">
+          <thead><tr><th>Asset</th><th>Protocol</th><th>Exposure USD</th><th>Risk Contribution</th><th>Primary Risk</th></tr></thead>
+          <tbody>{result.largest_risk_contributors.map((item) => <tr key={`${item.protocol}-${item.asset}`}><td><strong>{item.asset}</strong></td><td>{item.protocol}</td><td>{usd(item.exposure_usd)}</td><td>{percent(item.risk_contribution_pct)}</td><td>{item.primary_risk}</td></tr>)}</tbody>
+        </table></div>
+      ) : <p>Unavailable</p>}
+    </section>
+  );
+}
+
+function PortfolioObservations({ result }: { result: WalletPortfolioResponse }) {
+  return <section className="panel wallet-observations-panel"><div className="wallet-section-heading"><div><span>Deterministic findings</span><h2>Portfolio Observations</h2></div></div><ul>{result.portfolio_observations.map((item) => <li key={item}>{item}</li>)}</ul></section>;
+}
+
+function RiskTimeline({ result }: { result: WalletPortfolioResponse }) {
+  return <section className="panel wallet-timeline-panel"><div className="wallet-section-heading"><div><span>Threshold events</span><h2>Risk Timeline</h2></div></div><div>{result.risk_timeline.map((item) => <article key={item.metric}><i className={`timeline-dot timeline-${item.state}`} /><strong>{item.metric}</strong><b>{item.state}</b><p>{item.explanation}</p></article>)}</div></section>;
 }
 
 function PortfolioAllocation({ result }: { result: WalletPortfolioResponse }) {
@@ -428,6 +460,9 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       <PrimaryDrivers drivers={result.primary_drivers} />
       <ExposureAnalysis result={result} />
       <RiskBreakdown result={result} />
+      <LargestRiskContributors result={result} />
+      <PortfolioObservations result={result} />
+      <RiskTimeline result={result} />
       <PortfolioAllocation result={result} />
       <RecommendedPlan result={result} />
       <PositionTable positions={result.positions} />

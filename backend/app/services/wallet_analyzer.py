@@ -26,6 +26,8 @@ from app.models.wallet import (
     WalletPortfolioResponse,
     WalletPortfolioSummary,
     WalletPrimaryDriver,
+    WalletRiskContributor,
+    WalletRiskTimelineItem,
     WalletRecommendation,
     WalletRiskMetrics,
     WalletStrategyHealth,
@@ -272,6 +274,9 @@ def _build_wallet_response(
     exposure_analysis: WalletExposureAnalysis | None = None,
     portfolio_allocation: list[WalletAllocationItem] | None = None,
     stress_summary: WalletStressSummary | None = None,
+    largest_risk_contributors: list[WalletRiskContributor] | None = None,
+    portfolio_observations: list[str] | None = None,
+    risk_timeline: list[WalletRiskTimelineItem] | None = None,
 ) -> WalletPortfolioResponse:
     return WalletPortfolioResponse(
         service="wallet_portfolio_auditor",
@@ -298,6 +303,9 @@ def _build_wallet_response(
         exposure_analysis=exposure_analysis,
         portfolio_allocation=portfolio_allocation or [],
         stress_summary=stress_summary,
+        largest_risk_contributors=largest_risk_contributors or [],
+        portfolio_observations=portfolio_observations or [],
+        risk_timeline=risk_timeline or [],
     )
 
 
@@ -391,6 +399,19 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     data_timestamps: list[str] = []
     discovery_debug: dict[str, object] = {}
 
+    selected_adapter_protocols = {adapter.protocol for adapter in adapters}
+    for protocol in request.protocols:
+        if protocol not in selected_adapter_protocols:
+            protocol_errors.append(
+                ProtocolError(
+                    protocol=protocol,
+                    network=request.networks[0],
+                    message=f"{protocol.title()} is not supported on the selected networks.",
+                    error_type="UnsupportedProtocolNetwork",
+                    retryable=False,
+                )
+            )
+
     for adapter in adapters:
         try:
             snapshot = adapter.fetch_wallet_data(request.wallet_address)
@@ -432,7 +453,7 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     data_quality: str
     if supported_positions_found == 0:
         data_quality = "insufficient"
-    elif protocol_errors or warnings or all_position_warnings:
+    elif protocol_errors or all_position_warnings:
         data_quality = "partial"
     else:
         data_quality = "complete"
@@ -492,9 +513,11 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
             protocol_loss_assumption_usd=0.0,
         ),
     )
+    impairment_by_asset: dict[str, float] = {}
     if positions:
         for asset, cluster in _positions_by_asset(positions).items():
             cluster_result = _impairment_for_cluster(asset, cluster, request.stress_profile)
+            impairment_by_asset[asset] = cluster_result.estimated_impairment_loss_usd
             impairment_total = ImpairmentResult(
                 pre_stress_equity_usd=round(impairment_total.pre_stress_equity_usd + cluster_result.pre_stress_equity_usd, 2),
                 post_stress_equity_usd=round(impairment_total.post_stress_equity_usd + cluster_result.post_stress_equity_usd, 2),
@@ -709,6 +732,7 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         safety_state=safety_state,
         capital_state=capital_state,
         impairment_state=impairment_state,
+        impairment_by_asset=impairment_by_asset,
     )
     result = _build_wallet_response(
         assessment_status=assessment_status,  # type: ignore[arg-type]
@@ -734,6 +758,9 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         exposure_analysis=intelligence.exposure_analysis,
         portfolio_allocation=intelligence.portfolio_allocation,
         stress_summary=intelligence.stress_summary,
+        largest_risk_contributors=intelligence.largest_risk_contributors,
+        portfolio_observations=intelligence.portfolio_observations,
+        risk_timeline=intelligence.risk_timeline,
     )
 
     with WALLET_LOCK:
