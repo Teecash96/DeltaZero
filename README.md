@@ -219,6 +219,35 @@ It returns:
 
 If supported positions are not found, the service returns a dedicated empty state instead of forcing a portfolio risk recommendation.
 
+## Live Read Only Integrations
+
+### Hyperliquid
+
+Status: LIVE
+
+Read only perpetual positions, margin data, account value, unrealized PnL, and liquidation context through public protocol data.
+
+### Aave
+
+Status: LIVE WITH RPC
+
+Read only supply, borrow, collateral, debt, and health factor analysis when supported RPC access is configured.
+
+### Morpho
+
+Status: LIVE
+
+Read only market and vault position analysis through Morpho’s supported public API.
+
+Live integrations are read only. DeltaZero does not request signatures, private keys, approvals, or transaction permissions.
+
+## Planned Integrations
+
+- Pendle — fixed-yield, PT, YT, and maturity-risk analysis.
+- Ethena — synthetic-dollar and hedged-yield strategy analysis.
+- Live Funding Rates — real time perpetual funding inputs from supported venues.
+- Additional Wallet and Protocol Coverage — more networks, assets, protocols, LP positions, and portfolio adapters.
+
 ## SDK
 
 DeltaZero ships local SDK packages for agents and internal automation.
@@ -226,8 +255,9 @@ DeltaZero ships local SDK packages for agents and internal automation.
 Status:
 
 - Local SDK package
-- Planned npm publication
-- Planned PyPI publication
+- SDK Preview
+
+The TypeScript and Python SDKs are available directly from this repository for local installation and agent integration. Public registry publication is planned after interface validation.
 
 ### TypeScript
 
@@ -403,18 +433,9 @@ pip install -e .
 python3 -m unittest discover -s tests -p "test_*.py"
 ```
 
-## Screenshots
-
-Add screenshots here when you want image-based product previews.
-
-![Home](docs/images/home.png)
-![Builder](docs/images/builder.png)
-![Auditor](docs/images/auditor.png)
-![Stress Test](docs/images/stress-test.png)
-
 ## License
 
-This repository does not currently declare a license. Add one before any broader redistribution.
+DeltaZero is released under the MIT License. See [LICENSE](LICENSE).
 
 ## Built by Akanbi Labs
 
