@@ -305,6 +305,20 @@ Agent and dashboard use cases include deterministic pre-trade checks, portfolio 
 
 ## API Reference
 
+### Live Hyperliquid market context
+
+`GET /market/hyperliquid?asset=ETH&lookback_hours=24` returns normalized mark and oracle prices, signed current hourly funding and APY, open interest, 24-hour notional volume, premium when available, and a historical funding summary. The service uses Hyperliquid's public Info API only, with short-lived in-memory caching.
+
+Positive funding means longs pay shorts; negative funding means shorts pay longs. DeltaZero preserves that sign. Funding rates are variable and may change after analysis.
+
+### Manual and live Builder modes
+
+The Builder defaults to manual assumptions. Live Hyperliquid mode retrieves public market context while keeping long-yield and fee-drag inputs manual. Because the existing Builder field represents a short-side funding cost, signed market funding is converted centrally: positive market funding becomes income to the short hedge, while negative market funding becomes a cost.
+
+### Wallet hedge workflow
+
+Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure snapshot to the Builder through short-lived browser session storage. The Builder calculates a proposed short adjustment for long-dominant portfolios using the configured style and risk target, and the proposed structure can then be handed to Stress Test. These are read-only analytical recommendations: DeltaZero does not request signatures, submit transactions, or execute hedges.
+
 ### Base URLs
 
 | Environment | URL |
@@ -357,6 +371,7 @@ Wallet analysis is read-only. Protocol failures are isolated and returned as war
 Detailed service documentation:
 
 - [Wallet Auditor](docs/WALLET_AUDITOR.md)
+- [Hyperliquid Market Data](docs/HYPERLIQUID_MARKET_DATA.md)
 - [Economic Impairment Engine](docs/IMPAIRMENT_ENGINE.md)
 - [OKX ASP Service](docs/OKX_ASP_SERVICE.md)
 - [Project specification](docs/PROJECT.md)
@@ -504,7 +519,7 @@ Planned integrations:
 
 - **Pendle** — fixed-yield, PT, YT, and maturity-risk analysis.
 - **Ethena** — synthetic-dollar and hedged-yield strategy analysis.
-- **Live Funding Rates** — continuous funding inputs from supported venues.
+- **Continuous Funding Monitoring** — persistent alerts and multi-venue funding inputs beyond the current on-demand Hyperliquid snapshot.
 
 Additional planned product capabilities include broader read-only network and protocol coverage, multi-wallet monitoring, continuous risk alerts, funding alerts, Safety Buffer alerts, saved reports, and expanded ASP API access.
 

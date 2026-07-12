@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 Asset = Literal["SOL", "ETH"]
 RiskTolerance = Literal["low", "medium", "high"]
@@ -94,6 +94,11 @@ class BuildRequest(TypedDict):
     long_yield_apy: float
     short_funding_apy: float
     fee_drag_apy: float
+    market_data_mode: NotRequired[Literal["manual", "hyperliquid"]]
+    funding_lookback_hours: NotRequired[int]
+    override_live_funding: NotRequired[bool]
+    market_dex: NotRequired[str | None]
+    wallet_exposure: NotRequired[dict[str, object] | None]
 
 
 class AuditRequest(TypedDict):
@@ -134,6 +139,13 @@ class StrategyResponseBase(TypedDict):
 
 class BuildResponse(StrategyResponseBase):
     recommended_structure: RecommendedStructure
+    market_data_source: NotRequired[Literal["hyperliquid"]]
+    market_data_timestamp: NotRequired[str]
+    funding_rate_apy: NotRequired[float]
+    funding_contribution_apy: NotRequired[float]
+    market_data_quality: NotRequired[Literal["complete", "partial", "unavailable"]]
+    market_context: NotRequired[dict[str, object]]
+    hedge_adjustment: NotRequired[dict[str, object]]
 
 
 class AuditResponse(StrategyResponseBase):

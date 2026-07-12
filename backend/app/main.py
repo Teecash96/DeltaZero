@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.strategy import router as strategy_router
 from app.routers.wallet import router as wallet_router
+from app.routers.market import router as market_router
 
 app = FastAPI(
     title="DeltaZero",
@@ -26,6 +27,7 @@ app.add_middleware(
 
 app.include_router(strategy_router)
 app.include_router(wallet_router)
+app.include_router(market_router)
 
 
 @app.get("/health")

@@ -97,6 +97,67 @@ export interface BuildRequest {
   long_yield_apy: number;
   short_funding_apy: number;
   fee_drag_apy: number;
+  market_data_mode?: "manual" | "hyperliquid";
+  funding_lookback_hours?: number;
+  override_live_funding?: boolean;
+  market_dex?: string | null;
+  wallet_exposure?: WalletExposureImport | null;
+}
+
+export interface WalletExposureImport {
+  source: "wallet_auditor";
+  wallet_address: string;
+  asset: string | null;
+  gross_long_exposure_usd: number | null;
+  gross_short_exposure_usd: number | null;
+  net_delta_usd: number | null;
+  net_delta_pct: number | null;
+  current_hedge_ratio: number | null;
+  portfolio_equity_usd: number | null;
+  largest_risk_asset: string | null;
+  recommended_action: WalletAction;
+  data_quality: "complete" | "partial";
+  data_timestamp: string | null;
+}
+
+export interface HedgeAdjustment {
+  current_long_notional_usd: number | null;
+  current_short_notional_usd: number | null;
+  target_short_notional_usd: number | null;
+  short_adjustment_usd: number | null;
+  target_hedge_ratio: number;
+  projected_hedge_ratio: number | null;
+  projected_net_delta_usd: number | null;
+  projected_net_delta_pct: number | null;
+  projected_hedge_drift_pct: number | null;
+  adjustment_direction: "increase_short" | "reduce_short" | "no_change" | null;
+  limitation: string | null;
+}
+
+export interface FundingHistorySummary {
+  lookback_hours: number;
+  average_funding_apy: number;
+  minimum_funding_apy: number;
+  maximum_funding_apy: number;
+  observations: number;
+}
+
+export interface HyperliquidMarketResponse {
+  source: "hyperliquid";
+  asset: string;
+  market: string;
+  dex: string | null;
+  mark_price_usd: number;
+  oracle_price_usd: number;
+  current_funding_rate_hourly: number;
+  current_funding_apy: number;
+  funding_direction: "longs_pay" | "shorts_pay" | "neutral";
+  open_interest_usd: number;
+  day_volume_usd: number;
+  premium: number | null;
+  data_timestamp: string;
+  data_quality: "complete" | "partial" | "unavailable";
+  historical_funding: FundingHistorySummary | null;
 }
 
 export interface AuditRequest {
@@ -137,6 +198,20 @@ export interface StrategyResponseBase {
 
 export interface BuildResponse extends StrategyResponseBase {
   recommended_structure: RecommendedStructure;
+  market_data_source?: "hyperliquid";
+  market_data_timestamp?: string;
+  funding_rate_apy?: number;
+  funding_contribution_apy?: number;
+  market_data_quality?: "complete" | "partial" | "unavailable";
+  market_context?: {
+    mark_price_usd: number;
+    oracle_price_usd: number;
+    funding_direction: string;
+    open_interest_usd: number;
+    day_volume_usd: number;
+    historical_funding: FundingHistorySummary | null;
+  };
+  hedge_adjustment?: HedgeAdjustment;
 }
 
 export interface AuditResponse extends StrategyResponseBase {

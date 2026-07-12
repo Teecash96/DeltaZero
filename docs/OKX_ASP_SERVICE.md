@@ -50,6 +50,9 @@ The service returns a deterministic JSON report with:
 
 - Read-only only.
 - No trade execution.
+- On-demand Hyperliquid market context uses the public read-only Info API. Positive funding means longs pay shorts; negative funding means shorts pay longs, and the sign is preserved.
+- Wallet exposure can be passed to Builder and then Stress Test through short-lived client session storage for a deterministic proposed hedge workflow.
+- Funding is variable and the current snapshot does not predict future funding.
 - No wallet signing.
 - No private key collection.
 - No database persistence.

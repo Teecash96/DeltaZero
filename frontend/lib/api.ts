@@ -7,6 +7,7 @@ import type {
   WalletPortfolioResponse,
   StressTestRequest,
   StressTestResponse,
+  HyperliquidMarketResponse,
 } from "./types";
 
 export const API_BASE =
@@ -54,4 +55,12 @@ export function analyzeWallet(
   body: WalletAnalyzeRequest,
 ): Promise<WalletPortfolioResponse> {
   return post<WalletPortfolioResponse>("/wallet/analyze", body);
+}
+
+export async function getHyperliquidMarket(asset: string, lookbackHours = 24, dex?: string): Promise<HyperliquidMarketResponse> {
+  const query = new URLSearchParams({ asset, lookback_hours: String(lookbackHours) });
+  if (dex) query.set("dex", dex);
+  const response = await fetch(`${API_BASE}/market/hyperliquid?${query}`);
+  if (!response.ok) throw new Error(`Market API ${response.status}: ${await response.text()}`);
+  return response.json() as Promise<HyperliquidMarketResponse>;
 }

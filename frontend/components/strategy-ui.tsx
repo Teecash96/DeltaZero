@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
-import { auditStrategy, buildStrategy, stressTestStrategy } from "@/lib/api";
+import { auditStrategy, buildStrategy, getHyperliquidMarket, stressTestStrategy } from "@/lib/api";
+import { readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
 import type {
@@ -16,6 +17,8 @@ import type {
   StressTestRequest,
   StressTestResponse,
   TargetStyle,
+  HyperliquidMarketResponse,
+  WalletExposureImport,
 } from "@/lib/types";
 
 type Mode = "builder" | "auditor" | "stress-test";
@@ -215,12 +218,20 @@ function StrategyForm({
   setValue,
   submit,
   loading,
+  liveMarket,
+  marketLoading,
+  marketError,
+  refreshMarket,
 }: {
   mode: Mode;
   value: FormValue;
   setValue: (value: FormValue) => void;
   submit: (event: FormEvent) => void;
   loading: boolean;
+  liveMarket: HyperliquidMarketResponse | null;
+  marketLoading: boolean;
+  marketError: string | null;
+  refreshMarket: () => void;
 }) {
   const update = (key: string, raw: string) =>
     setValue(
@@ -297,6 +308,7 @@ function StrategyForm({
           value={Number(value[key as keyof FormValue])}
           onChange={(event) => update(key, event.target.value)}
           required
+          disabled={mode === "builder" && key === "short_funding_apy" && (value as BuildRequest).market_data_mode === "hyperliquid" && !(value as BuildRequest).override_live_funding}
         />
       )}
       {key === "target_style" ? (
@@ -315,6 +327,21 @@ function StrategyForm({
 
   return (
     <form className="panel" onSubmit={submit}>
+      {mode === "builder" ? (
+        <section className="form-section live-market-controls">
+          <h2><span aria-hidden="true">◉</span>Input mode</h2>
+          <div className="mode-toggle">
+            <button type="button" className={(value as BuildRequest).market_data_mode !== "hyperliquid" ? "active" : ""} onClick={() => setValue({ ...value, market_data_mode: "manual" } as BuildRequest)}>Manual Assumptions</button>
+            <button type="button" className={(value as BuildRequest).market_data_mode === "hyperliquid" ? "active" : ""} onClick={() => setValue({ ...value, market_data_mode: "hyperliquid" } as BuildRequest)}>Live Hyperliquid Data</button>
+          </div>
+          {(value as BuildRequest).market_data_mode === "hyperliquid" ? <div className="live-market-panel">
+            <div className="field"><label htmlFor="funding-lookback">Funding lookback</label><select id="funding-lookback" value={(value as BuildRequest).funding_lookback_hours ?? 24} onChange={(event) => setValue({ ...value, funding_lookback_hours: Number(event.target.value) } as BuildRequest)}><option value="24">24 hours</option><option value="72">72 hours</option><option value="168">168 hours</option></select></div>
+            <label className="override-check"><input type="checkbox" checked={(value as BuildRequest).override_live_funding ?? false} onChange={(event) => setValue({ ...value, override_live_funding: event.target.checked } as BuildRequest)} /> Override live value</label>
+            <button type="button" className="market-refresh" onClick={refreshMarket} disabled={marketLoading}>{marketLoading ? "Refreshing…" : "Refresh market data"}</button>
+            {marketError ? <p className="market-error">{marketError}</p> : liveMarket ? <div className="market-snapshot"><span>Live data source: Hyperliquid</span><strong>{liveMarket.current_funding_apy.toFixed(2)}% current funding</strong><small>{liveMarket.funding_direction.replaceAll("_", " ")} · {liveMarket.data_quality} · Updated {new Date(liveMarket.data_timestamp).toLocaleTimeString()}</small></div> : null}
+          </div> : null}
+        </section>
+      ) : null}
       {groups.map((group) => (
         <section className="form-section" key={group.title}>
           <h2>
@@ -383,7 +410,7 @@ function StrategyForm({
           </>
         )}
       </button>
-      <p className="form-note">Demo values are preloaded · Edit any input</p>
+      <p className="form-note">Values are preloaded · Edit any input</p>
     </form>
   );
 }
@@ -758,6 +785,31 @@ function Result({
   const stress = result as StressTestResponse;
   const displayedMetrics = mode === "stress-test" ? stress.scenario_result.stressed_metrics : result.metrics;
 
+  function sendProposedHedgeToStressTest() {
+    if (mode !== "builder" || !build.hedge_adjustment || !(request as BuildRequest).wallet_exposure) return;
+    const adjustment = build.hedge_adjustment;
+    if (adjustment.current_long_notional_usd === null || adjustment.current_short_notional_usd === null || adjustment.target_short_notional_usd === null || adjustment.short_adjustment_usd === null) return;
+    const imported = (request as BuildRequest).wallet_exposure!;
+    const payload: StressHandoff = {
+      source: "wallet_hedge_builder",
+      wallet_address: imported.wallet_address,
+      snapshot_timestamp: imported.data_timestamp,
+      asset: build.asset,
+      current_long_notional_usd: adjustment.current_long_notional_usd,
+      current_short_notional_usd: adjustment.current_short_notional_usd,
+      proposed_short_notional_usd: adjustment.target_short_notional_usd,
+      collateral_usd: build.recommended_structure.collateral_usd,
+      short_adjustment_usd: adjustment.short_adjustment_usd,
+      target_hedge_ratio: adjustment.target_hedge_ratio,
+      long_yield_apy: (request as BuildRequest).long_yield_apy,
+      short_funding_apy: build.funding_rate_apy !== undefined ? -build.funding_rate_apy : (request as BuildRequest).short_funding_apy,
+      fee_drag_apy: (request as BuildRequest).fee_drag_apy,
+      risk_tolerance: request.risk_tolerance,
+    };
+    sessionStorage.setItem(STRESS_HANDOFF_KEY, JSON.stringify(payload));
+    window.location.href = "/stress-test?source=wallet_hedge_builder";
+  }
+
   return (
     <div className="result-stack" aria-live="polite">
       <div className="report-breadcrumb" aria-label="Report location">
@@ -784,6 +836,25 @@ function Result({
           </div>
         </section>
       )}
+      {mode === "builder" && build.hedge_adjustment ? (
+        <section className="panel hedge-adjustment-report">
+          <div className="section-label-row"><h2 className="panel-title">Proposed Hedge</h2><span>Read only recommendation</span></div>
+          {build.hedge_adjustment.limitation ? <p className="error-copy">{build.hedge_adjustment.limitation}</p> : <>
+            <div className="structure-grid">
+              {[
+                ["Current long", build.hedge_adjustment.current_long_notional_usd], ["Current short", build.hedge_adjustment.current_short_notional_usd],
+                ["Adjustment USD", build.hedge_adjustment.short_adjustment_usd], ["Target hedge ratio", build.hedge_adjustment.target_hedge_ratio],
+                ["Projected net delta", build.hedge_adjustment.projected_net_delta_usd], ["Projected hedge drift", build.hedge_adjustment.projected_hedge_drift_pct],
+              ].map(([label, item]) => <div className="structure-item" key={String(label)}><label>{label}</label><strong>{String(label).includes("ratio") ? Number(item).toFixed(3) : String(label).includes("drift") ? `${Number(item).toFixed(2)}%` : usd(Number(item))}</strong></div>)}
+            </div>
+            <div className="hedge-direction"><span>Recommended adjustment</span><strong>{build.hedge_adjustment.adjustment_direction?.replaceAll("_", " ")}</strong></div>
+            {build.market_context ? <div className="market-context-grid"><div><span>Mark Price</span><strong>{usd(build.market_context.mark_price_usd, 2)}</strong></div><div><span>Current Funding</span><strong>{build.funding_rate_apy?.toFixed(2)}%</strong></div><div><span>24h Average</span><strong>{build.market_context.historical_funding?.average_funding_apy.toFixed(2) ?? "Unavailable"}%</strong></div><div><span>Open Interest</span><strong>{usd(build.market_context.open_interest_usd)}</strong></div><div><span>24h Volume</span><strong>{usd(build.market_context.day_volume_usd)}</strong></div></div> : null}
+            {build.funding_rate_apy !== undefined ? <p className="funding-impact">{build.funding_rate_apy > 0 ? "Current Hyperliquid funding pays short positions, improving expected carry for the proposed hedge." : build.funding_rate_apy < 0 ? "Current Hyperliquid funding charges short positions, reducing expected carry for the proposed hedge." : "Current funding has limited effect on expected carry."} Funding rates are variable and may change after the analysis.</p> : null}
+            <button className="button button-primary" type="button" onClick={sendProposedHedgeToStressTest}>Stress Test Proposed Hedge <span>→</span></button>
+          </>}
+        </section>
+      ) : null}
+      {mode === "stress-test" && (request as StressTestRequest & { imported_source?: string }).imported_source ? <section className="panel imported-stress-banner"><span>Imported proposed hedge</span><p>This scenario tests the proposed wallet hedge snapshot. No position is executed.</p></section> : null}
       {mode === "stress-test" && (
         <section className="panel scenario-card">
           <div className="section-label-row">
@@ -854,6 +925,59 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
   const [result, setResult] = useState<ResultValue | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [walletImport, setWalletImport] = useState<WalletExposureImport | null>(null);
+  const [liveMarket, setLiveMarket] = useState<HyperliquidMarketResponse | null>(null);
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketError, setMarketError] = useState<string | null>(null);
+  const [stressImport, setStressImport] = useState<StressHandoff | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (mode === "builder") {
+        const imported = readSession<WalletExposureImport>(WALLET_HANDOFF_KEY);
+        if (imported) {
+          setWalletImport(imported);
+          if (imported.asset === "ETH" || imported.asset === "SOL") setValue((current) => ({ ...current, asset: imported.asset } as BuildRequest));
+        }
+      }
+      if (mode === "stress-test") {
+        const imported = readSession<StressHandoff>(STRESS_HANDOFF_KEY);
+        if (imported) {
+          setStressImport(imported);
+          setValue({
+          asset: imported.asset, long_notional_usd: imported.current_long_notional_usd,
+          short_notional_usd: imported.proposed_short_notional_usd, collateral_usd: imported.collateral_usd,
+          risk_tolerance: imported.risk_tolerance, long_yield_apy: imported.long_yield_apy,
+          short_funding_apy: imported.short_funding_apy, fee_drag_apy: imported.fee_drag_apy,
+          scenario: (samples["stress-test"] as StressTestRequest).scenario, imported_source: imported.source,
+          } as StressTestRequest);
+        }
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [mode]);
+
+  async function refreshMarket() {
+    if (mode !== "builder") return;
+    const buildValue = value as BuildRequest;
+    setMarketLoading(true); setMarketError(null);
+    try {
+      const market = await getHyperliquidMarket(buildValue.asset, buildValue.funding_lookback_hours ?? 24, buildValue.market_dex ?? undefined);
+      setLiveMarket(market);
+      if (!buildValue.override_live_funding) setValue({ ...buildValue, short_funding_apy: -market.current_funding_apy });
+    } catch (caught) {
+      setLiveMarket(null); setMarketError(caught instanceof Error ? caught.message : "Live market data unavailable.");
+    } finally { setMarketLoading(false); }
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (mode === "builder" && (value as BuildRequest).market_data_mode === "hyperliquid") void refreshMarket();
+    }, 0);
+    return () => window.clearTimeout(timer);
+    // Asset/mode/lookback intentionally trigger a fresh public market snapshot.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, (value as BuildRequest).asset, (value as BuildRequest).market_data_mode, (value as BuildRequest).funding_lookback_hours]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -890,7 +1014,21 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
         <span className="endpoint">{copy[mode].endpoint}</span>
       </header>
       <div className="workspace-grid">
-        <StrategyForm mode={mode} value={value} setValue={setValue} submit={submit} loading={loading} />
+        <div>
+          {mode === "stress-test" && stressImport ? <section className="panel imported-wallet-panel">
+            <span className="decision-eyebrow">Imported Proposed Hedge</span><h2>{stressImport.asset} hedge snapshot</h2>
+            <div className="import-grid"><div><span>Source wallet</span><strong>{`${stressImport.wallet_address.slice(0, 6)}…${stressImport.wallet_address.slice(-4)}`}</strong></div><div><span>Snapshot</span><strong>{stressImport.snapshot_timestamp ? new Date(stressImport.snapshot_timestamp).toLocaleString() : "Unavailable"}</strong></div><div><span>Current long</span><strong>{usd(stressImport.current_long_notional_usd)}</strong></div><div><span>Current short</span><strong>{usd(stressImport.current_short_notional_usd)}</strong></div><div><span>Proposed short</span><strong>{usd(stressImport.proposed_short_notional_usd)}</strong></div><div><span>Proposed adjustment</span><strong>{usd(stressImport.short_adjustment_usd)}</strong></div></div>
+            <p>Select a scenario below to stress the proposed structure. This remains a read-only analysis.</p>
+          </section> : null}
+          {mode === "builder" && walletImport ? <section className="panel imported-wallet-panel">
+            <span className="decision-eyebrow">Imported Wallet Exposure</span><h2>{walletImport.largest_risk_asset ?? "Dominant asset unavailable"}</h2>
+            {walletImport.data_quality === "partial" ? <p className="partial-copy">Partial wallet coverage. The hedge recommendation may not reflect positions that could not be retrieved.</p> : null}
+            <div className="import-grid"><div><span>Wallet</span><strong>{`${walletImport.wallet_address.slice(0, 6)}…${walletImport.wallet_address.slice(-4)}`}</strong></div><div><span>Long</span><strong>{walletImport.gross_long_exposure_usd === null ? "Unavailable" : usd(walletImport.gross_long_exposure_usd)}</strong></div><div><span>Short</span><strong>{walletImport.gross_short_exposure_usd === null ? "Unavailable" : usd(walletImport.gross_short_exposure_usd)}</strong></div><div><span>Current hedge ratio</span><strong>{walletImport.current_hedge_ratio?.toFixed(3) ?? "Unavailable"}</strong></div><div><span>Net delta</span><strong>{walletImport.net_delta_usd === null ? "Unavailable" : usd(walletImport.net_delta_usd)}</strong></div><div><span>Wallet action</span><strong>{walletImport.recommended_action}</strong></div></div>
+            <p>This Builder analysis uses a snapshot imported from the Wallet Auditor. Refresh the wallet assessment before acting if market conditions or positions have changed.</p>
+            <div className="import-actions"><button type="button" onClick={() => setValue({ ...(value as BuildRequest), wallet_exposure: walletImport })}>Use Imported Exposure</button><button type="button" onClick={() => { sessionStorage.removeItem(WALLET_HANDOFF_KEY); setWalletImport(null); setValue({ ...(value as BuildRequest), wallet_exposure: null }); }}>Clear Import</button><a href="/wallet">Return to Wallet Auditor</a></div>
+          </section> : null}
+          <StrategyForm mode={mode} value={value} setValue={setValue} submit={submit} loading={loading} liveMarket={liveMarket} marketLoading={marketLoading} marketError={marketError} refreshMarket={() => void refreshMarket()} />
+        </div>
         <div className="result-region">
           {error ? (
             <div className="error-box" role="alert">

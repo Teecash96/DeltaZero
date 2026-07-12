@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { RiskGauge } from "@/components/risk-gauge";
 import { analyzeWallet } from "@/lib/api";
+import { writeWalletHandoff } from "@/lib/handoff";
 import type {
   NormalizedPosition,
   WalletAnalyzeRequest,
@@ -446,6 +447,27 @@ function ExportActions({ result }: { result: WalletPortfolioResponse }) {
 }
 
 function InstitutionalReport({ result, protocols }: { result: WalletPortfolioResponse; protocols: WalletProtocol[] }) {
+  function buildHedgeRecommendation() {
+    const exposure = result.exposure_analysis;
+    if (!exposure || !result.recommendation) return;
+    const largest = result.largest_risk_contributors[0]?.asset ?? result.portfolio_allocation[0]?.asset ?? null;
+    writeWalletHandoff({
+      source: "wallet_auditor",
+      wallet_address: result.wallet_address,
+      asset: largest,
+      largest_risk_asset: largest,
+      gross_long_exposure_usd: exposure.gross_long_exposure_usd,
+      gross_short_exposure_usd: exposure.gross_short_exposure_usd,
+      net_delta_usd: exposure.net_delta_usd,
+      net_delta_pct: exposure.net_delta_pct,
+      current_hedge_ratio: result.risk_metrics.hedge_ratio,
+      portfolio_equity_usd: exposure.portfolio_equity_usd,
+      recommended_action: result.recommendation.action,
+      data_quality: result.assessment_status === "partial_data" ? "partial" : "complete",
+      data_timestamp: result.data_timestamp,
+    });
+    window.location.href = `/builder?source=wallet_auditor${largest ? `&asset=${encodeURIComponent(largest)}` : ""}`;
+  }
   return (
     <>
       {result.assessment_status === "partial_data" ? (
@@ -456,6 +478,7 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       ) : null}
       <div className="report-breadcrumb" aria-label="Report location"><span>Wallet Auditor</span><i aria-hidden="true">/</i><strong>Portfolio Intelligence Report</strong></div>
       <AssessmentHeader result={result} protocols={protocols} />
+      <button className="button button-primary wallet-hedge-cta" type="button" onClick={buildHedgeRecommendation}>Build Hedge Recommendation <span>→</span></button>
       <ExecutiveSummary result={result} />
       <PrimaryDrivers drivers={result.primary_drivers} />
       <ExposureAnalysis result={result} />

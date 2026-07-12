@@ -171,3 +171,9 @@ The adapter recognizes only current supported positions: non-zero perpetual posi
 - Coverage is limited to supported public data sources.
 - Availability depends on read access to public protocol interfaces.
 - Wallet analysis is read-only and does not execute trades.
+
+## Wallet to Hedge Workflow
+
+For meaningful `positions_found` and `partial_data` assessments, the frontend can pass normalized exposure totals and the dominant risk asset to Strategy Builder using browser session storage. No full report is placed in the URL and nothing is persisted in a database.
+
+The Builder supports long-dominant portfolios that need an adjustment to an existing short hedge. Short-dominant or unreliable exposure returns an explicit limitation rather than inventing a trade. The resulting proposed hedge may be sent to Stress Test. No step requests a signature or executes a transaction.
