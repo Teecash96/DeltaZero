@@ -4,7 +4,7 @@ const quickLinks = [
   { label: "Home", href: "#home", note: "Hero and product summary" },
   { label: "How It Works", href: "#how-it-works", note: "The five-step workflow" },
   { label: "Products", href: "#products", note: "Builder, Auditor, Stress Test" },
-  { label: "Integrations", href: "#integrations", note: "Planned roadmap connections" },
+  { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
   { label: "Docs", href: "#docs", note: "Repository and API references" },
   { label: "FAQs", href: "#faqs", note: "Common questions and constraints" },
 ];
@@ -78,14 +78,33 @@ const products = [
   },
 ];
 
-const integrations = [
-  { name: "Hyperliquid", useCase: "Perpetual short hedges, funding rate monitoring, position data." },
-  { name: "Morpho", useCase: "Lending vault yield, collateral and borrowing analysis." },
-  { name: "Aave", useCase: "Lending, borrowing, collateral health, stablecoin carry." },
-  { name: "Pendle", useCase: "Fixed yield, PT and YT positions, yield maturity analysis." },
-  { name: "Ethena", useCase: "Synthetic dollar and hedged yield strategy analysis." },
-  { name: "Live Funding Rates", useCase: "Real time perpetual funding inputs from supported venues." },
-  { name: "Wallet Position Import", useCase: "Read only wallet based position discovery and portfolio auditing." },
+const liveIntegrations = [
+  {
+    name: "Hyperliquid",
+    badge: "LIVE",
+    useCase: "Read-only perpetual positions, margin data, account value, unrealized PnL, and liquidation context through public protocol data.",
+  },
+  {
+    name: "Aave",
+    badge: "LIVE WITH RPC",
+    useCase: "Read-only supply, borrow, collateral, debt, and health-factor analysis when supported RPC access is configured.",
+  },
+  {
+    name: "Morpho",
+    badge: "LIVE",
+    useCase: "Read-only market and vault positions through Morpho’s supported public data API.",
+  },
+];
+
+const plannedIntegrations = [
+  { name: "Pendle", badge: "PLANNED", useCase: "Fixed-yield, PT, YT, and maturity-risk analysis." },
+  { name: "Ethena", badge: "PLANNED", useCase: "Synthetic-dollar and hedged-yield strategy analysis." },
+  { name: "Live Funding Rates", badge: "PLANNED", useCase: "Continuous real-time funding inputs from supported venues." },
+  {
+    name: "Additional Wallet and Protocol Coverage",
+    badge: "PLANNED",
+    useCase: "More networks, assets, protocols, LP positions, and portfolio adapters.",
+  },
 ];
 
 const strategyPlatforms = [
@@ -138,7 +157,7 @@ const faqs = [
   {
     question: "Are protocol integrations live?",
     answer:
-      "No. Hyperliquid, Morpho, Aave, Pendle, Ethena, live funding data, and wallet import are planned roadmap integrations.",
+      "Hyperliquid, Aave, and Morpho are live read-only integrations. Pendle, Ethena, live funding inputs, and additional coverage remain planned. Wallet Auditor is available as a PRO PREVIEW.",
   },
   {
     question: "Is my data stored?",
@@ -172,8 +191,8 @@ export default function Home() {
           <Link href="/builder" className="button button-primary">
             Build a strategy <span>→</span>
           </Link>
-          <Link href="/demo" className="button button-secondary">
-            Explore the demo
+          <Link href="/wallet" className="button button-secondary">
+            Wallet Auditor
           </Link>
         </div>
         <div className="trust-row">
@@ -272,20 +291,61 @@ export default function Home() {
         <div className="section-heading">
           <div>
             <p className="kicker">Integrations</p>
-            <h2>Planned Integrations</h2>
+            <h2>Supported read-only integrations and roadmap coverage.</h2>
           </div>
-          <p>These are roadmap integrations, not currently live integrations.</p>
+          <p>Live integrations are read-only. DeltaZero does not request signatures, private keys, approvals, or transaction permissions.</p>
         </div>
-        <div className="integration-grid">
-          {integrations.map((item) => (
-            <article key={item.name} className="integration-card">
+        <div className="integration-group">
+          <div className="integration-group-head">
+            <p className="kicker">Live read-only integrations</p>
+            <span>Supported now</span>
+          </div>
+          <div className="integration-grid">
+            {liveIntegrations.map((item) => (
+              <article key={item.name} className="integration-card">
+                <div className="integration-head">
+                  <h3>{item.name}</h3>
+                  <span>{item.badge}</span>
+                </div>
+                <p>{item.useCase}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="integration-group">
+          <div className="integration-group-head">
+            <p className="kicker">Wallet Auditor</p>
+            <span>Pro preview</span>
+          </div>
+          <div className="integration-single">
+            <article className="integration-card">
               <div className="integration-head">
-                <h3>{item.name}</h3>
-                <span>Planned</span>
+                <h3>Wallet Auditor</h3>
+                <span>PRO PREVIEW</span>
               </div>
-              <p>{item.useCase}</p>
+              <p>Read-only wallet position discovery and portfolio risk assessment across supported integrations.</p>
             </article>
-          ))}
+          </div>
+        </div>
+        <div className="integration-group">
+          <div className="integration-group-head">
+            <p className="kicker">Planned integrations</p>
+            <span>Roadmap coverage</span>
+          </div>
+          <div className="integration-grid">
+            {plannedIntegrations.map((item) => (
+              <article key={item.name} className="integration-card">
+                <div className="integration-head">
+                  <h3>{item.name}</h3>
+                  <span>{item.badge}</span>
+                </div>
+                <p>{item.useCase}</p>
+              </article>
+            ))}
+          </div>
+          <p className="integration-note">
+            Unsupported positions and unavailable data sources are reported explicitly and are not treated as zero risk.
+          </p>
         </div>
       </section>
 

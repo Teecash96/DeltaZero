@@ -496,9 +496,11 @@ function WalletRequestForm({
         </section>
       ))}
       <button className="button button-primary form-submit" disabled={loading}>
-        {loading ? "Analyzing wallet..." : (
+        {loading ? (
+          "Auditing wallet..."
+        ) : (
           <>
-            Analyze Wallet
+            Audit Wallet or Positions
             <span>→</span>
           </>
         )}
@@ -547,7 +549,7 @@ export function WalletPortfolioWorkspace() {
           <h1>Read-only wallet portfolio analysis</h1>
           <div className="wallet-pro-badge">PRO PREVIEW</div>
           <p>
-            Analyze supported public wallet positions and receive a read-only DeltaZero risk assessment.
+            Audit supported public wallet positions and receive a read-only DeltaZero risk assessment.
           </p>
         </div>
         <div className="wallet-page-side">
@@ -574,7 +576,7 @@ export function WalletPortfolioWorkspace() {
             <div className="panel loading-state">
               <div>
                 <div className="spinner" />
-                <strong>Analyzing wallet</strong>
+                <strong>Auditing wallet</strong>
                 <p>Querying public protocol views and consolidating risk signals…</p>
               </div>
             </div>
