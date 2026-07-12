@@ -38,6 +38,35 @@ The project combines a focused Next.js interface with a typed FastAPI service an
 - **Supported assets** — SOL and ETH.
 - **Deterministic behavior** — identical inputs produce identical results; no model inference or external market feed is involved.
 
+## Live Demo
+
+[https://delta-zero-alpha.vercel.app](https://delta-zero-alpha.vercel.app)
+
+## Products
+
+- [Strategy Builder](#builder) — creates a pseudo delta neutral structure from capital, assumptions, and risk settings.
+- [Position Auditor](#auditor) — reviews an existing position and highlights hedge drift, capital risk, and corrective action.
+- [Stress Test](#stress-test) — evaluates how a structure changes under deterministic market shocks.
+
+## How It Works
+
+1. Input — users provide the asset, capital, risk tolerance, target style, yield assumptions, funding assumptions, fees, or existing position data.
+2. Analyze — DeltaZero evaluates estimated carry, hedge ratio, hedge drift, net delta, collateral resilience, capital at risk, and Safety Buffer.
+3. Assess — the deterministic risk engine compares the metrics against thresholds based on risk tolerance, target style, service type, and stress scenario.
+4. Decide — DeltaZero returns strategy health, recommended action, Decision Confidence, risk notes, and recommended structure where applicable.
+5. Act — the user or an autonomous agent can use the result to `OPEN`, `WAIT`, `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`.
+
+## Supported Target Styles
+
+DeltaZero currently supports these deterministic builder styles:
+
+- `neutral_yield`
+- `conservative_income`
+- `aggressive_carry`
+- `capital_preservation`
+
+Each style uses a different target hedge ratio, collateral reserve, Safety Buffer threshold, and capital risk profile.
+
 ## Architecture
 
 ```text
@@ -75,6 +104,45 @@ The API accepts JSON requests and returns a shared strategy response containing 
 ### Risk Engine
 
 The risk engine is heuristic and deterministic. It derives hedge and carry measurements from user-provided notionals, collateral, APYs, and fee drag, then maps those metrics to `healthy`, `warning`, or `critical` states using constants defined in `backend/app/config.py`. The engine does not query exchanges, protocols, blockchains, or price feeds.
+
+## Planned Integrations
+
+These are roadmap integrations, not currently live integrations.
+
+- Hyperliquid — perpetual short hedges, funding rate monitoring, and position data.
+- Morpho — lending vault yield, collateral, and borrowing analysis.
+- Aave — lending, borrowing, collateral health, and stablecoin carry.
+- Pendle — fixed yield, PT and YT positions, and yield maturity analysis.
+- Ethena — synthetic dollar and hedged yield strategy analysis.
+- Live Funding Rates — real time perpetual funding inputs from supported venues.
+- Wallet Position Import — read only wallet based position discovery and portfolio auditing.
+
+## Where These Strategies Can Be Used
+
+- Neutral Yield Carry — hold or earn yield on the long leg while shorting perpetual futures to reduce directional exposure. Relevant platforms: Hyperliquid, OKX, Drift, GMX, Aave, Morpho, Kamino.
+- Conservative Income — lower leverage, larger collateral reserve, tighter hedge, and lower capital risk. Relevant platforms: Aave, Morpho, Spark, Compound, Silo.
+- Aggressive Carry — higher capital deployment, higher expected carry, wider risk tolerance, and smaller collateral reserve. Relevant platforms: Hyperliquid, OKX, Drift, GMX, Ethena.
+- Capital Preservation — principal protection, tight hedge alignment, large collateral reserve, and low capital at risk. Relevant platforms: Aave, Morpho, Pendle fixed yield, Spark, Ethena hedged products.
+
+DeltaZero currently analyzes user supplied assumptions and does not execute trades or connect directly to these protocols.
+
+## FAQ Summary
+
+- Is DeltaZero non custodial? Yes. The current MVP does not hold funds, connect wallets, or execute transactions.
+- Does DeltaZero execute trades? No. It provides deterministic risk analysis and recommendations only.
+- Which assets are supported? SOL and ETH.
+- Which target styles are supported? Neutral Yield, Conservative Income, Aggressive Carry, and Capital Preservation.
+- How is the recommendation generated? The backend evaluates carry, hedge alignment, Safety Buffer, capital risk, and service specific thresholds using deterministic rules.
+- What is Decision Confidence? It measures how clearly the current metrics support the recommendation. It is not a measure of profitability or strategy quality.
+- Are protocol integrations live? No. Hyperliquid, Morpho, Aave, Pendle, Ethena, live funding data, and wallet import are planned roadmap integrations.
+- Is my data stored? No. The current MVP has no database and does not retain submitted strategy inputs.
+- Can autonomous agents use DeltaZero? Yes. The services expose structured API responses that can be consumed by agents, dashboards, or trading workflows.
+
+## External Links
+
+- Documentation: [Repository README](https://github.com/Teecash96/DeltaZero#readme)
+- GitHub: [Teecash96/DeltaZero](https://github.com/Teecash96/DeltaZero)
+- X: [@DeltaZeroASP](https://x.com/DeltaZeroASP)
 
 ## Project Structure
 
@@ -351,5 +419,7 @@ No open-source license has been added to this repository yet. Until a license is
 ## Acknowledgements
 
 DeltaZero was created for the **OKX AI Hackathon** as an exploration of clear, deterministic risk decision support for pseudo-delta-neutral DeFi strategies.
+
+Built by Akanbi Labs.
 
 Built with FastAPI, Next.js, TypeScript, Tailwind CSS, and the broader open-source Python and JavaScript ecosystems.

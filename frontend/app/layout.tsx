@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = { title: "DeltaZero — Neutral Carry Intelligence", description: "Deterministic risk analysis for pseudo-delta-neutral DeFi strategies." };
 
@@ -20,7 +21,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </nav>
         </header>
         <main>{children}</main>
-        <footer><Link href="/" className="logo"><span className="logo-mark">Δ</span>DELTA<span>ZERO</span></Link><p>Decision support for neutral carry strategies.</p><span>Built for clear thinking.</span></footer>
+        <SiteFooter />
       </body>
     </html>
   );
