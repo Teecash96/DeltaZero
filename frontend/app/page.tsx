@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AgentSdkSection } from "@/components/agent-sdk-section";
+import { InteractiveStrategyPreview } from "@/components/interactive-strategy-preview";
 
 const quickLinks = [
   { label: "Home", href: "#home", note: "Hero and product summary" },
@@ -6,6 +8,7 @@ const quickLinks = [
   { label: "Products", href: "#products", note: "Builder, Auditor, Stress Test" },
   { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
   { label: "Docs", href: "#docs", note: "Repository and API references" },
+  { label: "Agents", href: "#agents", note: "SDKs and automated workflows" },
   { label: "FAQs", href: "#faqs", note: "Common questions and constraints" },
 ];
 
@@ -195,6 +198,7 @@ export default function Home() {
             Wallet Auditor
           </Link>
         </div>
+        <InteractiveStrategyPreview />
         <div className="trust-row">
           <span>Deterministic outputs</span>
           <span>No wallet required</span>
@@ -395,6 +399,8 @@ export default function Home() {
           </article>
         </div>
       </section>
+
+      <AgentSdkSection />
 
       <section id="faqs" className="section-wrap anchor-section">
         <div className="section-heading">

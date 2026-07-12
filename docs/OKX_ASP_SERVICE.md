@@ -108,3 +108,39 @@ If this service is ever submitted into an OKX-reviewed ASP catalog, the document
 - SLA and support scope
 - access policy and rate-limit policy
 - operational monitoring notes
+
+## SDK Usage Examples
+
+The SDKs are local repository packages that call the live DeltaZero API. They are not claimed to be published.
+
+### TypeScript
+
+```ts
+import { DeltaZeroClient } from "@deltazero/core";
+
+const client = new DeltaZeroClient({
+  baseUrl: "https://deltazero-production.up.railway.app",
+});
+
+const report = await client.auditWallet({
+  wallet_address: "0x1234567890abcdef1234567890abcdef12345678",
+  networks: ["ethereum", "hyperliquid"],
+  protocols: ["hyperliquid", "aave"],
+  stress_profile: "standard",
+});
+```
+
+### Python
+
+```python
+from deltazero import DeltaZeroClient
+
+client = DeltaZeroClient(base_url="https://deltazero-production.up.railway.app")
+
+report = client.audit_wallet({
+    "wallet_address": "0x1234567890abcdef1234567890abcdef12345678",
+    "networks": ["ethereum", "hyperliquid"],
+    "protocols": ["hyperliquid", "aave"],
+    "stress_profile": "standard",
+})
+```

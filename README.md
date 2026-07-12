@@ -34,11 +34,133 @@ https://delta-zero-alpha.vercel.app
 - Strategy health and recommendation outputs from a centralized risk engine.
 - Decision Confidence from 0 to 100 to show how clearly the metrics support the recommendation.
 - Readable Safety Buffer and capital-at-risk analysis.
+- Lightweight Interactive Strategy Preview on the landing page.
+- TypeScript and Python SDK preview packages for agents and dashboards.
 - Scenario-based impairment analysis in the stress test flow.
 - Read-only wallet portfolio analysis for supported public positions.
 - Responsive dark green interface with loading, error, and raw JSON states.
 - Typed request and response contracts mirrored between backend and frontend.
 - No authentication, no wallet signing, no trade execution, and no database.
+
+## Interactive Strategy Preview
+
+The landing page includes a small illustrative simulation that lets users toggle between Conservative Income and Aggressive Carry under Low, Medium, or High market volatility. It is a frontend preview only. The values are deterministic presets and are labeled clearly as illustrative.
+
+The preview is designed to show how style and stress influence hedge drift, Safety Buffer, and the recommended action before a user opens the full Builder.
+
+## Built for Agents
+
+DeltaZero exposes deterministic, structured risk assessments that can be consumed by agents, dashboards, and automated workflows.
+
+The project includes local SDK packages for integration work:
+
+- TypeScript SDK: `sdk/typescript`
+- Python SDK: `sdk/python`
+
+Current status:
+
+- Local SDK package
+- Planned npm publication
+- Planned PyPI publication
+
+## TypeScript SDK
+
+The TypeScript SDK is a thin client around the deployed API. It does not duplicate backend logic.
+
+Supported methods:
+
+- `buildStrategy()`
+- `auditPosition()`
+- `stressTest()`
+- `auditWallet()`
+
+Install it from the local repository while developing:
+
+```bash
+cd sdk/typescript
+npm test
+```
+
+Example:
+
+```ts
+import { DeltaZeroClient } from "@deltazero/core";
+
+const client = new DeltaZeroClient({
+  baseUrl: "https://deltazero-production.up.railway.app",
+});
+
+const report = await client.buildStrategy({
+  asset: "SOL",
+  capital_usd: 5000,
+  risk_tolerance: "medium",
+  target_style: "neutral_yield",
+  long_yield_apy: 14,
+  short_funding_apy: 3,
+  fee_drag_apy: 1,
+});
+```
+
+## Python SDK
+
+The Python SDK is also a thin client around the deployed API.
+
+Supported methods:
+
+- `build_strategy()`
+- `audit_position()`
+- `stress_test()`
+- `audit_wallet()`
+
+Install it from the local repository while developing:
+
+```bash
+cd sdk/python
+python -m pytest
+```
+
+Example:
+
+```python
+from deltazero import DeltaZeroClient
+
+client = DeltaZeroClient(base_url="https://deltazero-production.up.railway.app")
+
+report = client.build_strategy({
+    "asset": "SOL",
+    "capital_usd": 5000,
+    "risk_tolerance": "medium",
+    "target_style": "neutral_yield",
+    "long_yield_apy": 14,
+    "short_funding_apy": 3,
+    "fee_drag_apy": 1,
+})
+```
+
+## Agent Use Cases
+
+- Portfolio automation that needs deterministic JSON responses.
+- Dashboards that need a live API client without duplicate business logic.
+- Offline workflows that call the Builder, Auditor, Stress Test, and Wallet Auditor endpoints.
+
+## API Base URL
+
+The frontend uses `NEXT_PUBLIC_API_BASE` and defaults to `http://localhost:8000`.
+
+The SDKs use the same API base URL convention and can target:
+
+- `http://localhost:8000` for local development
+- `https://deltazero-production.up.railway.app` for production
+
+## Visual Metric Explanation
+
+The risk UI highlights three measures with lightweight radial indicators:
+
+- Safety Buffer — the collateral resilience score on a 0 to 100 scale.
+- Decision Confidence — how clearly the recommendation is supported, not a profitability score.
+- Hedge Drift — the current drift percentage versus the acceptable target or threshold.
+
+These indicators are supportive and deterministic. They do not represent live market intelligence.
 
 ## How It Works
 
@@ -167,6 +289,9 @@ DeltaZero/
 │   ├── OKX_ASP_SERVICE.md
 │   ├── PROJECT.md
 │   └── WALLET_AUDITOR.md
+├── sdk/
+│   ├── python/
+│   └── typescript/
 ├── frontend/
 │   ├── app/
 │   │   ├── auditor/

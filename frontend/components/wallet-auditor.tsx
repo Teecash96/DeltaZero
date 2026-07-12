@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { analyzeWallet } from "@/lib/api";
+import { RiskGauge } from "@/components/risk-gauge";
 import type {
   NormalizedPosition,
   WalletAnalyzeRequest,
@@ -120,9 +121,16 @@ function WalletAssessment({
             <strong className={`action-value action-${action.toLowerCase()}`}>{action}</strong>
           </div>
           <div className="decision-confidence">
-            <span className="decision-label">Decision Confidence</span>
-            <strong>{result.decision_confidence === null ? "—" : `${result.decision_confidence}%`}</strong>
-            <p>Confidence reflects how clearly the current metrics support the recommended action.</p>
+            <RiskGauge
+              value={result.decision_confidence ?? 0}
+              max={100}
+              tone="positive"
+              label="Decision clarity"
+              caption="Confidence reflects how clearly the current metrics support the recommended action, not profitability."
+              suffix="%"
+              size="sm"
+            />
+            <p>Confidence reflects how clearly the current metrics support the recommended action, not profitability.</p>
           </div>
         </div>
         <h2>{actionCopy}</h2>
@@ -694,10 +702,16 @@ export function WalletPortfolioWorkspace() {
                       <h2>Safety Buffer</h2>
                       <p>Collateral resilience score</p>
                     </div>
-                    <div className="safety-score">
-                      <strong>{(result.risk_metrics.safety_buffer_score ?? 0).toFixed(1)}</strong>
-                      <span>{(result.risk_metrics.safety_buffer_score ?? 0) >= 80 ? "Strong" : (result.risk_metrics.safety_buffer_score ?? 0) >= 70 ? "Healthy" : (result.risk_metrics.safety_buffer_score ?? 0) >= 60 ? "Acceptable" : "Weak"}</span>
-                    </div>
+      <div className="safety-score">
+        <RiskGauge
+          value={result.risk_metrics.safety_buffer_score ?? 0}
+          max={100}
+          tone={(result.risk_metrics.safety_buffer_score ?? 0) >= 80 ? "positive" : (result.risk_metrics.safety_buffer_score ?? 0) >= 60 ? "warning" : "danger"}
+          label={(result.risk_metrics.safety_buffer_score ?? 0) >= 80 ? "Strong" : (result.risk_metrics.safety_buffer_score ?? 0) >= 70 ? "Healthy" : (result.risk_metrics.safety_buffer_score ?? 0) >= 60 ? "Acceptable" : "Weak"}
+          caption="Collateral resilience"
+          size="md"
+        />
+      </div>
                   </section>
                   <WalletMetrics result={result} />
                   <section className="panel wallet-actions-panel">

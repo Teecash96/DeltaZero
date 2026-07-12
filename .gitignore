@@ -15,6 +15,7 @@ node_modules/
 .next/
 out/
 build/
+sdk/**/dist/
 
 # Local environment files (keep documented examples)
 .env

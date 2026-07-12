@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { auditStrategy, buildStrategy, stressTestStrategy } from "@/lib/api";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
+import { RiskGauge } from "@/components/risk-gauge";
 import type {
   AuditRequest,
   AuditResponse,
@@ -392,15 +393,19 @@ function SafetyBufferCard({ score }: { score: number }) {
 
   return (
     <section className={`panel safety-hero safety-${status}`}>
-      <div>
+      <div className="safety-copy">
         <span className="safety-kicker">Primary risk signal</span>
         <h2>Safety Buffer</h2>
         <p>Collateral resilience score</p>
       </div>
-      <div className="safety-score">
-        <strong>{score.toFixed(1)}</strong>
-        <span>{safetyBufferLabel(score)}</span>
-      </div>
+      <RiskGauge
+        value={score}
+        max={100}
+        tone={score >= 80 ? "positive" : score >= 60 ? "warning" : "danger"}
+        label={safetyBufferLabel(score)}
+        caption="Collateral resilience"
+        size="md"
+      />
     </section>
   );
 }
@@ -510,9 +515,16 @@ function DecisionPanel({
             <strong className={`action-value action-${action.toLowerCase()}`}>{action}</strong>
           </div>
           <div className="decision-confidence">
-            <span className="decision-label">Decision Confidence</span>
-            <strong>{result.decision_confidence}%</strong>
-            <p>Confidence reflects how clearly the current metrics support the recommended action.</p>
+            <RiskGauge
+              value={result.decision_confidence}
+              max={100}
+              tone="positive"
+              label="Decision clarity"
+              caption="Confidence reflects how clearly the current metrics support the recommended action, not profitability."
+              suffix="%"
+              size="sm"
+            />
+            <p>Confidence reflects how clearly the current metrics support the recommended action, not profitability.</p>
           </div>
         </div>
         <h2>{mainSentence}</h2>
@@ -573,20 +585,34 @@ function MetricCard({
   helper,
   state,
   primary,
+  gauge,
 }: {
   label: string;
   value: string;
   helper: string;
   state: DecisionSupportState;
   primary: boolean;
+  gauge?: { value: number; max: number; tone: "positive" | "warning" | "danger"; label: string; caption: string; suffix?: string };
 }) {
   return (
-    <article className={`metric-card ${primary ? "metric-primary" : "metric-secondary"} ${metricStateClass(state)}`}>
+    <article className={`metric-card ${primary ? "metric-primary" : "metric-secondary"} ${metricStateClass(state)} ${gauge ? "metric-gauge-card" : ""}`}>
       <div className="metric-topline">
         <label>{label}</label>
         <span>{state === "positive" ? "Positive" : "Warning"}</span>
       </div>
-      <strong>{value}</strong>
+      {gauge ? (
+        <RiskGauge
+          value={gauge.value}
+          max={gauge.max}
+          tone={gauge.tone}
+          label={gauge.label}
+          caption={gauge.caption}
+          suffix={gauge.suffix}
+          size={primary ? "md" : "sm"}
+        />
+      ) : (
+        <strong>{value}</strong>
+      )}
       <small>{helper}</small>
     </article>
   );
@@ -647,12 +673,21 @@ function MetricsView({
     value: string;
     helper: string;
     state: DecisionSupportState;
+    gauge?: { value: number; max: number; tone: "positive" | "warning" | "danger"; label: string; caption: string; suffix?: string };
   }> = [
     {
       label: "Hedge drift",
       value: `${metrics.hedge_drift_pct.toFixed(1)}%`,
       helper: hedgeDriftLabel(metrics.hedge_drift_pct),
       state: hedgeSupportState,
+      gauge: {
+        value: metrics.hedge_drift_pct,
+        max: Math.max(hedgeThresholdForRequest(request, mode), metrics.hedge_drift_pct, 1),
+        tone: hedgeSupportState === "positive" ? "positive" : "warning",
+        label: "Hedge drift",
+        caption: `Threshold ${hedgeThresholdForRequest(request, mode).toFixed(1)}%`,
+        suffix: "%",
+      },
     },
     {
       label: "Net delta estimate",
@@ -701,6 +736,7 @@ function MetricsView({
             helper={card.helper}
             state={card.state}
             primary={false}
+            gauge={"gauge" in card ? card.gauge : undefined}
           />
         ))}
       </div>
