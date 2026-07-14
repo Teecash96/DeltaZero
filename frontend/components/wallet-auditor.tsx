@@ -2,8 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { RiskGauge } from "@/components/risk-gauge";
-import { ConfidenceBar, PaymentRequiredCard, ReportActions, StepProgress } from "@/components/report-polish";
+import { AnalysisConfidence, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { analyzeWallet, PaymentRequiredError, type X402Challenge } from "@/lib/api";
 import { writeWalletHandoff } from "@/lib/handoff";
 import type {
@@ -173,6 +172,7 @@ function WalletRequestForm({
 
 function AssessmentHeader({ result, protocols }: { result: WalletPortfolioResponse; protocols: WalletProtocol[] }) {
   const action = result.recommendation?.action;
+  const displayAction = recommendationLabel(action);
   const primaryCause = result.primary_drivers.find((driver) => driver.state === "critical" || driver.state === "warning") ?? result.primary_drivers[0];
   const expectedImprovement = result.recommended_plan[0]?.target ?? result.recommended_plan[0]?.action ?? "Re-analyze after the recommended plan";
   const timeHorizon = action === "HOLD" ? "Next monitoring cycle" : action === "REBALANCE" ? "Before increasing exposure" : "Immediate risk review";
@@ -188,23 +188,14 @@ function AssessmentHeader({ result, protocols }: { result: WalletPortfolioRespon
       <div className="wallet-assessment-grid">
         <div className="wallet-assessment-action">
           <span>Recommended Action</span>
-          <strong className={`action-value action-${action?.toLowerCase()}`}>{action}</strong>
+          <strong className={`action-value action-${action?.toLowerCase()}`}>{displayAction}</strong>
         </div>
         <div><span>Strategy Health</span><strong className={`wallet-status-value health-${result.strategy_health}`}>{result.strategy_health}</strong></div>
         <div><span>Data Quality</span><strong>{result.data_quality}</strong></div>
         <div><span>Supported Positions</span><strong>{result.supported_positions_found}</strong></div>
         <div><span>Protocols Checked</span><strong>{protocols.length}</strong></div>
         <div className="wallet-clarity-cell">
-          <RiskGauge
-            value={result.decision_confidence ?? 0}
-            max={100}
-            tone="positive"
-            label="Decision clarity"
-            caption="Recommendation support"
-            suffix="%"
-            size="sm"
-          />
-          <ConfidenceBar value={result.decision_confidence ?? 0} label="Decision clarity" />
+          <AnalysisConfidence value={result.decision_confidence ?? 0} />
         </div>
       </div>
       <div className="decision-detail-grid wallet-decision-details">
@@ -213,14 +204,26 @@ function AssessmentHeader({ result, protocols }: { result: WalletPortfolioRespon
         <div><span>Expected Improvement</span><strong>{expectedImprovement}</strong></div>
         <div><span>Time Horizon</span><strong>{timeHorizon}</strong></div>
       </div>
-      <p className="wallet-clarity-copy">Measures how strongly the available portfolio metrics support the recommendation.</p>
+      <p className="wallet-clarity-copy">Confidence measures data completeness and model certainty. It does not predict profitability.</p>
       <details className="wallet-clarity-details">
         <summary>Why this recommendation?</summary>
-        <p>DeltaZero recommends {action} because {result.recommendation?.summary.charAt(0).toLowerCase()}{result.recommendation?.summary.slice(1)}</p>
+        <p><strong>{displayAction}</strong> is the appropriate next step because {result.recommendation?.summary.charAt(0).toLowerCase()}{result.recommendation?.summary.slice(1)}</p>
         <ul>{result.primary_drivers.filter((driver) => driver.state !== "unavailable").slice(0, 4).map((driver) => <li key={driver.metric}>{driver.explanation}</li>)}</ul>
       </details>
     </section>
   );
+}
+
+function PortfolioSummaryStrip({ result, protocols }: { result: WalletPortfolioResponse; protocols: WalletProtocol[] }) {
+  const summary = result.portfolio_summary;
+  const items = [
+    ["Portfolio Value", usd(summary.current_position_value_usd), "Supported position value"],
+    ["Net Exposure", usd(summary.net_delta_usd), "Residual directional exposure"],
+    ["Current Hedge Ratio", number(result.risk_metrics.hedge_ratio, 3), "Short exposure relative to long"],
+    ["Protocols Covered", String(result.executive_summary?.protocol_count ?? protocols.length), "Successfully represented sources"],
+    ["Risk Rating", result.strategy_health ?? "Unavailable", "Current deterministic assessment"],
+  ];
+  return <section className="wallet-summary-strip" aria-label="Portfolio summary">{items.map(([label, value, copy]) => <article key={label}><span>{label}</span><strong className={label === "Risk Rating" && result.strategy_health ? `health-${result.strategy_health}` : ""}>{value}</strong><small>{copy}</small></article>)}</section>;
 }
 
 function ExecutiveSummary({ result }: { result: WalletPortfolioResponse }) {
@@ -496,6 +499,13 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
         </section>
       ) : null}
       <div className="report-breadcrumb" aria-label="Report location"><span>Wallet Auditor</span><i aria-hidden="true">/</i><strong>Portfolio Intelligence Report</strong></div>
+      <ReportActions
+        data={result}
+        analysis={`DeltaZero Wallet Auditor\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
+        filename={`deltazero-wallet-${result.wallet_address.slice(0, 10)}.json`}
+        title="DeltaZero Wallet Portfolio Assessment"
+      />
+      <PortfolioSummaryStrip result={result} protocols={protocols} />
       <AssessmentHeader result={result} protocols={protocols} />
       <button className="button button-primary wallet-hedge-cta" type="button" onClick={buildHedgeRecommendation}>Build Hedge Recommendation <span>→</span></button>
       <ExecutiveSummary result={result} />
@@ -513,12 +523,6 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       <PositionTable positions={result.positions} />
       <StressSummary result={result} />
       <ProtocolWarnings result={result} />
-      <ReportActions
-        data={result}
-        analysis={`DeltaZero Wallet Auditor\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
-        filename={`deltazero-wallet-${result.wallet_address.slice(0, 10)}.json`}
-        title="DeltaZero Wallet Portfolio Assessment"
-      />
       <details className="panel json-box">
         <summary><span><b>Raw JSON</b><small>Developer payload</small></span><i aria-hidden="true">⌄</i></summary>
         <pre>{JSON.stringify(result, null, 2)}</pre>
@@ -576,11 +580,11 @@ export function WalletPortfolioWorkspace() {
             <div className="result-stack">
               {result.assessment_status === "no_supported_positions" ? (
                 <section className="panel wallet-empty-card wallet-portfolio-status-card">
-                  <span className="decision-label">PORTFOLIO STATUS</span><h2>NO SUPPORTED POSITIONS</h2><p>DeltaZero checked the selected networks and protocols but found no supported open positions for this wallet.</p>
+                  <span className="decision-label">PORTFOLIO STATUS</span><h2>No Supported Positions Found</h2><p>This wallet currently has no supported lending or perpetual positions across the selected protocols.</p>
                   <div className="wallet-empty-meta">
                     {[["Wallet address", result.wallet_address], ["Protocols checked", value.protocols.join(", ")], ["Networks checked", value.networks.join(", ")], ["Supported positions", String(result.supported_positions_found)], ["Assessment time", result.data_timestamp ?? "Unavailable"]].map(([label, text]) => <div key={label}><label>{label}</label><strong>{text}</strong></div>)}
                   </div>
-                  <div className="wallet-empty-action">Try another wallet or select different networks and protocols.</div>
+                  <div className="wallet-empty-action"><strong>Try:</strong><ul><li>another wallet</li><li>additional protocols</li><li>refreshing the audit</li></ul></div>
                 </section>
               ) : result.assessment_status === "insufficient_data" ? (
                 <section className="panel wallet-empty-card wallet-incomplete-card">

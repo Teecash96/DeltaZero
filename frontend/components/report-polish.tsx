@@ -4,38 +4,74 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { X402Challenge, X402PaymentOption } from "@/lib/api";
 
-function paymentAsset(option: X402PaymentOption | undefined) {
-  const name = option?.extra?.name;
-  return typeof name === "string" && name ? name : option?.asset ?? "Unavailable";
-}
-
 function paymentPrice(option: X402PaymentOption | undefined) {
   if (!option?.amount) return "Unavailable";
   const decimals = option.extra?.decimals;
   const name = option.extra?.name;
-  if (typeof decimals === "number" && /^\d+$/.test(option.amount)) {
-    const numeric = Number(option.amount) / 10 ** decimals;
-    if (Number.isFinite(numeric)) return `${numeric.toLocaleString(undefined, { maximumFractionDigits: decimals })}${typeof name === "string" ? ` ${name}` : ""}`;
+  const stablecoin = typeof name === "string" && name.toUpperCase().startsWith("USD");
+  const displayDecimals = typeof decimals === "number" ? decimals : stablecoin ? 6 : null;
+  if (displayDecimals !== null && /^\d+$/.test(option.amount)) {
+    const numeric = Number(option.amount) / 10 ** displayDecimals;
+    if (Number.isFinite(numeric)) return `${numeric.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: displayDecimals })}${stablecoin ? " USDT" : ""}`;
   }
-  return `${option.amount} base units${typeof name === "string" ? ` ${name}` : ""}`;
+  return "Unavailable";
+}
+
+function networkName(network: string | undefined) {
+  return network === "eip155:196" ? "X Layer" : network ?? "Unavailable";
+}
+
+function shortAddress(address: string | undefined) {
+  return address && address.length > 12 ? `${address.slice(0, 6)}...${address.slice(-5)}` : address ?? "Unavailable";
 }
 
 export function PaymentRequiredCard({ challenge, retry, loading }: { challenge: X402Challenge | null; retry: () => void; loading: boolean }) {
   const option = challenge?.accepts?.[0];
-  const details = [["Price", paymentPrice(option)], ["Network", option?.network ?? "Unavailable"], ["Asset", paymentAsset(option)], ["Receiver", option?.payTo ?? "Unavailable"]];
+  const [copyFeedback, setCopyFeedback] = useState(false);
+  const details = [["Cost", paymentPrice(option)], ["Network", networkName(option?.network)], ["Receiver", shortAddress(option?.payTo)], ["Verification", "Automatic"]];
+  async function copyReceiver() {
+    if (!option?.payTo) return;
+    try {
+      await navigator.clipboard.writeText(option.payTo);
+      setCopyFeedback(true);
+      window.setTimeout(() => setCopyFeedback(false), 1800);
+    } catch {
+      setCopyFeedback(false);
+    }
+  }
   return (
-    <section className="panel payment-required-card" role="alert" aria-labelledby="payment-required-title">
-      <span className="payment-required-icon" aria-hidden="true">◇</span>
-      <div className="payment-required-copy">
-        <span className="decision-eyebrow">x402 payment boundary</span>
-        <h2 id="payment-required-title">Payment Required</h2>
-        <p>This endpoint is protected by x402.</p>
-        {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
-        <button className="button button-primary" type="button" onClick={retry} disabled={loading}>{loading ? "Retrying..." : "Retry after payment"}</button>
-        <small>DeltaZero will retry the request. Payment status is verified by the protected endpoint.</small>
-      </div>
-    </section>
+    <div className="payment-unlock-stack">
+      <section className="panel payment-required-card" role="alert" aria-labelledby="payment-required-title">
+        <span className="payment-required-icon" aria-hidden="true">◇</span>
+        <div className="payment-required-copy">
+          <span className="decision-eyebrow">Premium analysis</span>
+          <h2 id="payment-required-title">Unlock Premium Strategy Analysis</h2>
+          <p>This analysis is protected by the OKX x402 payment protocol. A one time payment unlocks the deterministic strategy computation. DeltaZero never requests wallet signatures, approvals, or private keys.</p>
+          {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}{label === "Receiver" ? <button type="button" onClick={() => void copyReceiver()} aria-label="Copy receiver address">{copyFeedback ? "Copied" : "Copy"}</button> : null}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
+          <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>
+          <small>Payment is verified automatically by the protected endpoint.</small>
+        </div>
+      </section>
+      <section className="panel payment-trust-panel" aria-labelledby="payment-trust-title">
+        <div><span className="decision-eyebrow">Security model</span><h2 id="payment-trust-title">Why DeltaZero is Safe</h2></div>
+        <div className="payment-trust-grid">
+          {[["◉", "Read Only", "Analysis reads submitted and public data without changing positions."], ["⊘", "No Signatures", "DeltaZero never asks you to sign a wallet message."], ["◇", "No Wallet Control", "No approvals, custody, or transaction permissions are requested."], ["≡", "Deterministic Analysis", "The same inputs produce the same transparent risk output."]].map(([icon, title, copy]) => <article key={title}><i aria-hidden="true">{icon}</i><strong>{title}</strong><p>{copy}</p></article>)}
+        </div>
+      </section>
+    </div>
   );
+}
+
+export function recommendationLabel(action: string | undefined) {
+  if (action === "OPEN" || action === "HOLD") return "Proceed";
+  if (action === "WAIT" || action === "REBALANCE") return "Adjust";
+  return "Avoid";
+}
+
+export function AnalysisConfidence({ value }: { value: number }) {
+  const score = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+  const level = score >= 80 ? "High" : score >= 60 ? "Moderate" : "Low";
+  return <div className="analysis-confidence" title="Confidence measures data completeness and model certainty. It does not predict profitability."><div><span>Analysis Confidence</span><strong>{score.toFixed(0)}%</strong><b>{level}</b></div><ConfidenceBar value={score} label="Analysis confidence" /><small>Confidence measures data completeness and model certainty. It does not predict profitability.</small></div>;
 }
 
 export function ConfidenceBar({ value, label = "Decision confidence" }: { value: number; label?: string }) {
@@ -128,11 +164,17 @@ export function ReportActions({
     }
   }
 
+  function printReport() {
+    window.print();
+    setFeedback("Print dialog opened.");
+  }
+
   return (
-    <div className="report-actions">
-      <button type="button" onClick={downloadJson}><span aria-hidden="true">↓</span> Download JSON</button>
-      <button type="button" onClick={() => void copyAnalysis()}><span aria-hidden="true">□</span> Copy Analysis</button>
-      <button type="button" onClick={() => void shareReport()}><span aria-hidden="true">↗</span> Share Report</button>
+    <div className="report-actions report-actions-top">
+      <button type="button" onClick={downloadJson}><span aria-hidden="true">↓</span> Export JSON</button>
+      <button type="button" onClick={() => void copyAnalysis()}><span aria-hidden="true">□</span> Copy Report</button>
+      <button type="button" onClick={() => void shareReport()}><span aria-hidden="true">↗</span> Share</button>
+      <button type="button" onClick={printReport}><span aria-hidden="true">▣</span> Print</button>
       <span role="status" aria-live="polite">{feedback}</span>
     </div>
   );

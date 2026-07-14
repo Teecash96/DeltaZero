@@ -6,7 +6,7 @@ import { auditStrategy, buildStrategy, getHyperliquidMarket, PaymentRequiredErro
 import { readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
-import { ConfidenceBar, PaymentRequiredCard, ReportActions, StepProgress } from "@/components/report-polish";
+import { AnalysisConfidence, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import type {
   AuditRequest,
   AuditResponse,
@@ -443,7 +443,7 @@ function Summary({ result }: { result: ResultValue }) {
     ["Asset", result.asset],
     ["Strategy name", result.strategy_name],
     ["Strategy health", result.strategy_health],
-    ["Recommended action", result.recommendation.action],
+    ["Recommendation", recommendationLabel(result.recommendation.action)],
     ["Estimated net carry APY", `${result.metrics.estimated_net_carry_apy.toFixed(1)}%`],
     ["Safety Buffer score", result.metrics.safety_buffer_score.toFixed(1)],
   ];
@@ -453,7 +453,7 @@ function Summary({ result }: { result: ResultValue }) {
       <div className="summary-heading">
         <div>
           <span className="summary-meta">Analysis complete · {result.service}</span>
-          <h2>AI Strategy Report</h2>
+          <h2>Strategy Risk Report</h2>
         </div>
         <span className="summary-check">✓ Complete</span>
       </div>
@@ -465,7 +465,7 @@ function Summary({ result }: { result: ResultValue }) {
               className={
                 label === "Strategy health"
                   ? `summary-state health-${result.strategy_health}`
-                  : label === "Recommended action"
+                  : label === "Recommendation"
                     ? `summary-state action-${result.recommendation.action.toLowerCase()}`
                     : ""
               }
@@ -489,6 +489,7 @@ function DecisionPanel({
   mode: Mode;
 }) {
   const action = result.recommendation.action;
+  const displayAction = recommendationLabel(action);
   const needsSafetyWarning = ["WAIT", "REDUCE", "REBALANCE", "CLOSE"].includes(action);
   const shouldShowPositiveMessage = action === "OPEN" || action === "HOLD";
   const mainSentence = needsSafetyWarning
@@ -545,25 +546,15 @@ function DecisionPanel({
           <span className="assessment-icon" aria-hidden="true">
             Δ
           </span>
-          <p className="decision-eyebrow">AI Assessment</p>
+          <p className="decision-eyebrow">Decision Assessment</p>
         </div>
         <div className="decision-summary-row">
           <div>
             <span className="decision-label">Recommended Action</span>
-            <strong className={`action-value action-${action.toLowerCase()}`}>{action}</strong>
+            <strong className={`action-value action-${action.toLowerCase()}`}>{displayAction}</strong>
           </div>
           <div className="decision-confidence">
-            <RiskGauge
-              value={result.decision_confidence}
-              max={100}
-              tone="positive"
-              label="Decision clarity"
-              caption="Confidence reflects how clearly the current metrics support the recommended action, not profitability."
-              suffix="%"
-              size="sm"
-            />
-            <p>Confidence reflects how clearly the current metrics support the recommended action, not profitability.</p>
-            <ConfidenceBar value={result.decision_confidence} label="Recommendation clarity" />
+            <AnalysisConfidence value={result.decision_confidence} />
           </div>
         </div>
         <h2>{mainSentence}</h2>
@@ -593,7 +584,7 @@ function DecisionPanel({
       <div className="decision-rationale">
         <span>Why this recommendation</span>
         <p>
-          DeltaZero recommends <strong>{action}</strong> because {result.recommendation.summary.charAt(0).toLowerCase() + result.recommendation.summary.slice(1)}
+          <strong>{displayAction}</strong> is the appropriate next step because {result.recommendation.summary.charAt(0).toLowerCase() + result.recommendation.summary.slice(1)}
           {distinctNotes[0] ? ` The report also identifies ${distinctNotes[0].charAt(0).toLowerCase() + distinctNotes[0].slice(1)}` : ""}
         </p>
         {distinctNotes.length > 1 ? <ul>{distinctNotes.slice(1, 3).map((note) => <li key={note}>{note}</li>)}</ul> : null}
@@ -788,19 +779,19 @@ function MetricsView({
 
 function StrategyBlueprint({ result, request }: { result: BuildResponse; request: BuildRequest }) {
   const cards = [
-    ["Expected Yield", `${request.long_yield_apy.toFixed(1)}%`, "Submitted annual yield assumption for the long leg."],
-    ["Target Hedge", result.recommended_structure.target_hedge_ratio.toFixed(3), "Short notional target relative to long exposure."],
-    ["Estimated Carry", `${result.metrics.estimated_net_carry_apy.toFixed(1)}%`, "Net annualized carry after funding and fee assumptions."],
-    ["Drawdown", "Not stress-tested", "Run Stress Test to estimate scenario impairment; no value is inferred here."],
-    ["Safety Score", `${result.metrics.safety_buffer_score.toFixed(1)} / 100`, "Deterministic resilience score from the evaluated structure."],
-    ["Recommendation", result.recommendation.action, result.recommendation.summary],
+    ["Expected Net Carry", `${result.metrics.estimated_net_carry_apy.toFixed(1)}%`, "Annualized carry after submitted funding and fee assumptions."],
+    ["Estimated Hedge Cost", `${request.short_funding_apy.toFixed(1)}%`, "Submitted annual funding cost for the short hedge."],
+    ["Capital Efficiency", `${result.metrics.carry_efficiency_score.toFixed(1)} / 100`, "Existing carry efficiency score for the proposed structure."],
+    ["Safety Buffer", `${result.metrics.safety_buffer_score.toFixed(1)} / 100`, "Existing resilience score for the evaluated structure."],
+    ["Expected Drawdown", "Unavailable", "Run Stress Test to measure scenario impairment."],
+    ["Recommendation", recommendationLabel(result.recommendation.action), result.recommendation.summary],
   ];
 
   return (
     <section className="panel strategy-blueprint">
-      <div className="section-label-row"><div><span className="decision-eyebrow">Strategy Blueprint</span><h2 className="panel-title">Proposed structure at a glance</h2></div><span>Read-only plan</span></div>
+      <div className="section-label-row"><div><span className="decision-eyebrow">Strategy Snapshot</span><h2 className="panel-title">Strategy Snapshot</h2></div><span>Measured values</span></div>
       <div className="blueprint-grid">
-        {cards.map(([label, value, helper]) => <article key={label}><span>{label}</span><strong className={label === "Recommendation" ? `action-${String(value).toLowerCase()}` : ""}>{value}</strong><p>{helper}</p></article>)}
+        {cards.map(([label, value, helper]) => <article key={label}><span>{label}</span><strong className={label === "Recommendation" ? `action-${result.recommendation.action.toLowerCase()}` : ""}>{value}</strong><p>{helper}</p></article>)}
       </div>
     </section>
   );
@@ -874,6 +865,12 @@ function Result({
         <i aria-hidden="true">/</i>
         <strong>{reportNames[mode]}</strong>
       </div>
+      <ReportActions
+        data={result}
+        analysis={`${reportNames[mode]}\nRecommendation: ${result.recommendation.action}\nRisk level: ${result.strategy_health}\nDecision confidence: ${result.decision_confidence.toFixed(0)}%\n${result.recommendation.summary}`}
+        filename={`deltazero-${mode}-${result.asset.toLowerCase()}.json`}
+        title={`DeltaZero ${reportNames[mode]}`}
+      />
       <Summary result={result} />
       <DecisionPanel result={result} request={request} mode={mode} />
       <SafetyBufferCard score={displayedMetrics.safety_buffer_score} />
@@ -964,12 +961,6 @@ function Result({
           </section>
         )}
       </div>
-      <ReportActions
-        data={result}
-        analysis={`${reportNames[mode]}\nRecommendation: ${result.recommendation.action}\nRisk level: ${result.strategy_health}\nDecision confidence: ${result.decision_confidence.toFixed(0)}%\n${result.recommendation.summary}`}
-        filename={`deltazero-${mode}-${result.asset.toLowerCase()}.json`}
-        title={`DeltaZero ${reportNames[mode]}`}
-      />
       <details className="panel json-box">
         <summary>
           <span>
