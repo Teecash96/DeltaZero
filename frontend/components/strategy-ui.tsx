@@ -6,6 +6,7 @@ import { auditStrategy, buildStrategy, getHyperliquidMarket, stressTestStrategy 
 import { readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
+import { ConfidenceBar, ReportActions, StepProgress } from "@/components/report-polish";
 import type {
   AuditRequest,
   AuditResponse,
@@ -526,6 +527,16 @@ function DecisionPanel({
           : "warning",
     },
   ] as const;
+  const distinctNotes = result.risk_notes.filter((note) => note.trim() !== result.recommendation.summary.trim());
+  const primaryCause = distinctNotes[0] ?? result.recommendation.summary;
+  const expectedImprovement =
+    mode === "builder" && "recommended_structure" in result
+      ? `Target hedge ratio ${result.recommended_structure.target_hedge_ratio.toFixed(3)}`
+      : "actions" in result && result.actions.length > 0
+        ? formatKey(result.actions[0])
+        : distinctNotes[1] ?? "Re-analyze after applying the recommendation";
+  const timeHorizon =
+    action === "OPEN" ? "Before opening" : action === "HOLD" ? "Next monitoring cycle" : action === "WAIT" ? "Before execution" : action === "REBALANCE" ? "Before increasing exposure" : "Immediate risk review";
 
   return (
     <section className="panel decision-card">
@@ -552,6 +563,7 @@ function DecisionPanel({
               size="sm"
             />
             <p>Confidence reflects how clearly the current metrics support the recommended action, not profitability.</p>
+            <ConfidenceBar value={result.decision_confidence} label="Recommendation clarity" />
           </div>
         </div>
         <h2>{mainSentence}</h2>
@@ -564,6 +576,12 @@ function DecisionPanel({
             </span>
           ))}
         </div>
+        <div className="decision-detail-grid">
+          <div><span>Risk Level</span><strong className={`health-${result.strategy_health}`}>{result.strategy_health}</strong></div>
+          <div><span>Primary Cause</span><strong>{primaryCause}</strong></div>
+          <div><span>Expected Improvement</span><strong>{expectedImprovement}</strong></div>
+          <div><span>Time Horizon</span><strong>{timeHorizon}</strong></div>
+        </div>
       </div>
       <div className="health-context">
         <div>
@@ -573,15 +591,12 @@ function DecisionPanel({
         <p>{healthMessage}</p>
       </div>
       <div className="decision-rationale">
-        <span>Why this decision</span>
-        <ul>
-          {result.risk_notes
-            .filter((note) => note.trim() !== result.recommendation.summary.trim())
-            .slice(0, 3)
-            .map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-        </ul>
+        <span>Why this recommendation</span>
+        <p>
+          DeltaZero recommends <strong>{action}</strong> because {result.recommendation.summary.charAt(0).toLowerCase() + result.recommendation.summary.slice(1)}
+          {distinctNotes[0] ? ` The report also identifies ${distinctNotes[0].charAt(0).toLowerCase() + distinctNotes[0].slice(1)}` : ""}
+        </p>
+        {distinctNotes.length > 1 ? <ul>{distinctNotes.slice(1, 3).map((note) => <li key={note}>{note}</li>)}</ul> : null}
       </div>
     </section>
   );
@@ -771,6 +786,48 @@ function MetricsView({
   );
 }
 
+function StrategyBlueprint({ result, request }: { result: BuildResponse; request: BuildRequest }) {
+  const cards = [
+    ["Expected Yield", `${request.long_yield_apy.toFixed(1)}%`, "Submitted annual yield assumption for the long leg."],
+    ["Target Hedge", result.recommended_structure.target_hedge_ratio.toFixed(3), "Short notional target relative to long exposure."],
+    ["Estimated Carry", `${result.metrics.estimated_net_carry_apy.toFixed(1)}%`, "Net annualized carry after funding and fee assumptions."],
+    ["Drawdown", "Not stress-tested", "Run Stress Test to estimate scenario impairment; no value is inferred here."],
+    ["Safety Score", `${result.metrics.safety_buffer_score.toFixed(1)} / 100`, "Deterministic resilience score from the evaluated structure."],
+    ["Recommendation", result.recommendation.action, result.recommendation.summary],
+  ];
+
+  return (
+    <section className="panel strategy-blueprint">
+      <div className="section-label-row"><div><span className="decision-eyebrow">Strategy Blueprint</span><h2 className="panel-title">Proposed structure at a glance</h2></div><span>Read-only plan</span></div>
+      <div className="blueprint-grid">
+        {cards.map(([label, value, helper]) => <article key={label}><span>{label}</span><strong className={label === "Recommendation" ? `action-${String(value).toLowerCase()}` : ""}>{value}</strong><p>{helper}</p></article>)}
+      </div>
+    </section>
+  );
+}
+
+function RiskOutlook({ mode, result }: { mode: Mode; result: ResultValue }) {
+  const stress = mode === "stress-test" ? (result as StressTestResponse) : null;
+  const postAction = result.recommendation.action === "HOLD" || result.recommendation.action === "OPEN"
+    ? "Maintain and monitor"
+    : "Re-analysis required";
+  const worstValue = stress ? stress.scenario_result.health_after_stress : "Not evaluated";
+  const worstCopy = stress
+    ? `${stress.scenario_result.estimated_impairment_loss_pct.toFixed(1)}% estimated impairment in this scenario.`
+    : "Run Stress Test to measure a downside scenario; no worst-case state is inferred.";
+
+  return (
+    <section className="panel risk-outlook-panel">
+      <div className="section-label-row"><div><span className="decision-eyebrow">Risk Timeline</span><h2 className="panel-title">Decision path</h2></div><span>Measured vs. pending</span></div>
+      <div className="risk-outlook-grid">
+        <article><i>1</i><span>Current Risk</span><strong className={`health-${result.strategy_health}`}>{result.strategy_health}</strong><p>Measured from the submitted structure and assumptions.</p></article>
+        <article><i>2</i><span>After Recommendation</span><strong>{postAction}</strong><p>{result.recommendation.action === "HOLD" || result.recommendation.action === "OPEN" ? result.recommendation.summary : "Apply the recommendation, then run a fresh analysis to measure improvement."}</p></article>
+        <article><i>3</i><span>Worst Case</span><strong className={stress ? `health-${stress.scenario_result.health_after_stress}` : ""}>{worstValue}</strong><p>{worstCopy}</p></article>
+      </div>
+    </section>
+  );
+}
+
 function Result({
   mode,
   result,
@@ -820,6 +877,7 @@ function Result({
       <Summary result={result} />
       <DecisionPanel result={result} request={request} mode={mode} />
       <SafetyBufferCard score={displayedMetrics.safety_buffer_score} />
+      {mode === "builder" ? <StrategyBlueprint result={build} request={request as BuildRequest} /> : null}
       {mode === "builder" && (
         <section className="panel">
           <h2 className="panel-title">Recommended structure</h2>
@@ -880,6 +938,7 @@ function Result({
         </section>
       )}
       <MetricsView metrics={displayedMetrics} request={request} result={result} mode={mode} />
+      <RiskOutlook mode={mode} result={result} />
       <div className="result-columns">
         {mode !== "builder" && (
           <section className="panel corrective-actions">
@@ -905,6 +964,12 @@ function Result({
           </section>
         )}
       </div>
+      <ReportActions
+        data={result}
+        analysis={`${reportNames[mode]}\nRecommendation: ${result.recommendation.action}\nRisk level: ${result.strategy_health}\nDecision confidence: ${result.decision_confidence.toFixed(0)}%\n${result.recommendation.summary}`}
+        filename={`deltazero-${mode}-${result.asset.toLowerCase()}.json`}
+        title={`DeltaZero ${reportNames[mode]}`}
+      />
       <details className="panel json-box">
         <summary>
           <span>
@@ -1041,11 +1106,7 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
             </div>
           ) : loading ? (
             <div className="panel loading-state">
-              <div>
-                <div className="spinner" />
-                <strong>Analyzing strategy</strong>
-                <p>Calculating hedge, carry, and collateral metrics…</p>
-              </div>
+              <StepProgress kind="strategy" />
             </div>
           ) : result ? (
             <Result mode={mode} result={result} request={requestValue} />
@@ -1053,9 +1114,9 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
             <div className="panel empty-state">
               <div>
                 <div className="empty-icon">Δ</div>
-                <strong>Ready for analysis</strong>
-                <p>Review the preloaded inputs, then submit to generate a deterministic strategy decision.</p>
-                <small>No wallet or live market connection required.</small>
+                <strong>{mode === "builder" ? "Build a decision-ready strategy report" : mode === "auditor" ? "Evaluate an existing position" : "Measure a downside scenario"}</strong>
+                <p>{mode === "builder" ? "Review capital, market assumptions, and risk settings. The report will explain carry, hedge quality, resilience, and the recommended next action." : mode === "auditor" ? "Enter the current long, short, and collateral structure to identify hedge drift, capital risk, and corrective actions." : "Choose a scenario and magnitude to compare stressed metrics, impairment, and the resulting recommendation."}</p>
+                <small>Every result is deterministic and includes the raw API response for verification.</small>
               </div>
             </div>
           )}

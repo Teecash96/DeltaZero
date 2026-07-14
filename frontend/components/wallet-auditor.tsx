@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { RiskGauge } from "@/components/risk-gauge";
+import { ConfidenceBar, ReportActions, StepProgress } from "@/components/report-polish";
 import { analyzeWallet } from "@/lib/api";
 import { writeWalletHandoff } from "@/lib/handoff";
 import type {
@@ -19,6 +20,13 @@ const DEFAULT_REQUEST: WalletAnalyzeRequest = {
   wallet_address: "",
   networks: ["ethereum", "arbitrum", "hyperliquid"],
   protocols: ["hyperliquid", "aave", "morpho"],
+  stress_profile: "standard",
+};
+
+const DEMO_WALLET_REQUEST: WalletAnalyzeRequest = {
+  wallet_address: "0x7fdafde5cfb5465924316eced2d3715494c517d1",
+  networks: ["hyperliquid"],
+  protocols: ["hyperliquid"],
   stress_profile: "standard",
 };
 
@@ -81,11 +89,13 @@ function WalletRequestForm({
   setValue,
   submit,
   loading,
+  loadDemo,
 }: {
   value: WalletAnalyzeRequest;
   setValue: (value: WalletAnalyzeRequest) => void;
   submit: (event: FormEvent) => void;
   loading: boolean;
+  loadDemo: () => void;
 }) {
   return (
     <form className="panel wallet-form" onSubmit={submit}>
@@ -154,6 +164,8 @@ function WalletRequestForm({
       <button className="button button-primary form-submit" disabled={loading}>
         {loading ? "Auditing wallet..." : <>Audit Wallet or Positions <span>→</span></>}
       </button>
+      <button className="button wallet-demo-button" type="button" onClick={loadDemo} disabled={loading}>Demo Wallet <span>↗</span></button>
+      <p className="wallet-demo-note">Loads a predefined public Hyperliquid address. Submit normally to retrieve live supported positions—no sample results are injected.</p>
       <p className="form-note">Read-only analysis · no transaction permissions</p>
     </form>
   );
@@ -161,6 +173,9 @@ function WalletRequestForm({
 
 function AssessmentHeader({ result, protocols }: { result: WalletPortfolioResponse; protocols: WalletProtocol[] }) {
   const action = result.recommendation?.action;
+  const primaryCause = result.primary_drivers.find((driver) => driver.state === "critical" || driver.state === "warning") ?? result.primary_drivers[0];
+  const expectedImprovement = result.recommended_plan[0]?.target ?? result.recommended_plan[0]?.action ?? "Re-analyze after the recommended plan";
+  const timeHorizon = action === "HOLD" ? "Next monitoring cycle" : action === "REBALANCE" ? "Before increasing exposure" : "Immediate risk review";
   return (
     <section className="panel wallet-report-header">
       <div className="wallet-report-title-row">
@@ -189,12 +204,19 @@ function AssessmentHeader({ result, protocols }: { result: WalletPortfolioRespon
             suffix="%"
             size="sm"
           />
+          <ConfidenceBar value={result.decision_confidence ?? 0} label="Decision clarity" />
         </div>
+      </div>
+      <div className="decision-detail-grid wallet-decision-details">
+        <div><span>Risk Level</span><strong className={`health-${result.strategy_health}`}>{result.strategy_health}</strong></div>
+        <div><span>Primary Cause</span><strong>{primaryCause?.explanation ?? result.recommendation?.summary}</strong></div>
+        <div><span>Expected Improvement</span><strong>{expectedImprovement}</strong></div>
+        <div><span>Time Horizon</span><strong>{timeHorizon}</strong></div>
       </div>
       <p className="wallet-clarity-copy">Measures how strongly the available portfolio metrics support the recommendation.</p>
       <details className="wallet-clarity-details">
-        <summary>Why this decision?</summary>
-        <p>The score reflects how consistently the evaluated carry, hedge, Safety Buffer, capital-risk, impairment, and data-quality conditions support {action}.</p>
+        <summary>Why this recommendation?</summary>
+        <p>DeltaZero recommends {action} because {result.recommendation?.summary.charAt(0).toLowerCase()}{result.recommendation?.summary.slice(1)}</p>
         <ul>{result.primary_drivers.filter((driver) => driver.state !== "unavailable").slice(0, 4).map((driver) => <li key={driver.metric}>{driver.explanation}</li>)}</ul>
       </details>
     </section>
@@ -248,12 +270,47 @@ function ExposureAnalysis({ result }: { result: WalletPortfolioResponse }) {
   ];
   return (
     <section className="wallet-report-section">
-      <div className="wallet-section-heading"><div><span>Exposure map</span><h2>Exposure Analysis</h2></div></div>
+      <div className="wallet-section-heading"><div><span>Portfolio overview</span><h2>Portfolio Overview</h2></div></div>
       <div className="wallet-exposure-grid">
         {metrics.map(([label, value, copy]) => <article key={label}><span>{label}</span><strong>{value}</strong><p>{copy}</p></article>)}
       </div>
     </section>
   );
+}
+
+function ExposureBreakdown({ result }: { result: WalletPortfolioResponse }) {
+  const summary = result.portfolio_summary;
+  const items = [
+    ["Long exposure", usd(summary.gross_long_exposure_usd), "Supported assets and long derivative exposure."],
+    ["Short exposure", usd(summary.gross_short_exposure_usd), "Supported short derivative and borrow exposure."],
+    ["Net delta", `${usd(summary.net_delta_usd)} · ${percent(summary.net_delta_pct)}`, "Residual directional exposure after supported hedges."],
+    ["Collateral", usd(summary.collateral_value_usd), "Collateral value reported by supported sources."],
+    ["Debt", usd(summary.debt_value_usd), "Borrowed value reported by supported lending sources."],
+    ["Unrealized PnL", usd(summary.unrealized_pnl_usd), "Aggregate unrealized result where providers expose it reliably."],
+  ];
+  return <section className="wallet-report-section"><div className="wallet-section-heading"><div><span>Directional composition</span><h2>Exposure Breakdown</h2></div></div><div className="wallet-exposure-grid">{items.map(([label, value, copy]) => <article key={label}><span>{label}</span><strong>{value}</strong><p>{copy}</p></article>)}</div></section>;
+}
+
+function ProtocolAllocation({ result }: { result: WalletPortfolioResponse }) {
+  const totals = new Map<string, number>();
+  for (const position of result.positions) {
+    const exposure = Math.abs(position.notional_usd ?? position.current_value_usd ?? 0);
+    totals.set(position.protocol, (totals.get(position.protocol) ?? 0) + exposure);
+  }
+  const gross = [...totals.values()].reduce((sum, value) => sum + value, 0);
+  const rows = [...totals.entries()].sort((left, right) => right[1] - left[1]);
+  if (gross <= 0 || rows.length === 0) return null;
+  return <section className="panel wallet-allocation-panel"><div className="wallet-section-heading"><div><span>Supported source concentration</span><h2>Protocol Allocation</h2></div></div><div className="wallet-allocation-list">{rows.map(([protocol, exposure]) => { const allocation = exposure / gross * 100; return <div className="wallet-allocation-row" key={protocol}><div><strong>{formatProtocol(protocol)}</strong><span>{percent(allocation)} · {usd(exposure)}</span></div><div className="wallet-allocation-track" aria-label={`${protocol} ${allocation.toFixed(1)} percent`}><i style={{ width: `${allocation}%` }} /></div></div>; })}</div></section>;
+}
+
+function formatProtocol(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function WalletRiskOutlook({ result }: { result: WalletPortfolioResponse }) {
+  const stress = result.stress_summary;
+  const action = result.recommendation?.action;
+  return <section className="panel risk-outlook-panel"><div className="wallet-section-heading"><div><span>Risk timeline</span><h2>Current, Recommended, and Worst Case</h2></div><small>Measured values only</small></div><div className="risk-outlook-grid"><article><i>1</i><span>Current Risk</span><strong className={`health-${result.strategy_health}`}>{result.strategy_health}</strong><p>{result.primary_drivers[0]?.explanation ?? "Current supported portfolio metrics were evaluated."}</p></article><article><i>2</i><span>After Recommendation</span><strong>{action === "HOLD" ? "Monitor" : "Re-analysis required"}</strong><p>{result.recommended_plan[0]?.target ?? "Apply the recommended plan and run a new assessment to measure improvement."}</p></article><article><i>3</i><span>Worst Case</span><strong>{stress ? percent(stress.estimated_impairment_loss_pct) : "Unavailable"}</strong><p>{stress?.summary ?? "No reliable stress result is available."}</p></article></div></section>;
 }
 
 function RiskBreakdown({ result }: { result: WalletPortfolioResponse }) {
@@ -408,44 +465,6 @@ function ProtocolWarnings({ result }: { result: WalletPortfolioResponse }) {
   );
 }
 
-function ExportActions({ result }: { result: WalletPortfolioResponse }) {
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const payload = JSON.stringify(result, null, 2);
-
-  function downloadJson() {
-    try {
-      const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `deltazero-wallet-${result.wallet_address.slice(0, 10)}.json`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      setFeedback("JSON report downloaded.");
-    } catch {
-      setFeedback("JSON download failed.");
-    }
-  }
-
-  async function copyResponse() {
-    try {
-      await navigator.clipboard.writeText(payload);
-      setFeedback("API response copied.");
-    } catch {
-      setFeedback("Copy failed. Clipboard access may be unavailable.");
-    }
-  }
-
-  return (
-    <div className="wallet-export-row">
-      <button type="button" onClick={downloadJson}>Download JSON</button>
-      <button type="button" onClick={() => void copyResponse()}>Copy API Response</button>
-      <span role="status" aria-live="polite">{feedback}</span>
-    </div>
-  );
-}
-
 function InstitutionalReport({ result, protocols }: { result: WalletPortfolioResponse; protocols: WalletProtocol[] }) {
   function buildHedgeRecommendation() {
     const exposure = result.exposure_analysis;
@@ -482,16 +501,24 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       <ExecutiveSummary result={result} />
       <PrimaryDrivers drivers={result.primary_drivers} />
       <ExposureAnalysis result={result} />
+      <ExposureBreakdown result={result} />
       <RiskBreakdown result={result} />
       <LargestRiskContributors result={result} />
       <PortfolioObservations result={result} />
       <RiskTimeline result={result} />
+      <WalletRiskOutlook result={result} />
+      <ProtocolAllocation result={result} />
       <PortfolioAllocation result={result} />
       <RecommendedPlan result={result} />
       <PositionTable positions={result.positions} />
       <StressSummary result={result} />
       <ProtocolWarnings result={result} />
-      <ExportActions result={result} />
+      <ReportActions
+        data={result}
+        analysis={`DeltaZero Wallet Auditor\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
+        filename={`deltazero-wallet-${result.wallet_address.slice(0, 10)}.json`}
+        title="DeltaZero Wallet Portfolio Assessment"
+      />
       <details className="panel json-box">
         <summary><span><b>Raw JSON</b><small>Developer payload</small></span><i aria-hidden="true">⌄</i></summary>
         <pre>{JSON.stringify(result, null, 2)}</pre>
@@ -534,12 +561,12 @@ export function WalletPortfolioWorkspace() {
         <div className="wallet-page-side"><span className="endpoint">POST /wallet/analyze</span><p className="wallet-readonly-note">DeltaZero only reads public wallet and protocol data. It never requests signatures, private keys, or transaction permissions.</p></div>
       </header>
       <div className="workspace-grid wallet-workspace-grid">
-        <WalletRequestForm value={value} setValue={setValue} submit={submit} loading={loading} />
+        <WalletRequestForm value={value} setValue={setValue} submit={submit} loading={loading} loadDemo={() => { setValue(structuredClone(DEMO_WALLET_REQUEST)); setResult(null); setError(null); }} />
         <div className="result-region">
           {error ? (
             <div className="error-box" role="alert"><span className="state-icon">!</span><div><strong>Analysis could not be completed</strong><p>{error}</p><small>Check the wallet address and selected protocol coverage, then try again.</small></div></div>
           ) : loading ? (
-            <div className="panel loading-state"><div><div className="spinner" /><strong>Auditing wallet</strong><p>Querying public protocol views and consolidating risk signals…</p></div></div>
+            <div className="panel loading-state"><StepProgress kind="wallet" /></div>
           ) : result ? (
             <div className="result-stack">
               {result.assessment_status === "no_supported_positions" ? (
@@ -561,7 +588,7 @@ export function WalletPortfolioWorkspace() {
               )}
             </div>
           ) : (
-            <div className="panel empty-state"><div><div className="empty-icon">◌</div><strong>Ready for wallet analysis</strong><p>Enter a public wallet address, choose the networks and protocols to inspect, then submit to generate a read-only risk report.</p><small>No signatures, private keys, or transaction permissions are requested.</small></div></div>
+            <div className="panel empty-state"><div><div className="empty-icon">◌</div><strong>Turn public positions into an explainable risk report</strong><p>Enter a wallet or load the predefined public demo address. DeltaZero will query only the selected sources, identify supported positions, and explain exposure, impairment, and the next action.</p><small>No sample positions are injected. No signatures, private keys, or transaction permissions are requested.</small></div></div>
           )}
         </div>
       </div>

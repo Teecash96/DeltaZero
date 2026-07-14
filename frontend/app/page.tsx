@@ -402,6 +402,25 @@ export default function Home() {
 
       <AgentSdkSection />
 
+      <section id="why-deltazero" className="section-wrap trust-section anchor-section">
+        <div className="section-heading">
+          <div>
+            <p className="kicker">Why DeltaZero</p>
+            <h2>Trust comes from inspectable decisions, not black-box claims.</h2>
+          </div>
+          <p>DeltaZero is designed for transparent, read-only analysis of user inputs and supported public position data.</p>
+        </div>
+        <div className="trust-grid">
+          {[
+            ["◇", "Deterministic analysis", "The same inputs and configured thresholds produce the same explainable result."],
+            ["◉", "Read-only access", "Supported wallet integrations retrieve public position context without transaction permissions."],
+            ["×", "No trading signatures", "Risk analysis never asks you to sign a trade, approval, or protocol transaction."],
+            ["⌂", "No custody", "DeltaZero does not hold funds, control wallets, or execute the recommended action."],
+            ["≡", "Transparent calculations", "Metrics, risk notes, decision drivers, and raw JSON remain available for verification."],
+          ].map(([icon, title, description]) => <article key={title}><i aria-hidden="true">{icon}</i><h3>{title}</h3><p>{description}</p></article>)}
+        </div>
+      </section>
+
       <section id="faqs" className="section-wrap anchor-section">
         <div className="section-heading">
           <div>
