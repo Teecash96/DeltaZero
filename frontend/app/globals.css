@@ -229,6 +229,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .report-breadcrumb { padding: 0 2px; display: flex; align-items: center; gap: 9px; color: #6f7b72; font: 9px var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
 .report-breadcrumb i { color: #435047; font-style: normal; }
 .report-breadcrumb strong { color: #9ba69d; font-weight: 650; }
+.verdict-hero { padding: 30px; overflow: hidden; border-color: #46564a; background: #111814; animation: verdict-enter .4s ease-out both; }
+.verdict-heading { margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.verdict-heading span { color: var(--green); font: 750 10px var(--font-geist-mono); letter-spacing: .18em; }
+.verdict-heading small { color: #707d74; font: 9px var(--font-geist-mono); text-transform: uppercase; }
+.verdict-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.verdict-grid article { min-width: 0; min-height: 190px; padding: 19px; display: flex; flex-direction: column; border: 1px solid #2e3b32; border-radius: 11px; background: #0d130f; }
+.verdict-grid article > span { color: #89958c; font: 700 9px var(--font-geist-mono); letter-spacing: .09em; text-transform: uppercase; }
+.verdict-grid article > strong { display: block; margin-top: 22px; overflow-wrap: anywhere; color: #edf3ee; font: 700 25px/1.05 var(--font-geist-mono); letter-spacing: -.04em; text-transform: capitalize; }
+.verdict-grid article > b { width: fit-content; margin-top: 9px; padding: 4px 7px; border: 1px solid #3a493e; border-radius: 999px; color: #bdc8bf; font: 8px var(--font-geist-mono); text-transform: uppercase; }
+.verdict-grid article > small { margin-top: auto; padding-top: 14px; color: #748078; font-size: 9px; line-height: 1.5; }
+.verdict-risk-card > strong { font-size: clamp(34px, 4vw, 48px) !important; }
+.verdict-risk-critical .verdict-risk-card > strong, .verdict-risk-high .verdict-risk-card > strong { color: var(--danger); }
+.verdict-risk-medium .verdict-risk-card > strong { color: var(--warning); }
+.verdict-risk-low .verdict-risk-card > strong { color: var(--green); }
+.verdict-action { width: fit-content; padding: 8px 10px; border-radius: 7px; font-size: 21px !important; }
+.verdict-confidence > div { position: relative; width: 82px; height: 82px; margin-top: 13px; display: grid; place-items: center; }
+.verdict-confidence svg { position: absolute; inset: 0; width: 82px; height: 82px; transform: rotate(-90deg); }
+.verdict-confidence circle { fill: none; stroke: #273229; stroke-width: 6; }
+.verdict-confidence .verdict-ring-value { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset .45s ease-out; }
+.verdict-confidence div strong { position: relative; z-index: 1; color: #edf4ee; font: 700 18px var(--font-geist-mono); }
+@keyframes verdict-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .decision-card { padding: 0; overflow: hidden; border-color: #526542; background: #141c16; box-shadow: 0 18px 50px rgba(0,0,0,.16), inset 0 1px rgba(255,255,255,.025); }
 .assessment-main { padding: 29px 30px 27px; }
 .assessment-heading { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; }
@@ -642,6 +663,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .payment-required-details, .payment-trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wallet-summary-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .verdict-risk-card { grid-column: span 2; }
 }
 
 @media (max-width: 768px) {
@@ -674,6 +697,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .payment-required-card { flex-direction: column; }
   .payment-required-copy, .payment-verify { width: 100%; }
   .payment-trust-panel { padding: 21px; }
+  .verdict-hero { padding: 22px; }
+  .verdict-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .verdict-grid { grid-template-columns: minmax(0, 1fr); }
+  .verdict-risk-card { grid-column: auto; }
+  .verdict-grid article { min-height: 160px; }
   .site-header { min-height: 112px; padding: 15px 0 12px; align-items: flex-start; flex-direction: column; gap: 12px; }
   .site-header nav { width: 100%; display: grid; grid-template-columns: 1fr; gap: 4px; }
   .site-nav-link { min-width: 0; padding: 8px 10px; overflow-wrap: anywhere; white-space: normal; text-align: center; font-size: 11px; }
@@ -770,6 +798,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .risk-gauge { grid-template-columns: 1fr; }
   .risk-gauge svg { width: 74px; height: 74px; }
   .risk-gauge-copy strong { font-size: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verdict-hero { animation: none; }
+  .verdict-confidence .verdict-ring-value { transition: none; }
+}
+
+@media print {
+  .site-header, .site-footer, .workspace-grid > div:first-child, .report-actions, .wallet-hedge-cta { display: none !important; }
+  .workspace, .workspace-grid, .result-region { width: 100%; display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {

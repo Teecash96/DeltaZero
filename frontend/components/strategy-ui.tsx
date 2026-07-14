@@ -6,7 +6,7 @@ import { auditStrategy, buildStrategy, getHyperliquidMarket, PaymentRequiredErro
 import { readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
-import { AnalysisConfidence, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
+import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import type {
   AuditRequest,
   AuditResponse,
@@ -865,16 +865,12 @@ function Result({
         <i aria-hidden="true">/</i>
         <strong>{reportNames[mode]}</strong>
       </div>
-      <ReportActions
-        data={result}
-        analysis={`${reportNames[mode]}\nRecommendation: ${result.recommendation.action}\nRisk level: ${result.strategy_health}\nDecision confidence: ${result.decision_confidence.toFixed(0)}%\n${result.recommendation.summary}`}
-        filename={`deltazero-${mode}-${result.asset.toLowerCase()}.json`}
-        title={`DeltaZero ${reportNames[mode]}`}
-      />
-      <Summary result={result} />
+      <DeltaZeroVerdict health={result.strategy_health} action={result.recommendation.action} confidence={result.decision_confidence} safetyBuffer={displayedMetrics.safety_buffer_score} />
       <DecisionPanel result={result} request={request} mode={mode} />
-      <SafetyBufferCard score={displayedMetrics.safety_buffer_score} />
+      <Summary result={result} />
       {mode === "builder" ? <StrategyBlueprint result={build} request={request as BuildRequest} /> : null}
+      <SafetyBufferCard score={displayedMetrics.safety_buffer_score} />
+      <RiskOutlook mode={mode} result={result} />
       {mode === "builder" && (
         <section className="panel">
           <h2 className="panel-title">Recommended structure</h2>
@@ -935,7 +931,6 @@ function Result({
         </section>
       )}
       <MetricsView metrics={displayedMetrics} request={request} result={result} mode={mode} />
-      <RiskOutlook mode={mode} result={result} />
       <div className="result-columns">
         {mode !== "builder" && (
           <section className="panel corrective-actions">
@@ -961,6 +956,12 @@ function Result({
           </section>
         )}
       </div>
+      <ReportActions
+        data={result}
+        analysis={`${reportNames[mode]}\nRecommendation: ${result.recommendation.action}\nRisk level: ${result.strategy_health}\nDecision confidence: ${result.decision_confidence.toFixed(0)}%\n${result.recommendation.summary}`}
+        filename={`deltazero-${mode}-${result.asset.toLowerCase()}.json`}
+        title={`DeltaZero ${reportNames[mode]}`}
+      />
       <details className="panel json-box">
         <summary>
           <span>

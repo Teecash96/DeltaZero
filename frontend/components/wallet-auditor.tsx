@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
-import { AnalysisConfidence, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
+import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { analyzeWallet, PaymentRequiredError, type X402Challenge } from "@/lib/api";
 import { writeWalletHandoff } from "@/lib/handoff";
 import type {
@@ -499,30 +499,31 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
         </section>
       ) : null}
       <div className="report-breadcrumb" aria-label="Report location"><span>Wallet Auditor</span><i aria-hidden="true">/</i><strong>Portfolio Intelligence Report</strong></div>
+      <DeltaZeroVerdict health={result.strategy_health} action={result.recommendation?.action} confidence={result.decision_confidence ?? 0} safetyBuffer={result.risk_metrics.safety_buffer_score} />
+      <ExecutiveSummary result={result} />
+      <PortfolioSummaryStrip result={result} protocols={protocols} />
+      <AssessmentHeader result={result} protocols={protocols} />
+      <WalletRiskOutlook result={result} />
+      <RiskTimeline result={result} />
+      <PositionTable positions={result.positions} />
+      <ExposureAnalysis result={result} />
+      <ExposureBreakdown result={result} />
+      <LargestRiskContributors result={result} />
+      <ProtocolAllocation result={result} />
+      <PortfolioAllocation result={result} />
+      <RecommendedPlan result={result} />
+      <button className="button button-primary wallet-hedge-cta" type="button" onClick={buildHedgeRecommendation}>Build Hedge Recommendation <span>→</span></button>
+      <PrimaryDrivers drivers={result.primary_drivers} />
+      <RiskBreakdown result={result} />
+      <PortfolioObservations result={result} />
+      <StressSummary result={result} />
+      <ProtocolWarnings result={result} />
       <ReportActions
         data={result}
         analysis={`DeltaZero Wallet Auditor\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
         filename={`deltazero-wallet-${result.wallet_address.slice(0, 10)}.json`}
         title="DeltaZero Wallet Portfolio Assessment"
       />
-      <PortfolioSummaryStrip result={result} protocols={protocols} />
-      <AssessmentHeader result={result} protocols={protocols} />
-      <button className="button button-primary wallet-hedge-cta" type="button" onClick={buildHedgeRecommendation}>Build Hedge Recommendation <span>→</span></button>
-      <ExecutiveSummary result={result} />
-      <PrimaryDrivers drivers={result.primary_drivers} />
-      <ExposureAnalysis result={result} />
-      <ExposureBreakdown result={result} />
-      <RiskBreakdown result={result} />
-      <LargestRiskContributors result={result} />
-      <PortfolioObservations result={result} />
-      <RiskTimeline result={result} />
-      <WalletRiskOutlook result={result} />
-      <ProtocolAllocation result={result} />
-      <PortfolioAllocation result={result} />
-      <RecommendedPlan result={result} />
-      <PositionTable positions={result.positions} />
-      <StressSummary result={result} />
-      <ProtocolWarnings result={result} />
       <details className="panel json-box">
         <summary><span><b>Raw JSON</b><small>Developer payload</small></span><i aria-hidden="true">⌄</i></summary>
         <pre>{JSON.stringify(result, null, 2)}</pre>

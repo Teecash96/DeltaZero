@@ -68,6 +68,73 @@ export function recommendationLabel(action: string | undefined) {
   return "Avoid";
 }
 
+function verdictRisk(health: string | null | undefined) {
+  if (health === "critical") return "Critical";
+  if (health === "fragile") return "High";
+  if (health === "warning" || health === "watch") return "Medium";
+  return "Low";
+}
+
+function verdictSafety(score: number) {
+  if (score >= 70) return "Healthy";
+  if (score >= 60) return "Watch";
+  return "Weak";
+}
+
+function verdictHorizon(action: string | undefined) {
+  if (action === "CLOSE" || action === "REDUCE") return "Immediate";
+  if (action === "REBALANCE" || action === "WAIT") return "Short Term";
+  if (action === "HOLD") return "Medium Term";
+  return "Long Term";
+}
+
+function verdictActionCopy(action: string | undefined) {
+  if (action === "OPEN" || action === "HOLD") return "Current hedge quality meets the preferred safety threshold.";
+  if (action === "WAIT" || action === "REBALANCE") return "Risk is elevated and exposure should be improved before deployment.";
+  return "Current portfolio conditions exceed DeltaZero safety thresholds.";
+}
+
+function AnimatedValue({ value, suffix = "", digits = 0 }: { value: number; suffix?: string; digits?: number }) {
+  const [display, setDisplay] = useState(value);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const reducedFrame = requestAnimationFrame(() => setDisplay(value));
+      return () => cancelAnimationFrame(reducedFrame);
+    }
+    const started = performance.now();
+    const duration = 420;
+    let frame = 0;
+    const update = (now: number) => {
+      const progress = Math.min((now - started) / duration, 1);
+      setDisplay(value * (1 - (1 - progress) ** 3));
+      if (progress < 1) frame = requestAnimationFrame(update);
+    };
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return <>{display.toFixed(digits)}{suffix}</>;
+}
+
+export function DeltaZeroVerdict({ health, action, confidence, safetyBuffer }: { health: string | null | undefined; action: string | undefined; confidence: number; safetyBuffer: number | null | undefined }) {
+  const risk = verdictRisk(health);
+  const score = safetyBuffer ?? 0;
+  const normalizedConfidence = Math.max(0, Math.min(100, confidence));
+  const radius = 30;
+  const circumference = 2 * Math.PI * radius;
+  return (
+    <section className={`panel verdict-hero verdict-risk-${risk.toLowerCase()}`} aria-labelledby="deltazero-verdict-title">
+      <div className="verdict-heading"><span>DELTAZERO VERDICT</span><small>Deterministic report summary</small></div>
+      <div className="verdict-grid">
+        <article className="verdict-risk-card"><span>Risk Level</span><strong id="deltazero-verdict-title">{risk}</strong><small>Current evaluated risk posture</small></article>
+        <article><span>Recommended Action</span><strong className={`verdict-action action-${action?.toLowerCase()}`}>{recommendationLabel(action)}</strong><small>{verdictActionCopy(action)}</small></article>
+        <article className="verdict-confidence" title="Confidence reflects model certainty and data completeness. It does not predict profitability."><span>Analysis Confidence</span><div><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r={radius} /><circle className="verdict-ring-value" cx="40" cy="40" r={radius} strokeDasharray={circumference} strokeDashoffset={circumference * (1 - normalizedConfidence / 100)} /></svg><strong><AnimatedValue value={normalizedConfidence} suffix="%" /></strong></div><b>{normalizedConfidence >= 80 ? "High" : normalizedConfidence >= 60 ? "Moderate" : "Low"}</b><small>Confidence reflects model certainty and data completeness. It does not predict profitability.</small></article>
+        <article><span>Safety Buffer</span><strong><AnimatedValue value={score} digits={1} /></strong><b>{verdictSafety(score)}</b><small>Existing portfolio resilience score</small></article>
+        <article><span>Time Horizon</span><strong>{verdictHorizon(action)}</strong><small>Priority inferred from recommendation severity</small></article>
+      </div>
+    </section>
+  );
+}
+
 export function AnalysisConfidence({ value }: { value: number }) {
   const score = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
   const level = score >= 80 ? "High" : score >= 60 ? "Moderate" : "Low";
