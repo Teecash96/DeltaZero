@@ -41,6 +41,14 @@ WALLET_PAYLOAD = {
     "stress_profile": "standard",
 }
 
+MONTE_CARLO_PAYLOAD = {
+    **BUILD_PAYLOAD,
+    "long_notional_usd": 3500,
+    "short_notional_usd": 3360,
+    "collateral_usd": 1500,
+    "simulation_count": 100,
+}
+
 
 class FakeFacilitator:
     """Facilitator double that never calls a live payment service."""
@@ -105,6 +113,7 @@ def paid_client(payment_settings: PaymentSettings) -> tuple[TestClient, FakeFaci
     [
         ("/strategy/build", BUILD_PAYLOAD),
         ("/wallet/analyze", WALLET_PAYLOAD),
+        ("/monte-carlo/run", MONTE_CARLO_PAYLOAD),
     ],
 )
 def test_protected_routes_return_x402_challenge_without_payment(

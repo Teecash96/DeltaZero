@@ -238,6 +238,30 @@ export interface ImpairmentBreakdown {
   protocol_loss_assumption_usd: number;
 }
 
+export type MonteCarloRecommendation = "PROCEED" | "ADJUST" | "AVOID";
+export interface MonteCarloRequest {
+  asset: Asset; capital_usd: number; long_notional_usd: number; short_notional_usd: number; collateral_usd: number;
+  long_yield_apy: number; short_funding_apy: number; fee_drag_apy: number; risk_tolerance: RiskTolerance; target_style: TargetStyle;
+  simulation_count: number; time_horizon_days: number; seed?: number | null;
+  market_shock_mean_pct: number; market_shock_volatility_pct: number; funding_shift_mean_apy: number; funding_shift_volatility_apy: number;
+  slippage_mean_pct: number; slippage_volatility_pct: number; collateral_haircut_mean_pct: number; collateral_haircut_volatility_pct: number;
+  protocol_loss_mean_pct: number; protocol_loss_volatility_pct: number;
+}
+export interface MonteCarloSummary {
+  expected_impairment_loss_usd: number; expected_impairment_loss_pct: number; median_impairment_loss_pct: number; p95_impairment_loss_pct: number;
+  p99_impairment_loss_pct: number; worst_case_impairment_loss_pct: number; expected_post_stress_equity_usd: number;
+  probability_safety_buffer_breach_pct: number; probability_hedge_drift_breach_pct: number; probability_negative_carry_pct: number;
+  probability_capital_impairment_pct: number; monte_carlo_score: number; recommendation: MonteCarloRecommendation;
+}
+export interface MonteCarloPath { path_id: number; market_shock_pct: number; funding_shift_apy: number; slippage_pct: number; collateral_haircut_pct: number; protocol_loss_pct: number; impairment_loss_pct: number; post_stress_equity_usd: number; safety_buffer_score: number; hedge_drift_pct: number; }
+export interface MonteCarloResponse {
+  asset: Asset; simulation_count: number; time_horizon_days: number; seed: number | null; risk_tolerance: RiskTolerance; target_style: TargetStyle;
+  summary: MonteCarloSummary;
+  percentiles: { impairment_loss_pct: Record<"p5" | "p25" | "p50" | "p75" | "p95" | "p99", number>; post_stress_equity_usd: Record<"p5" | "p25" | "p50" | "p75" | "p95" | "p99", number>; };
+  sensitivity: Array<{ factor: string; contribution_pct: number; direction: "positive" | "negative" | "mixed"; explanation: string }>;
+  sample_paths: MonteCarloPath[];
+}
+
 export interface ImpairmentResult {
   pre_stress_equity_usd: number;
   post_stress_equity_usd: number;

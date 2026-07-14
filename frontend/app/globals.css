@@ -622,6 +622,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .wallet-summary-strip small { display: block; margin-top: 8px; color: #728078; font-size: 9px; line-height: 1.45; }
 .wallet-empty-action strong { display: block; margin-bottom: 8px; }
 .wallet-empty-action ul { margin: 0; padding-left: 18px; color: #b9c9bb; font-weight: 400; line-height: 1.7; }
+.mc-import { margin-bottom: 16px; border-color: #4d674f; }
+.mc-import > span { color: var(--green); font: 10px var(--font-geist-mono); letter-spacing: .12em; text-transform: uppercase; }
+.mc-import h2 { margin: 8px 0; font-size: 20px; }.mc-import p { color: #929e95; line-height: 1.6; }
+.mc-assumptions { margin-top: 20px; border-top: 1px solid #2b382e; }
+.mc-assumptions summary { padding: 18px 0; color: #c5cec7; cursor: pointer; font-weight: 650; }
+.mc-verdict { padding: 28px; border-color: #4b5d4e; background: #111914; }
+.mc-verdict > div:first-child span { color: var(--green); font: 10px var(--font-geist-mono); letter-spacing: .17em; }
+.mc-verdict h2 { margin: 8px 0 22px; font-size: 28px; text-transform: capitalize; }
+.mc-verdict-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.mc-verdict-grid article, .mc-percentiles article { min-width: 0; padding: 17px; border: 1px solid #2f3c33; border-radius: 10px; background: #0d130f; }
+.mc-verdict-grid span, .mc-percentiles span { color: #859188; font: 9px var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
+.mc-verdict-grid strong, .mc-percentiles strong { display: block; margin-top: 12px; color: #edf4ee; font: 700 21px var(--font-geist-mono); overflow-wrap: anywhere; }
+.mc-distribution-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.mc-distribution-grid h3 { margin: 0 0 15px; color: #cbd4cd; font-size: 13px; }
+.mc-bar-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) 64px; align-items: center; gap: 9px; margin-top: 9px; }
+.mc-bar-row span, .mc-bar-row strong { color: #87938a; font: 9px var(--font-geist-mono); }.mc-bar-row strong { color: #cbd5cd; text-align: right; }
+.mc-bar-row i { height: 7px; overflow: hidden; border-radius: 999px; background: #222d25; }.mc-bar-row b { display: block; height: 100%; background: var(--warning); }.mc-bar-row.equity b { background: var(--green); }
+.mc-percentiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.mc-drivers { display: grid; gap: 8px; }.mc-drivers article { padding: 13px; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 12px; border: 1px solid #2c3930; border-radius: 9px; background: #0f1510; }
+.mc-drivers article > b { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #14200d; background: var(--green); font: 10px var(--font-geist-mono); }.mc-drivers strong { color: #dde6df; font-size: 12px; text-transform: capitalize; }.mc-drivers p { margin: 4px 0 0; color: #78847b; font-size: 10px; }.mc-drivers article > span { color: var(--green); font: 12px var(--font-geist-mono); }
+.mc-table { width: 100%; min-width: 1050px; border-collapse: collapse; }.mc-table th, .mc-table td { padding: 11px; border-bottom: 1px solid #27332a; color: #9ba69e; font: 9px var(--font-geist-mono); text-align: left; white-space: nowrap; }.mc-table th { color: #77837a; text-transform: uppercase; }
 .step-progress { width: min(100%, 450px); text-align: left; }
 .step-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #dce4dd; }
 .step-progress-head span { font-size: 15px; font-weight: 700; }
@@ -665,6 +686,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .wallet-summary-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .verdict-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .verdict-risk-card { grid-column: span 2; }
+  .mc-verdict-grid, .mc-percentiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 768px) {
@@ -702,6 +724,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .verdict-grid { grid-template-columns: minmax(0, 1fr); }
   .verdict-risk-card { grid-column: auto; }
   .verdict-grid article { min-height: 160px; }
+  .mc-verdict-grid, .mc-percentiles, .mc-distribution-grid { grid-template-columns: minmax(0, 1fr); }
+  .mc-drivers article { grid-template-columns: 28px minmax(0, 1fr); }.mc-drivers article > span { grid-column: 2; }
   .site-header { min-height: 112px; padding: 15px 0 12px; align-items: flex-start; flex-direction: column; gap: 12px; }
   .site-header nav { width: 100%; display: grid; grid-template-columns: 1fr; gap: 4px; }
   .site-nav-link { min-width: 0; padding: 8px 10px; overflow-wrap: anywhere; white-space: normal; text-align: center; font-size: 11px; }

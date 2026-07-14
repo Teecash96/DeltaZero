@@ -7,6 +7,7 @@ const navItems = [
   { href: "/builder", label: "Builder" },
   { href: "/auditor", label: "Auditor" },
   { href: "/stress-test", label: "Stress Test" },
+  { href: "/monte-carlo", label: "Monte Carlo" },
   { href: "/#how-it-works", label: "How It Works" },
   { href: "/wallet", label: "Wallet Auditor", featured: true },
 ];

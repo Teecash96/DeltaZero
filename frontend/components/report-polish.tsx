@@ -63,8 +63,8 @@ export function PaymentRequiredCard({ challenge, retry, loading }: { challenge: 
 }
 
 export function recommendationLabel(action: string | undefined) {
-  if (action === "OPEN" || action === "HOLD") return "Proceed";
-  if (action === "WAIT" || action === "REBALANCE") return "Adjust";
+  if (action === "PROCEED" || action === "OPEN" || action === "HOLD") return "Proceed";
+  if (action === "ADJUST" || action === "WAIT" || action === "REBALANCE") return "Adjust";
   return "Avoid";
 }
 
@@ -82,15 +82,15 @@ function verdictSafety(score: number) {
 }
 
 function verdictHorizon(action: string | undefined) {
-  if (action === "CLOSE" || action === "REDUCE") return "Immediate";
-  if (action === "REBALANCE" || action === "WAIT") return "Short Term";
+  if (action === "AVOID" || action === "CLOSE" || action === "REDUCE") return "Immediate";
+  if (action === "ADJUST" || action === "REBALANCE" || action === "WAIT") return "Short Term";
   if (action === "HOLD") return "Medium Term";
   return "Long Term";
 }
 
 function verdictActionCopy(action: string | undefined) {
-  if (action === "OPEN" || action === "HOLD") return "Current hedge quality meets the preferred safety threshold.";
-  if (action === "WAIT" || action === "REBALANCE") return "Risk is elevated and exposure should be improved before deployment.";
+  if (action === "PROCEED" || action === "OPEN" || action === "HOLD") return "Current hedge quality meets the preferred safety threshold.";
+  if (action === "ADJUST" || action === "WAIT" || action === "REBALANCE") return "Risk is elevated and exposure should be improved before deployment.";
   return "Current portfolio conditions exceed DeltaZero safety thresholds.";
 }
 

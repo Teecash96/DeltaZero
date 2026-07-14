@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { analyzeWallet, PaymentRequiredError, type X402Challenge } from "@/lib/api";
-import { writeWalletHandoff } from "@/lib/handoff";
+import { MONTE_CARLO_HANDOFF_KEY, type MonteCarloHandoff, writeWalletHandoff } from "@/lib/handoff";
 import type {
   NormalizedPosition,
   WalletAnalyzeRequest,
@@ -490,6 +490,16 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
     });
     window.location.href = `/builder?source=wallet_auditor${largest ? `&asset=${encodeURIComponent(largest)}` : ""}`;
   }
+  function runExposureMonteCarlo() {
+    const exposure = result.exposure_analysis;
+    const asset = result.largest_risk_contributors[0]?.asset ?? result.portfolio_allocation[0]?.asset;
+    if (!exposure || (asset !== "SOL" && asset !== "ETH")) return;
+    const handoff: MonteCarloHandoff = { source: "wallet_auditor", asset, capital_usd: exposure.portfolio_equity_usd, long_notional_usd: exposure.gross_long_exposure_usd, short_notional_usd: exposure.gross_short_exposure_usd, collateral_usd: result.portfolio_summary.collateral_value_usd, short_funding_apy: result.portfolio_summary.estimated_funding_exposure_apy ?? undefined, risk_tolerance: "medium", target_style: "neutral_yield" };
+    sessionStorage.setItem(MONTE_CARLO_HANDOFF_KEY, JSON.stringify(handoff));
+    window.location.href = "/monte-carlo?source=wallet_auditor";
+  }
+  const monteCarloAsset = result.largest_risk_contributors[0]?.asset ?? result.portfolio_allocation[0]?.asset;
+  const canRunMonteCarlo = Boolean(result.exposure_analysis && (monteCarloAsset === "SOL" || monteCarloAsset === "ETH") && result.exposure_analysis.gross_long_exposure_usd + result.exposure_analysis.gross_short_exposure_usd > 0);
   return (
     <>
       {result.assessment_status === "partial_data" ? (
@@ -513,6 +523,7 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       <PortfolioAllocation result={result} />
       <RecommendedPlan result={result} />
       <button className="button button-primary wallet-hedge-cta" type="button" onClick={buildHedgeRecommendation}>Build Hedge Recommendation <span>→</span></button>
+      {canRunMonteCarlo ? <button className="button button-primary wallet-hedge-cta" type="button" onClick={runExposureMonteCarlo}>Run Monte Carlo on Exposure <span>→</span></button> : null}
       <PrimaryDrivers drivers={result.primary_drivers} />
       <RiskBreakdown result={result} />
       <PortfolioObservations result={result} />

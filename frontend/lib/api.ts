@@ -8,6 +8,8 @@ import type {
   StressTestRequest,
   StressTestResponse,
   HyperliquidMarketResponse,
+  MonteCarloRequest,
+  MonteCarloResponse,
 } from "./types";
 
 export const API_BASE =
@@ -95,6 +97,10 @@ export function analyzeWallet(
   body: WalletAnalyzeRequest,
 ): Promise<WalletPortfolioResponse> {
   return post<WalletPortfolioResponse>("/wallet/analyze", body);
+}
+
+export function runMonteCarlo(body: MonteCarloRequest): Promise<MonteCarloResponse> {
+  return post<MonteCarloResponse>("/monte-carlo/run", body);
 }
 
 export async function getHyperliquidMarket(asset: string, lookbackHours = 24, dex?: string): Promise<HyperliquidMarketResponse> {

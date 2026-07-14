@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { auditStrategy, buildStrategy, getHyperliquidMarket, PaymentRequiredError, stressTestStrategy, type X402Challenge } from "@/lib/api";
-import { readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type StressHandoff } from "@/lib/handoff";
+import { MONTE_CARLO_HANDOFF_KEY, readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type MonteCarloHandoff, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
@@ -858,6 +858,14 @@ function Result({
     window.location.href = "/stress-test?source=wallet_hedge_builder";
   }
 
+  function sendToMonteCarlo() {
+    if (mode !== "builder") return;
+    const input = request as BuildRequest;
+    const handoff: MonteCarloHandoff = { source: "strategy_builder", asset: build.asset, capital_usd: input.capital_usd, long_notional_usd: build.recommended_structure.long_notional_usd, short_notional_usd: build.recommended_structure.short_notional_usd, collateral_usd: build.recommended_structure.collateral_usd, long_yield_apy: input.long_yield_apy, short_funding_apy: input.short_funding_apy, fee_drag_apy: input.fee_drag_apy, risk_tolerance: input.risk_tolerance, target_style: input.target_style };
+    sessionStorage.setItem(MONTE_CARLO_HANDOFF_KEY, JSON.stringify(handoff));
+    window.location.href = "/monte-carlo?source=strategy_builder";
+  }
+
   return (
     <div className="result-stack" aria-live="polite">
       <div className="report-breadcrumb" aria-label="Report location">
@@ -869,6 +877,7 @@ function Result({
       <DecisionPanel result={result} request={request} mode={mode} />
       <Summary result={result} />
       {mode === "builder" ? <StrategyBlueprint result={build} request={request as BuildRequest} /> : null}
+      {mode === "builder" ? <button className="button button-primary wallet-hedge-cta" type="button" onClick={sendToMonteCarlo}>Run Monte Carlo <span>→</span></button> : null}
       <SafetyBufferCard score={displayedMetrics.safety_buffer_score} />
       <RiskOutlook mode={mode} result={result} />
       {mode === "builder" && (

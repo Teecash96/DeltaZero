@@ -97,6 +97,14 @@ Its report includes:
 - estimated impairment loss; and
 - post-impairment equity.
 
+### Monte Carlo Sensitivity Analysis
+
+Monte Carlo analysis runs 100 to 10,000 bounded stress paths across market movement, funding shifts, exit slippage, collateral haircuts, and protocol-loss assumptions. It reports impairment and post-stress equity distributions, breach probabilities, percentile outcomes, and ranked sensitivity drivers.
+
+The engine is deterministic when a seed is supplied and reuses DeltaZero's existing impairment, metric, and threshold logic. It is a sensitivity tool—not a price forecast—and it does not source, infer, or fabricate future market data. Builder results and supported Wallet Auditor exposures can be transferred through short-lived browser session storage for simulation.
+
+Key inputs include the current structure, capital, carry assumptions, simulation count, time horizon, seed, and bounded volatility assumptions. Outputs include P50/P95/P99 impairment, expected post-stress equity, Safety Buffer and hedge-drift breach probabilities, negative-carry probability, sensitivity contributions, and up to 50 sample paths.
+
 ## Wallet Auditor
 
 The Wallet Auditor discovers and normalizes positions available through supported read-only integrations. It aggregates exposure, collateral, debt, unrealized PnL where reliable, hedge alignment, liquidation context, Safety Buffer, capital at risk, and estimated impairment.
@@ -350,6 +358,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/strategy/stress-test` | Apply a deterministic stress scenario and impairment model. |
 | `POST` | `/wallet/analyze` | Analyze supported public wallet positions. x402 payment required. |
+| `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. x402 payment required. |
 
 ### x402 payments and pricing
 
