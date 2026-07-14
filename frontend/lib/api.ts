@@ -11,6 +11,7 @@ import type {
   MonteCarloRequest,
   MonteCarloResponse,
 } from "./types";
+import { getDemoAccessKey } from "./demo-access";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -51,10 +52,26 @@ export class PaymentRequiredError extends Error {
   }
 }
 
+const DEMO_ACCESS_PATHS = new Set([
+  "/strategy/build",
+  "/strategy/audit",
+  "/strategy/stress-test",
+  "/stress-test/run",
+  "/wallet/analyze",
+  "/monte-carlo/run",
+]);
+
+function protectedRequestHeaders(path: string): HeadersInit {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const demoAccessKey = DEMO_ACCESS_PATHS.has(path) ? getDemoAccessKey() : null;
+  if (demoAccessKey) headers["X-DeltaZero-Admin-Key"] = demoAccessKey;
+  return headers;
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: protectedRequestHeaders(path),
     body: JSON.stringify(body),
   });
 

@@ -29,6 +29,19 @@ DeltaZero classifies completed Strategy Builder, Wallet Auditor, Stress Test, an
 
 Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
 
+## Editor Demo Access
+
+Editor Demo Access lets a trusted editor use the existing backend admin-key check during one browser session without changing normal x402 behavior:
+
+1. Set `DELTAZERO_ADMIN_KEY` in the Railway backend variables.
+2. Share a temporary demo key privately with the editor.
+3. The editor opens `/demo-access`.
+4. The editor enters the key.
+5. The frontend sends `X-DeltaZero-Admin-Key` for protected API calls during that browser session.
+6. Rotate the key after recording.
+
+Never place the key in `NEXT_PUBLIC` variables or public code.
+
 The current product includes a Strategy Builder, Position Auditor, Stress Test, and read-only Wallet Auditor. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
 
 ## Why DeltaZero?
