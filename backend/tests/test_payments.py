@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from dataclasses import replace
 import json
 
 from fastapi.testclient import TestClient
@@ -87,6 +88,16 @@ class FakeFacilitator:
         )
 
 
+def fake_payment_server(
+    payment_settings: PaymentSettings,
+) -> tuple[x402ResourceServer, FakeFacilitator]:
+    facilitator = FakeFacilitator()
+    server = x402ResourceServer(facilitator)
+    server.register(payment_settings.network, ExactEvmScheme())
+    server.register(payment_settings.network, AggrDeferredEvmScheme())
+    return server, facilitator
+
+
 @pytest.fixture
 def payment_settings() -> PaymentSettings:
     return PaymentSettings(
@@ -101,10 +112,7 @@ def payment_settings() -> PaymentSettings:
 
 @pytest.fixture
 def paid_client(payment_settings: PaymentSettings) -> tuple[TestClient, FakeFacilitator]:
-    facilitator = FakeFacilitator()
-    server = x402ResourceServer(facilitator)
-    server.register(payment_settings.network, ExactEvmScheme())
-    server.register(payment_settings.network, AggrDeferredEvmScheme())
+    server, facilitator = fake_payment_server(payment_settings)
     return TestClient(create_app(payment_settings, server)), facilitator
 
 
@@ -159,6 +167,76 @@ def test_required_public_routes_remain_free(
     assert facilitator.settle_calls == 0
 
 
+def test_wrong_admin_key_keeps_x402_challenge(
+    payment_settings: PaymentSettings,
+) -> None:
+    settings = replace(payment_settings, admin_key="owner-test-key")
+    server, _ = fake_payment_server(settings)
+    client = TestClient(create_app(settings, server))
+
+    response = client.post(
+        "/strategy/build",
+        json=BUILD_PAYLOAD,
+        headers={"X-DeltaZero-Admin-Key": "wrong-key"},
+    )
+
+    assert response.status_code == 402
+    assert "PAYMENT-REQUIRED" in response.headers
+
+
+def test_correct_admin_key_executes_protected_endpoint(
+    payment_settings: PaymentSettings,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    admin_key = "owner-test-key"
+    settings = replace(payment_settings, admin_key=admin_key)
+    client = TestClient(create_app(settings, create_payment_server(settings)))
+
+    with caplog.at_level("INFO", logger="app.payments"):
+        response = client.post(
+            "/strategy/build",
+            json=BUILD_PAYLOAD,
+            headers={"X-DeltaZero-Admin-Key": admin_key},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["service"] == "deltazero"
+    assert "PAYMENT-REQUIRED" not in response.headers
+    assert "admin_bypass_used=true" in caplog.text
+    assert admin_key not in caplog.text
+    assert admin_key not in response.text
+    assert admin_key not in json.dumps(dict(response.headers))
+
+
+def test_admin_bypass_is_disabled_when_key_is_not_configured(
+    payment_settings: PaymentSettings,
+) -> None:
+    server, _ = fake_payment_server(payment_settings)
+    client = TestClient(create_app(payment_settings, server))
+
+    response = client.post(
+        "/strategy/build",
+        json=BUILD_PAYLOAD,
+        headers={"X-DeltaZero-Admin-Key": "any-value"},
+    )
+
+    assert response.status_code == 402
+    assert "PAYMENT-REQUIRED" in response.headers
+
+
+def test_free_endpoint_stays_free_with_admin_key_configured(
+    payment_settings: PaymentSettings,
+) -> None:
+    settings = replace(payment_settings, admin_key="owner-test-key")
+    client = TestClient(create_app(settings, create_payment_server(settings)))
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    assert "PAYMENT-REQUIRED" not in response.headers
+
+
 def test_valid_paid_replay_runs_handler_and_returns_settlement_header(
     paid_client: tuple[TestClient, FakeFacilitator],
 ) -> None:
@@ -198,6 +276,7 @@ def test_payment_configuration_is_disabled_when_unset(monkeypatch: pytest.Monkey
         "OKX_API_KEY",
         "OKX_SECRET_KEY",
         "OKX_PASSPHRASE",
+        "DELTAZERO_ADMIN_KEY",
     ):
         monkeypatch.delenv(key, raising=False)
 

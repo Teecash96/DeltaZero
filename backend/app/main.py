@@ -2,10 +2,9 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 from x402.server import x402ResourceServer
 
-from app.payments import PaymentSettings, create_payment_server, paid_routes
+from app.payments import DeltaZeroPaymentMiddleware, PaymentSettings, create_payment_server, paid_routes
 from app.routers.market import router as market_router
 from app.routers.monte_carlo import router as monte_carlo_router
 from app.routers.strategy import router as strategy_router
@@ -26,9 +25,10 @@ def create_app(
 
     if payment_settings is not None:
         application.add_middleware(
-            PaymentMiddlewareASGI,
+            DeltaZeroPaymentMiddleware,
             routes=paid_routes(payment_settings),
             server=payment_server or create_payment_server(payment_settings),
+            admin_key=payment_settings.admin_key,
         )
 
     # CORS is registered after x402 so browser clients can read payment headers

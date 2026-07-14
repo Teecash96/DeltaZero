@@ -8,10 +8,13 @@ in challenge-only mode and never releases a protected resource.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
+import logging
 import os
 import re
+import secrets
+from typing import Any
 
 from x402.http import (
     OKXAuthConfig,
@@ -24,10 +27,13 @@ from x402 import SettleResponse, SupportedKind, SupportedResponse, VerifyRespons
 from x402.mechanisms.evm.deferred.server import AggrDeferredEvmScheme
 from x402.mechanisms.evm.exact.server import ExactEvmScheme
 from x402.server import x402ResourceServer
+from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 
 
 _EVM_ADDRESS_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 _CAIP2_EVM_NETWORK_RE = re.compile(r"^eip155:[1-9][0-9]*$")
+_ADMIN_HEADER = b"x-deltazero-admin-key"
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -41,6 +47,7 @@ class PaymentSettings:
     okx_secret_key: str | None = None
     okx_passphrase: str | None = None
     okx_base_url: str = "https://web3.okx.com"
+    admin_key: str | None = field(default=None, repr=False)
 
     @classmethod
     def from_environment(cls) -> PaymentSettings | None:
@@ -102,6 +109,7 @@ class PaymentSettings:
             okx_secret_key=values["OKX_SECRET_KEY"] or None,
             okx_passphrase=values["OKX_PASSPHRASE"] or None,
             okx_base_url=base_url.rstrip("/"),
+            admin_key=os.getenv("DELTAZERO_ADMIN_KEY") or None,
         )
 
     @property
@@ -235,3 +243,59 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
             "Run deterministic Monte Carlo sensitivity analysis",
         ),
     }
+
+
+class DeltaZeroPaymentMiddleware:
+    """Apply x402 unless a configured owner-testing key matches exactly.
+
+    The secret is compared in constant time and is never logged, returned, or
+    forwarded into business logic. When no key is configured, this wrapper is
+    behaviorally identical to the vendor x402 middleware.
+    """
+
+    def __init__(
+        self,
+        app: Any,
+        *,
+        routes: dict[str, RouteConfig],
+        server: x402ResourceServer,
+        admin_key: str | None,
+    ) -> None:
+        self.app = app
+        self.admin_key = admin_key
+        self.protected_routes = frozenset(routes)
+        self.payment_app = PaymentMiddlewareASGI(app, routes=routes, server=server)
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        route_key = f"{scope.get('method', '')} {scope.get('path', '')}"
+        if (
+            scope.get("type") == "http"
+            and route_key in self.protected_routes
+            and self.admin_key is not None
+        ):
+            supplied_key = self._header_value(scope.get("headers", []))
+            if supplied_key is not None and secrets.compare_digest(
+                supplied_key,
+                self.admin_key,
+            ):
+                logger.info("admin_bypass_used=true")
+                sanitized_scope = dict(scope)
+                sanitized_scope["headers"] = [
+                    (name, value)
+                    for name, value in scope.get("headers", [])
+                    if name.lower() != _ADMIN_HEADER
+                ]
+                await self.app(sanitized_scope, receive, send)
+                return
+
+        await self.payment_app(scope, receive, send)
+
+    @staticmethod
+    def _header_value(headers: list[tuple[bytes, bytes]]) -> str | None:
+        for name, value in headers:
+            if name.lower() == _ADMIN_HEADER:
+                try:
+                    return value.decode("utf-8")
+                except UnicodeDecodeError:
+                    return None
+        return None

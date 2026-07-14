@@ -389,6 +389,20 @@ curl --include \
 
 Never construct a payment credential by hand or treat the presence of a header as proof of payment. In challenge-only mode all paid replays fail closed. In settlement mode DeltaZero forwards credentials to the OKX facilitator for cryptographic verification and settlement before returning the protected resource.
 
+### Admin Testing
+
+The admin bypass is for owner and developer testing only. Set `DELTAZERO_ADMIN_KEY` in the backend environment, then send the value in the `X-DeltaZero-Admin-Key` request header from curl, Postman, or an agent. A correct key bypasses x402 for protected endpoints; a missing or incorrect key follows the normal payment flow.
+
+Never commit this key, place it in a `NEXT_PUBLIC_*` variable, or expose it in browser code. DeltaZero logs only `admin_bypass_used=true` when the bypass is used and never logs or returns the key itself.
+
+```bash
+curl --request POST \
+  --url https://deltazero-production.up.railway.app/strategy/build \
+  --header 'Content-Type: application/json' \
+  --header "X-DeltaZero-Admin-Key: ${DELTAZERO_ADMIN_KEY}" \
+  --data @builder-request.json
+```
+
 ### Builder request body
 
 ```json
