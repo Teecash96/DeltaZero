@@ -23,6 +23,12 @@ Build strategies, audit positions, simulate economic impairment, and assess supp
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
 
+## DeltaZero Risk Zones
+
+DeltaZero classifies completed Strategy Builder, Wallet Auditor, Stress Test, and Monte Carlo reports into five operator-friendly zones: **Optimal**, **Healthy**, **Watch**, **Defensive**, and **Critical**.
+
+Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
+
 The current product includes a Strategy Builder, Position Auditor, Stress Test, and read-only Wallet Auditor. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
 
 ## Why DeltaZero?

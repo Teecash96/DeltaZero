@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
+import { RiskZonePanel } from "@/components/risk-zone-panel";
 import { analyzeWallet, PaymentRequiredError, type X402Challenge } from "@/lib/api";
 import { MONTE_CARLO_HANDOFF_KEY, type MonteCarloHandoff, writeWalletHandoff } from "@/lib/handoff";
 import type {
@@ -510,6 +511,13 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       ) : null}
       <div className="report-breadcrumb" aria-label="Report location"><span>Wallet Auditor</span><i aria-hidden="true">/</i><strong>Portfolio Intelligence Report</strong></div>
       <DeltaZeroVerdict health={result.strategy_health} action={result.recommendation?.action} confidence={result.decision_confidence ?? 0} safetyBuffer={result.risk_metrics.safety_buffer_score} />
+      <RiskZonePanel metrics={{
+        recommendation: result.recommendation?.action,
+        risk_level: result.strategy_health,
+        safety_buffer_score: result.risk_metrics.safety_buffer_score,
+        hedge_drift_pct: result.risk_metrics.hedge_drift_pct,
+        expected_impairment_loss_pct: result.risk_metrics.estimated_impairment_loss_pct,
+      }} />
       <ExecutiveSummary result={result} />
       <PortfolioSummaryStrip result={result} protocols={protocols} />
       <AssessmentHeader result={result} protocols={protocols} />

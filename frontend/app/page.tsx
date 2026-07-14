@@ -202,6 +202,31 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="section-wrap risk-zones-home anchor-section" aria-labelledby="risk-zones-home-title">
+        <div className="section-heading">
+          <div>
+            <p className="kicker">Deterministic interpretation</p>
+            <h2 id="risk-zones-home-title">Risk zones that agents can understand</h2>
+          </div>
+          <p>DeltaZero translates complex hedge, carry, impairment, and stress metrics into clear operator zones.</p>
+        </div>
+        <div className="risk-zones-home-grid">
+          {[
+            ["Optimal", "Preferred range"],
+            ["Healthy", "Acceptable risk"],
+            ["Watch", "Review required"],
+            ["Defensive", "Adjustment likely"],
+            ["Critical", "Safety limits exceeded"],
+          ].map(([zone, note], index) => (
+            <article className={`risk-zone-mini risk-zone-${zone.toLowerCase()}`} key={zone}>
+              <i aria-hidden="true">0{index + 1}</i>
+              <strong>{zone}</strong>
+              <span>{note}</span>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="section-wrap action-demo-section anchor-section" aria-labelledby="action-demo-title">
         <div className="section-heading"><div><p className="kicker">Product walkthrough</p><h2 id="action-demo-title">See DeltaZero in action</h2></div><p>A staged preview of the read-only workflow, prepared for a forthcoming product walkthrough.</p></div>
         <div className="action-demo-shell glass-card">
