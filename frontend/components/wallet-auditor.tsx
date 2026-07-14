@@ -576,7 +576,7 @@ export function WalletPortfolioWorkspace() {
   return (
     <div className="workspace">
       <header className="page-intro wallet-page-intro">
-        <div><p className="kicker">Wallet Auditor</p><h1>Read-only wallet portfolio analysis</h1><div className="wallet-pro-badge">PRO PREVIEW</div><p>Audit supported public wallet positions and receive a read-only DeltaZero risk assessment.</p></div>
+        <div><p className="kicker">Wallet Auditor</p><h1>Read Only Wallet Auditor</h1><div className="wallet-pro-badge">PRO PREVIEW</div><p>Audit supported public wallet positions and receive a read-only DeltaZero risk assessment.</p></div>
         <div className="wallet-page-side"><span className="endpoint">POST /wallet/analyze</span><p className="wallet-readonly-note">DeltaZero only reads public wallet and protocol data. It never requests signatures, private keys, or transaction permissions.</p></div>
       </header>
       <div className="workspace-grid wallet-workspace-grid">

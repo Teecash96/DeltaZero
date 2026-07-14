@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AgentSdkSection } from "@/components/agent-sdk-section";
-import { InteractiveStrategyPreview } from "@/components/interactive-strategy-preview";
 
 const quickLinks = [
   { label: "Home", href: "#home", note: "Hero and product summary" },
@@ -55,7 +54,7 @@ const products = [
   {
     href: "/builder",
     number: "01",
-    title: "Strategy Builder",
+    title: "Deterministic Strategy Builder",
     description:
       "Builds a pseudo delta neutral strategy from capital, market assumptions, risk tolerance, and target style.",
     bullets: ["Recommended long notional", "Short notional", "Collateral allocation", "Hedge ratio", "Carry metrics", "Safety Buffer", "Action"],
@@ -73,7 +72,7 @@ const products = [
   {
     href: "/stress-test",
     number: "03",
-    title: "Stress Test",
+    title: "Portfolio Stress Simulator",
     description:
       "Applies deterministic scenarios such as funding worsens, yield drops, price shock, or collateral pressure.",
     bullets: ["Post stress metrics", "Post stress health", "Recommended action", "Scenario impact"],
@@ -176,33 +175,40 @@ const faqs = [
 export default function Home() {
   return (
     <>
-      <section id="home" className="hero-shell anchor-section">
-        <div className="eyebrow">
-          <span className="pulse-dot" />
-          Neutral carry intelligence
+      <section id="home" className="hero-shell hero-marketing anchor-section">
+        <div className="hero-marketing-copy">
+          <div className="eyebrow">DEFI RISK INTELLIGENCE ASP</div>
+          <h1>Know your hedge.<br /><span>Protect your capital.</span></h1>
+          <p className="hero-copy">DeltaZero helps agents and users build, audit, and stress test pseudo delta neutral DeFi strategies using deterministic risk analysis, live market context, and Monte Carlo sensitivity.</p>
+          <div className="hero-actions">
+            <Link href="/builder" className="button button-primary">Start Risk Analysis <span>→</span></Link>
+            <Link href="/monte-carlo" className="button button-secondary">Run Monte Carlo <span>∿</span></Link>
+          </div>
+          <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
+            {['Read only', 'No signatures', 'Deterministic engine', 'OKX x402 ready'].map((badge) => <span key={badge}>✓ {badge}</span>)}
+          </div>
         </div>
-        <h1>
-          Know your hedge.
-          <br />
-          <span>Protect your capital.</span>
-        </h1>
-        <p className="hero-copy">
-          Deterministic risk analysis for pseudo-delta-neutral DeFi strategies. Build with intent, audit with clarity,
-          and stress test before the market does.
-        </p>
-        <div className="hero-actions">
-          <Link href="/builder" className="button button-primary">
-            Build a strategy <span>→</span>
-          </Link>
-          <Link href="/wallet" className="button button-secondary">
-            Wallet Auditor
-          </Link>
+        <div className="hero-risk-dashboard glass-card" aria-label="Illustrative risk dashboard">
+          <div className="hero-dashboard-head"><div><span>Illustrative risk dashboard</span><strong>SOL neutral carry</strong></div><i>ΔZ / 01</i></div>
+          <div className="hero-dashboard-grid">
+            <article className="hero-safety-gauge"><div className="hero-gauge" role="img" aria-label="Illustrative Safety Buffer 76 percent"><strong>76</strong><span>%</span></div><div><span>Safety Buffer</span><b>Healthy</b><small>Illustrative resilience score</small></div></article>
+            <article className="hero-mini-metric"><span>Hedge Drift</span><strong>4.2%</strong><small>Inside illustrative tolerance</small></article>
+            <article className="hero-mini-metric"><span>Net Carry APY</span><strong>9.8%</strong><small>Illustrative annual estimate</small></article>
+          </div>
+          <div className="hero-dashboard-lower">
+            <article className="hero-histogram"><div><span>Monte Carlo Distribution</span><small>Illustrative stress paths</small></div><div className="hero-histogram-bars" aria-hidden="true">{[18, 30, 48, 70, 92, 78, 55, 36, 22].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div></article>
+            <article className="hero-position-card"><span>Delta neutral position</span><div><b>↑ Long SOL</b><b>↓ Short SOL Perp</b></div><strong>Near Neutral</strong></article>
+          </div>
         </div>
-        <InteractiveStrategyPreview />
-        <div className="trust-row">
-          <span>Deterministic outputs</span>
-          <span>No wallet required</span>
-          <span>SOL &amp; ETH</span>
+      </section>
+
+      <section className="section-wrap action-demo-section anchor-section" aria-labelledby="action-demo-title">
+        <div className="section-heading"><div><p className="kicker">Product walkthrough</p><h2 id="action-demo-title">See DeltaZero in action</h2></div><p>A staged preview of the read-only workflow, prepared for a forthcoming product walkthrough.</p></div>
+        <div className="action-demo-shell glass-card">
+          <div className="action-demo-track">
+            {[['01', 'Wallet Auditor', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Builder', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Stress Test', 'Apply a deterministic downside scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
+          </div>
+          <button className="button button-secondary" type="button" disabled>Watch demo soon</button>
         </div>
       </section>
 

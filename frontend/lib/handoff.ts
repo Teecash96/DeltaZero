@@ -1,8 +1,9 @@
-import type { WalletExposureImport } from "./types";
+import type { MonteCarloRequest, MonteCarloResponse, WalletExposureImport } from "./types";
 
 export const WALLET_HANDOFF_KEY = "deltazero.wallet-builder-handoff";
 export const STRESS_HANDOFF_KEY = "deltazero.builder-stress-handoff";
 export const MONTE_CARLO_HANDOFF_KEY = "deltazero.monte-carlo-handoff";
+export const MONTE_CARLO_RESULT_KEY = "deltazero.monte-carlo-result";
 
 export interface MonteCarloHandoff {
   source: "strategy_builder" | "wallet_auditor";
@@ -16,6 +17,13 @@ export interface MonteCarloHandoff {
   fee_drag_apy?: number;
   risk_tolerance: "low" | "medium" | "high";
   target_style: "neutral_yield" | "conservative_income" | "aggressive_carry" | "capital_preservation";
+}
+
+export interface MonteCarloResultHandoff {
+  source: MonteCarloHandoff["source"];
+  request: MonteCarloRequest;
+  result: MonteCarloResponse;
+  completed_at: string;
 }
 
 export interface StressHandoff {

@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { auditStrategy, buildStrategy, getHyperliquidMarket, PaymentRequiredError, stressTestStrategy, type X402Challenge } from "@/lib/api";
-import { MONTE_CARLO_HANDOFF_KEY, readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type MonteCarloHandoff, type StressHandoff } from "@/lib/handoff";
+import { MONTE_CARLO_HANDOFF_KEY, MONTE_CARLO_RESULT_KEY, readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type MonteCarloHandoff, type MonteCarloResultHandoff, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
@@ -31,7 +31,7 @@ type DecisionSupportState = "positive" | "warning";
 const copy = {
   builder: {
     kicker: "Design from first principles",
-    title: "Strategy Builder",
+    title: "Deterministic Strategy Builder",
     description:
       "Set your capital, carry assumptions, and risk posture. DeltaZero returns a balanced structure and an explicit entry decision.",
     endpoint: "POST /strategy/build",
@@ -47,7 +47,7 @@ const copy = {
   },
   "stress-test": {
     kicker: "Pressure before the market",
-    title: "Stress Test",
+    title: "Portfolio Stress Simulator",
     description:
       "Apply a deterministic market shock and see how the position, health, and recommended action respond.",
     endpoint: "POST /strategy/stress-test",
@@ -832,6 +832,23 @@ function Result({
   const build = result as BuildResponse;
   const stress = result as StressTestResponse;
   const displayedMetrics = mode === "stress-test" ? stress.scenario_result.stressed_metrics : result.metrics;
+  const [monteCarloPreview, setMonteCarloPreview] = useState<MonteCarloResultHandoff | null>(null);
+
+  useEffect(() => {
+    if (mode !== "builder") return;
+    const timer = window.setTimeout(() => {
+      const saved = readSession<MonteCarloResultHandoff>(MONTE_CARLO_RESULT_KEY);
+      if (!saved || saved.source !== "strategy_builder") return;
+      const structure = build.recommended_structure;
+      const matches = saved.request.asset === build.asset
+        && saved.request.capital_usd === (request as BuildRequest).capital_usd
+        && saved.request.long_notional_usd === structure.long_notional_usd
+        && saved.request.short_notional_usd === structure.short_notional_usd
+        && saved.request.collateral_usd === structure.collateral_usd;
+      if (matches) setMonteCarloPreview(saved);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [build, mode, request]);
 
   function sendProposedHedgeToStressTest() {
     if (mode !== "builder" || !build.hedge_adjustment || !(request as BuildRequest).wallet_exposure) return;
@@ -877,7 +894,39 @@ function Result({
       <DecisionPanel result={result} request={request} mode={mode} />
       <Summary result={result} />
       {mode === "builder" ? <StrategyBlueprint result={build} request={request as BuildRequest} /> : null}
-      {mode === "builder" ? <button className="button button-primary wallet-hedge-cta" type="button" onClick={sendToMonteCarlo}>Run Monte Carlo <span>→</span></button> : null}
+      {mode === "builder" ? (
+        <section className="panel builder-monte-carlo">
+          <div className="section-label-row">
+            <div><span className="decision-eyebrow">Sensitivity analysis</span><h2 className="panel-title">Monte Carlo Sensitivity</h2></div>
+            <span>User initiated</span>
+          </div>
+          {monteCarloPreview ? (
+            <>
+              <div className="builder-mc-grid">
+                {[
+                  ["P95 Impairment", `${monteCarloPreview.result.summary.p95_impairment_loss_pct.toFixed(1)}%`],
+                  ["P99 Impairment", `${monteCarloPreview.result.summary.p99_impairment_loss_pct.toFixed(1)}%`],
+                  ["Safety Buffer Breach", `${monteCarloPreview.result.summary.probability_safety_buffer_breach_pct.toFixed(1)}%`],
+                  ["Hedge Drift Breach", `${monteCarloPreview.result.summary.probability_hedge_drift_breach_pct.toFixed(1)}%`],
+                  ["Recommendation", monteCarloPreview.result.summary.recommendation],
+                ].map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}
+              </div>
+              <div className="builder-mc-distribution" aria-label="Monte Carlo impairment percentile preview">
+                {["p5", "p25", "p50", "p75", "p95", "p99"].map((key) => {
+                  const values = monteCarloPreview.result.percentiles.impairment_loss_pct;
+                  const value = values[key as keyof typeof values];
+                  const maximum = Math.max(values.p99, 1);
+                  return <i key={key} style={{ height: `${Math.max(8, value / maximum * 100)}%` }} title={`${key.toUpperCase()}: ${value.toFixed(1)}%`} />;
+                })}
+              </div>
+              <p className="builder-mc-note">Completed {new Date(monteCarloPreview.completed_at).toLocaleString()}. Results match this exact strategy structure.</p>
+              <button className="button button-secondary" type="button" onClick={sendToMonteCarlo}>Run again <span>→</span></button>
+            </>
+          ) : (
+            <div className="builder-mc-empty"><p>Measure impairment percentiles and breach probabilities across deterministic stress paths. Simulation runs only when you request it.</p><button className="button button-primary" type="button" onClick={sendToMonteCarlo}>Run Monte Carlo on this strategy <span>→</span></button></div>
+          )}
+        </section>
+      ) : null}
       <SafetyBufferCard score={displayedMetrics.safety_buffer_score} />
       <RiskOutlook mode={mode} result={result} />
       {mode === "builder" && (
@@ -1112,7 +1161,7 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
             </div>
           ) : loading ? (
             <div className="panel loading-state">
-              <StepProgress kind="strategy" />
+              <StepProgress kind={mode} />
             </div>
           ) : result ? (
             <Result mode={mode} result={result} request={requestValue} />

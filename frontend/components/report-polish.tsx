@@ -152,11 +152,27 @@ export function ConfidenceBar({ value, label = "Decision confidence" }: { value:
   );
 }
 
-export function StepProgress({ kind }: { kind: "strategy" | "wallet" }) {
+type ProgressKind = "builder" | "auditor" | "stress-test" | "wallet" | "monte-carlo";
+
+const progressSteps: Record<ProgressKind, string[]> = {
+  builder: ["Reading strategy inputs", "Calculating hedge ratio", "Estimating carry", "Checking Safety Buffer", "Preparing verdict"],
+  auditor: ["Reading position inputs", "Measuring hedge drift", "Evaluating capital risk", "Checking Safety Buffer", "Preparing audit verdict"],
+  "stress-test": ["Applying stress scenario", "Repricing exposure", "Estimating impairment", "Checking collateral resilience", "Preparing stress report"],
+  wallet: ["Reading public wallet data", "Normalizing positions", "Measuring exposure", "Calculating impairment", "Preparing portfolio verdict"],
+  "monte-carlo": ["Generating stress paths", "Measuring impairment", "Ranking risk factors", "Preparing sensitivity report"],
+};
+
+const progressTitles: Record<ProgressKind, string> = {
+  builder: "Analyzing strategy",
+  auditor: "Auditing position",
+  "stress-test": "Simulating portfolio stress",
+  wallet: "Auditing wallet",
+  "monte-carlo": "Running sensitivity analysis",
+};
+
+export function StepProgress({ kind }: { kind: ProgressKind }) {
   const steps = useMemo(
-    () => kind === "wallet"
-      ? ["Validating the public address", "Querying selected read-only sources", "Normalizing supported positions", "Evaluating exposure and impairment", "Preparing the portfolio report"]
-      : ["Validating strategy inputs", "Evaluating carry and hedge alignment", "Comparing risk thresholds", "Calculating Safety Buffer", "Preparing the decision report"],
+    () => progressSteps[kind],
     [kind],
   );
   const [active, setActive] = useState(0);
@@ -168,7 +184,7 @@ export function StepProgress({ kind }: { kind: "strategy" | "wallet" }) {
 
   return (
     <div className="step-progress" role="status" aria-live="polite">
-      <div className="step-progress-head"><span>{kind === "wallet" ? "Auditing wallet" : "Analyzing strategy"}</span><strong>{active + 1}/{steps.length}</strong></div>
+      <div className="step-progress-head"><span>{progressTitles[kind]}</span><strong>{active + 1}/{steps.length}</strong></div>
       <div className="step-progress-track"><i style={{ width: `${((active + 1) / steps.length) * 100}%` }} /></div>
       <ol>
         {steps.map((step, index) => <li className={index < active ? "complete" : index === active ? "active" : ""} key={step}><i>{index < active ? "✓" : index + 1}</i><span>{step}</span></li>)}
