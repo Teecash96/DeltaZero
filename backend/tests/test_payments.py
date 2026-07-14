@@ -22,7 +22,7 @@ from x402.mechanisms.evm.exact.server import ExactEvmScheme
 from x402.server import x402ResourceServer
 
 from app.main import create_app
-from app.payments import PaymentSettings, create_payment_server
+from app.payments import PaymentSettings, create_payment_server, paid_routes
 
 
 BUILD_PAYLOAD = {
@@ -49,6 +49,34 @@ MONTE_CARLO_PAYLOAD = {
     "collateral_usd": 1500,
     "simulation_count": 100,
 }
+
+AUDIT_PAYLOAD = {
+    "asset": "SOL",
+    "long_notional_usd": 3800,
+    "short_notional_usd": 3000,
+    "collateral_usd": 1200,
+    "risk_tolerance": "medium",
+    "long_yield_apy": 12,
+    "short_funding_apy": 4,
+    "fee_drag_apy": 1,
+}
+
+STRESS_PAYLOAD = {
+    **AUDIT_PAYLOAD,
+    "scenario": {
+        "type": "funding_worsens",
+        "magnitude_pct": 4,
+    },
+}
+
+PROTECTED_ROUTES = [
+    ("/strategy/build", BUILD_PAYLOAD),
+    ("/strategy/audit", AUDIT_PAYLOAD),
+    ("/wallet/analyze", WALLET_PAYLOAD),
+    ("/monte-carlo/run", MONTE_CARLO_PAYLOAD),
+    ("/stress-test/run", STRESS_PAYLOAD),
+    ("/strategy/stress-test", STRESS_PAYLOAD),
+]
 
 
 class FakeFacilitator:
@@ -118,11 +146,7 @@ def paid_client(payment_settings: PaymentSettings) -> tuple[TestClient, FakeFaci
 
 @pytest.mark.parametrize(
     ("path", "payload"),
-    [
-        ("/strategy/build", BUILD_PAYLOAD),
-        ("/wallet/analyze", WALLET_PAYLOAD),
-        ("/monte-carlo/run", MONTE_CARLO_PAYLOAD),
-    ],
+    PROTECTED_ROUTES,
 )
 def test_protected_routes_return_x402_challenge_without_payment(
     paid_client: tuple[TestClient, FakeFacilitator],
@@ -167,16 +191,32 @@ def test_required_public_routes_remain_free(
     assert facilitator.settle_calls == 0
 
 
-def test_wrong_admin_key_keeps_x402_challenge(
+def test_every_backend_post_route_is_payment_protected(
     payment_settings: PaymentSettings,
+) -> None:
+    schema = create_app().openapi()
+    exposed_post_routes = {
+        f"POST {path}"
+        for path, operations in schema["paths"].items()
+        if "post" in operations
+    }
+
+    assert exposed_post_routes == set(paid_routes(payment_settings))
+
+
+@pytest.mark.parametrize(("path", "payload"), PROTECTED_ROUTES)
+def test_wrong_admin_key_keeps_x402_challenge_for_every_protected_route(
+    payment_settings: PaymentSettings,
+    path: str,
+    payload: dict,
 ) -> None:
     settings = replace(payment_settings, admin_key="owner-test-key")
     server, _ = fake_payment_server(settings)
     client = TestClient(create_app(settings, server))
 
     response = client.post(
-        "/strategy/build",
-        json=BUILD_PAYLOAD,
+        path,
+        json=payload,
         headers={"X-DeltaZero-Admin-Key": "wrong-key"},
     )
 
@@ -184,23 +224,30 @@ def test_wrong_admin_key_keeps_x402_challenge(
     assert "PAYMENT-REQUIRED" in response.headers
 
 
-def test_correct_admin_key_executes_protected_endpoint(
+@pytest.mark.parametrize(("path", "payload"), PROTECTED_ROUTES)
+def test_correct_admin_key_executes_every_protected_endpoint(
     payment_settings: PaymentSettings,
     caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+    payload: dict,
 ) -> None:
+    from app.services import wallet_analyzer
+
     admin_key = "owner-test-key"
     settings = replace(payment_settings, admin_key=admin_key)
-    client = TestClient(create_app(settings, create_payment_server(settings)))
+    server, _ = fake_payment_server(settings)
+    client = TestClient(create_app(settings, server))
+    monkeypatch.setattr(wallet_analyzer, "_select_adapters", lambda networks, protocols: [])
 
     with caplog.at_level("INFO", logger="app.payments"):
         response = client.post(
-            "/strategy/build",
-            json=BUILD_PAYLOAD,
+            path,
+            json=payload,
             headers={"X-DeltaZero-Admin-Key": admin_key},
         )
 
     assert response.status_code == 200
-    assert response.json()["service"] == "deltazero"
     assert "PAYMENT-REQUIRED" not in response.headers
     assert "admin_bypass_used=true" in caplog.text
     assert admin_key not in caplog.text

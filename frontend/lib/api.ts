@@ -107,7 +107,7 @@ export function auditStrategy(body: AuditRequest): Promise<AuditResponse> {
 export function stressTestStrategy(
   body: StressTestRequest,
 ): Promise<StressTestResponse> {
-  return post<StressTestResponse>("/strategy/stress-test", body);
+  return post<StressTestResponse>("/stress-test/run", body);
 }
 
 export function analyzeWallet(

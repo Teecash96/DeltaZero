@@ -234,6 +234,18 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
             "/strategy/build",
             "Build and evaluate a deterministic pseudo-delta-neutral strategy",
         ),
+        "POST /strategy/audit": route(
+            "/strategy/audit",
+            "Audit an existing pseudo-delta-neutral position",
+        ),
+        "POST /strategy/stress-test": route(
+            "/strategy/stress-test",
+            "Run deterministic stress analysis using the legacy route",
+        ),
+        "POST /stress-test/run": route(
+            "/stress-test/run",
+            "Run deterministic stress analysis",
+        ),
         "POST /wallet/analyze": route(
             "/wallet/analyze",
             "Analyze supported public wallet positions and portfolio risk",

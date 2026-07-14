@@ -9,6 +9,7 @@ from app.services.stress_test import stress_test_strategy
 from app.services.market_data import MarketDataError, UnknownMarketError
 
 router = APIRouter(prefix="/strategy", tags=["strategy"])
+stress_router = APIRouter(prefix="/stress-test", tags=["strategy"])
 
 
 @router.post("/build", response_model=BuildResponse, response_model_exclude_none=True)
@@ -27,5 +28,6 @@ def strategy_audit(request: AuditRequest) -> AuditResponse:
 
 
 @router.post("/stress-test", response_model=StressTestResponse)
+@stress_router.post("/run", response_model=StressTestResponse)
 def strategy_stress_test(request: StressTestRequest) -> StressTestResponse:
     return stress_test_strategy(request)

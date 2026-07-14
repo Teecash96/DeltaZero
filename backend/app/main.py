@@ -7,7 +7,7 @@ from x402.server import x402ResourceServer
 from app.payments import DeltaZeroPaymentMiddleware, PaymentSettings, create_payment_server, paid_routes
 from app.routers.market import router as market_router
 from app.routers.monte_carlo import router as monte_carlo_router
-from app.routers.strategy import router as strategy_router
+from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
 
 
@@ -47,6 +47,7 @@ def create_app(
     )
 
     application.include_router(strategy_router)
+    application.include_router(stress_router)
     application.include_router(wallet_router)
     application.include_router(market_router)
     application.include_router(monte_carlo_router)

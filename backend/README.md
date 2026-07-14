@@ -36,7 +36,8 @@ API docs: http://localhost:8000/docs
 |--------|-------|-------------|
 | POST | `/strategy/build` | Build a style-aware neutral carry strategy |
 | POST | `/strategy/audit` | Audit an existing position |
-| POST | `/strategy/stress-test` | Stress test under a scenario |
+| POST | `/stress-test/run` | Stress test under a scenario |
+| POST | `/strategy/stress-test` | Legacy stress-test route |
 | GET | `/health` | Health check |
 
 Supported assets: **SOL**, **ETH**
@@ -87,7 +88,7 @@ curl -X POST http://localhost:8000/strategy/audit \
 ### Stress test
 
 ```bash
-curl -X POST http://localhost:8000/strategy/stress-test \
+curl -X POST http://localhost:8000/stress-test/run \
   -H "Content-Type: application/json" \
   -d '{
     "asset": "SOL",

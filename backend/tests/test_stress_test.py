@@ -1,4 +1,4 @@
-"""Tests for POST /strategy/stress-test."""
+"""Tests for the canonical and legacy stress-test routes."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -39,8 +39,11 @@ REQUIRED_TOP_LEVEL = {
 
 
 def test_stress_test_returns_200(client: TestClient) -> None:
-    response = client.post("/strategy/stress-test", json=STRESS_PAYLOAD)
-    assert response.status_code == 200
+    canonical = client.post("/stress-test/run", json=STRESS_PAYLOAD)
+    legacy = client.post("/strategy/stress-test", json=STRESS_PAYLOAD)
+    assert canonical.status_code == 200
+    assert legacy.status_code == 200
+    assert canonical.json() == legacy.json()
 
 
 def test_stress_test_response_shape(client: TestClient) -> None:

@@ -51,7 +51,7 @@ const copy = {
     title: "Portfolio Stress Simulator",
     description:
       "Apply a deterministic market shock and see how the position, health, and recommended action respond.",
-    endpoint: "POST /strategy/stress-test",
+    endpoint: "POST /stress-test/run",
     submit: "Run stress test",
   },
 } satisfies Record<

@@ -375,7 +375,8 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `GET` | `/openapi.json` | Read the OpenAPI contract. Free. |
 | `POST` | `/strategy/build` | Build and evaluate a proposed strategy. x402 payment required. |
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
-| `POST` | `/strategy/stress-test` | Apply a deterministic stress scenario and impairment model. |
+| `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |
+| `POST` | `/strategy/stress-test` | Protected legacy alias retained for SDK compatibility. |
 | `POST` | `/wallet/analyze` | Analyze supported public wallet positions. x402 payment required. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. x402 payment required. |
 
