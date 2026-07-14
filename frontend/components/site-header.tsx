@@ -9,7 +9,6 @@ const navItems = [
   { href: "/stress-test", label: "Stress Test" },
   { href: "/monte-carlo", label: "Monte Carlo" },
   { href: "/#how-it-works", label: "How It Works" },
-  { href: "/wallet", label: "Wallet Auditor", featured: true },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -35,7 +34,7 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className={`site-nav-link${item.featured ? " site-nav-featured" : ""}${active ? " site-nav-active" : ""}`}
+              className={`site-nav-link${active ? " site-nav-active" : ""}`}
               aria-current={active ? "page" : undefined}
             >
               {item.label}

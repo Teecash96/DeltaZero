@@ -177,12 +177,12 @@ export default function Home() {
     <>
       <section id="home" className="hero-shell hero-marketing anchor-section">
         <div className="hero-marketing-copy">
-          <div className="eyebrow">DEFI RISK INTELLIGENCE ASP</div>
           <h1>Know your hedge.<br /><span>Protect your capital.</span></h1>
           <p className="hero-copy">DeltaZero helps agents and users build, audit, and stress test pseudo delta neutral DeFi strategies using deterministic risk analysis, live market context, and Monte Carlo sensitivity.</p>
           <div className="hero-actions">
-            <Link href="/builder" className="button button-primary">Start Risk Analysis <span>→</span></Link>
+            <Link href="/builder" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/monte-carlo" className="button button-secondary">Run Monte Carlo <span>∿</span></Link>
+            <Link href="/wallet" className="button button-secondary">Audit Portfolio <span>◇</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
             {['Read only', 'No signatures', 'Deterministic engine', 'OKX x402 ready'].map((badge) => <span key={badge}>✓ {badge}</span>)}
