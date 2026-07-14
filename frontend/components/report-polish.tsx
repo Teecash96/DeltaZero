@@ -2,6 +2,42 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import type { X402Challenge, X402PaymentOption } from "@/lib/api";
+
+function paymentAsset(option: X402PaymentOption | undefined) {
+  const name = option?.extra?.name;
+  return typeof name === "string" && name ? name : option?.asset ?? "Unavailable";
+}
+
+function paymentPrice(option: X402PaymentOption | undefined) {
+  if (!option?.amount) return "Unavailable";
+  const decimals = option.extra?.decimals;
+  const name = option.extra?.name;
+  if (typeof decimals === "number" && /^\d+$/.test(option.amount)) {
+    const numeric = Number(option.amount) / 10 ** decimals;
+    if (Number.isFinite(numeric)) return `${numeric.toLocaleString(undefined, { maximumFractionDigits: decimals })}${typeof name === "string" ? ` ${name}` : ""}`;
+  }
+  return `${option.amount} base units${typeof name === "string" ? ` ${name}` : ""}`;
+}
+
+export function PaymentRequiredCard({ challenge, retry, loading }: { challenge: X402Challenge | null; retry: () => void; loading: boolean }) {
+  const option = challenge?.accepts?.[0];
+  const details = [["Price", paymentPrice(option)], ["Network", option?.network ?? "Unavailable"], ["Asset", paymentAsset(option)], ["Receiver", option?.payTo ?? "Unavailable"]];
+  return (
+    <section className="panel payment-required-card" role="alert" aria-labelledby="payment-required-title">
+      <span className="payment-required-icon" aria-hidden="true">◇</span>
+      <div className="payment-required-copy">
+        <span className="decision-eyebrow">x402 payment boundary</span>
+        <h2 id="payment-required-title">Payment Required</h2>
+        <p>This endpoint is protected by x402.</p>
+        {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
+        <button className="button button-primary" type="button" onClick={retry} disabled={loading}>{loading ? "Retrying..." : "Retry after payment"}</button>
+        <small>DeltaZero will retry the request. Payment status is verified by the protected endpoint.</small>
+      </div>
+    </section>
+  );
+}
+
 export function ConfidenceBar({ value, label = "Decision confidence" }: { value: number; label?: string }) {
   const score = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
 

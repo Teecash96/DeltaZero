@@ -192,6 +192,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .error-box p { margin: 7px 0; overflow-wrap: anywhere; color: #e6a9a4; font: 12px/1.6 var(--font-geist-mono); }
 .error-box small { color: #bd817d; }
 
+.payment-required-card { display: flex; align-items: flex-start; gap: 18px; padding: 25px; border-color: rgba(191, 255, 103, .34); background: #101d17; }
+.payment-required-icon { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; border: 1px solid rgba(191, 255, 103, .35); border-radius: 12px; color: var(--lime); font-size: 22px; background: rgba(191, 255, 103, .07); }
+.payment-required-copy { min-width: 0; flex: 1; }
+.payment-required-copy h2 { margin: 5px 0 7px; font-size: clamp(24px, 3vw, 34px); }
+.payment-required-copy > p { margin: 0; color: var(--muted); }
+.payment-required-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 20px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--border); }
+.payment-required-details div { min-width: 0; padding: 13px 14px; background: #13221b; }
+.payment-required-details dt { margin-bottom: 5px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
+.payment-required-details dd { margin: 0; overflow-wrap: anywhere; color: var(--text); font: 12px/1.45 var(--font-geist-mono); }
+.payment-required-copy .button { margin-top: 0; }
+.payment-required-copy > small { display: block; margin-top: 11px; color: var(--muted); line-height: 1.5; }
+.payment-required-missing { margin: 18px 0 !important; padding: 12px 14px; border: 1px solid rgba(224, 198, 107, .25); border-radius: 9px; color: #e0c66b !important; background: rgba(224, 198, 107, .06); }
+
 .summary-card { display: block; }
 .summary-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
 .summary-card h2 { margin: 6px 0 0; font-size: 22px; font-weight: 630; letter-spacing: -.025em; }
@@ -631,6 +644,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 @media (max-width: 600px) {
+  .payment-required-card { padding: 20px; }
+  .payment-required-details { grid-template-columns: minmax(0, 1fr); }
   .site-header { min-height: 112px; padding: 15px 0 12px; align-items: flex-start; flex-direction: column; gap: 12px; }
   .site-header nav { width: 100%; display: grid; grid-template-columns: 1fr; gap: 4px; }
   .site-nav-link { min-width: 0; padding: 8px 10px; overflow-wrap: anywhere; white-space: normal; text-align: center; font-size: 11px; }

@@ -2,11 +2,11 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
-import { auditStrategy, buildStrategy, getHyperliquidMarket, stressTestStrategy } from "@/lib/api";
+import { auditStrategy, buildStrategy, getHyperliquidMarket, PaymentRequiredError, stressTestStrategy, type X402Challenge } from "@/lib/api";
 import { readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
-import { ConfidenceBar, ReportActions, StepProgress } from "@/components/report-polish";
+import { ConfidenceBar, PaymentRequiredCard, ReportActions, StepProgress } from "@/components/report-polish";
 import type {
   AuditRequest,
   AuditResponse,
@@ -989,6 +989,7 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
   const [submittedValue, setSubmittedValue] = useState<FormValue | null>(null);
   const [result, setResult] = useState<ResultValue | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentChallenge, setPaymentChallenge] = useState<X402Challenge | null | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [walletImport, setWalletImport] = useState<WalletExposureImport | null>(null);
   const [liveMarket, setLiveMarket] = useState<HyperliquidMarketResponse | null>(null);
@@ -1044,10 +1045,11 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, (value as BuildRequest).asset, (value as BuildRequest).market_data_mode, (value as BuildRequest).funding_lookback_hours]);
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
+  async function submit(event?: FormEvent) {
+    event?.preventDefault();
     setLoading(true);
     setError(null);
+    setPaymentChallenge(undefined);
 
     try {
       const response =
@@ -1060,7 +1062,8 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
       setSubmittedValue(structuredClone(value));
     } catch (caught) {
       setResult(null);
-      setError(caught instanceof Error ? caught.message : "Unable to reach the strategy service.");
+      if (caught instanceof PaymentRequiredError) setPaymentChallenge(caught.challenge);
+      else setError(caught instanceof Error ? caught.message : "Unable to reach the strategy service.");
     } finally {
       setLoading(false);
     }
@@ -1095,7 +1098,9 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
           <StrategyForm mode={mode} value={value} setValue={setValue} submit={submit} loading={loading} liveMarket={liveMarket} marketLoading={marketLoading} marketError={marketError} refreshMarket={() => void refreshMarket()} />
         </div>
         <div className="result-region">
-          {error ? (
+          {paymentChallenge !== undefined ? (
+            <PaymentRequiredCard challenge={paymentChallenge} retry={() => void submit()} loading={loading} />
+          ) : error ? (
             <div className="error-box" role="alert">
               <span className="state-icon">!</span>
               <div>

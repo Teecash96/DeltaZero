@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from "react";
 
 import { RiskGauge } from "@/components/risk-gauge";
-import { ConfidenceBar, ReportActions, StepProgress } from "@/components/report-polish";
-import { analyzeWallet } from "@/lib/api";
+import { ConfidenceBar, PaymentRequiredCard, ReportActions, StepProgress } from "@/components/report-polish";
+import { analyzeWallet, PaymentRequiredError, type X402Challenge } from "@/lib/api";
 import { writeWalletHandoff } from "@/lib/handoff";
 import type {
   NormalizedPosition,
@@ -531,16 +531,19 @@ export function WalletPortfolioWorkspace() {
   const [value, setValue] = useState<WalletAnalyzeRequest>(() => structuredClone(DEFAULT_REQUEST));
   const [result, setResult] = useState<WalletPortfolioResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentChallenge, setPaymentChallenge] = useState<X402Challenge | null | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
   async function runAnalysis() {
     setLoading(true);
     setError(null);
+    setPaymentChallenge(undefined);
     try {
       setResult(await analyzeWallet(value));
     } catch (caught) {
       setResult(null);
-      setError(caught instanceof Error ? caught.message : "Unable to analyze the wallet.");
+      if (caught instanceof PaymentRequiredError) setPaymentChallenge(caught.challenge);
+      else setError(caught instanceof Error ? caught.message : "Unable to analyze the wallet.");
     } finally {
       setLoading(false);
     }
@@ -563,7 +566,9 @@ export function WalletPortfolioWorkspace() {
       <div className="workspace-grid wallet-workspace-grid">
         <WalletRequestForm value={value} setValue={setValue} submit={submit} loading={loading} loadDemo={() => { setValue(structuredClone(DEMO_WALLET_REQUEST)); setResult(null); setError(null); }} />
         <div className="result-region">
-          {error ? (
+          {paymentChallenge !== undefined ? (
+            <PaymentRequiredCard challenge={paymentChallenge} retry={() => void runAnalysis()} loading={loading} />
+          ) : error ? (
             <div className="error-box" role="alert"><span className="state-icon">!</span><div><strong>Analysis could not be completed</strong><p>{error}</p><small>Check the wallet address and selected protocol coverage, then try again.</small></div></div>
           ) : loading ? (
             <div className="panel loading-state"><StepProgress kind="wallet" /></div>
