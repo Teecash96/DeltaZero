@@ -23,7 +23,7 @@ Build strategies, audit positions, simulate economic impairment, and assess supp
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
 
-The current product includes a Strategy Builder, Position Auditor, Stress Test, and read-only Wallet Auditor. It never requests private keys, seed phrases, signatures, approvals, or transaction permissions, and it does not execute trades.
+The current product includes a Strategy Builder, Position Auditor, Stress Test, and read-only Wallet Auditor. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -46,6 +46,7 @@ DeltaZero is differentiated by:
 | Wallet Auditor | Live · Pro Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
+| x402 Payment Gate | Ready locally | Issues standards-compliant challenges and supports facilitator-verified per-call settlement when official credentials are configured. |
 | Interactive Strategy Preview | Live | Provides a clearly labelled illustrative simulation on the landing page. |
 | TypeScript SDK | SDK Preview | Supplies a typed local client for every current API service. |
 | Python SDK | SDK Preview | Supplies a typed local client for every current API service. |
@@ -141,6 +142,7 @@ flowchart LR
     end
 
     subgraph API[FastAPI Service]
+        PAYMENT[x402 Payment Gate]
         ROUTES[Validated API Routes]
         STRATEGY[Strategy Services]
         DECISION[Deterministic Decision Engine]
@@ -155,11 +157,19 @@ flowchart LR
         MORPHO[Morpho Public API]
     end
 
-    WEB --> ROUTES
-    TS --> ROUTES
-    PY --> ROUTES
+    subgraph Payments[OKX Agent Payments]
+        FACILITATOR[OKX Facilitator]
+        XLAYER[X Layer USDT Settlement]
+    end
+
+    WEB --> PAYMENT
+    TS --> PAYMENT
+    PY --> PAYMENT
     AGENT --> TS
     AGENT --> PY
+    PAYMENT --> ROUTES
+    PAYMENT --> FACILITATOR
+    FACILITATOR --> XLAYER
     ROUTES --> STRATEGY
     ROUTES --> WALLET
     STRATEGY --> DECISION
@@ -332,19 +342,48 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
+| `GET` | `/` | Check the public service root. Free. |
 | `GET` | `/health` | Check backend availability. |
-| `POST` | `/strategy/build` | Build and evaluate a proposed strategy. |
+| `GET` | `/docs` | Open Swagger UI. Free. |
+| `GET` | `/openapi.json` | Read the OpenAPI contract. Free. |
+| `POST` | `/strategy/build` | Build and evaluate a proposed strategy. x402 payment required. |
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/strategy/stress-test` | Apply a deterministic stress scenario and impairment model. |
-| `POST` | `/wallet/analyze` | Analyze supported public wallet positions. |
+| `POST` | `/wallet/analyze` | Analyze supported public wallet positions. x402 payment required. |
 
-### Builder example
+### x402 payments and pricing
+
+DeltaZero uses the official OKX x402 seller middleware. An unpaid request to a protected route returns `HTTP 402 Payment Required` with a base64-encoded `PAYMENT-REQUIRED` header. The header is the authoritative payment quote and identifies the network, stablecoin contract, atomic amount, receiver, and supported payment schemes.
+
+The per-call price is configured with `PAYMENT_PRICE_USDT`; the same price currently applies to `/strategy/build` and `/wallet/analyze`. With only the three `PAYMENT_*` variables, the server operates in challenge-only mode: it returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted `PAYMENT-SIGNATURE` or legacy `X-PAYMENT` credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
+
+Unpaid challenge:
 
 ```bash
-curl --request POST \
+curl --include \
+  --request POST \
   --url https://deltazero-production.up.railway.app/strategy/build \
   --header 'Content-Type: application/json' \
-  --data '{
+  --data @builder-request.json
+```
+
+Paid replay after an x402-compatible wallet signs the returned challenge:
+
+```bash
+curl --include \
+  --request POST \
+  --url https://deltazero-production.up.railway.app/strategy/build \
+  --header 'Content-Type: application/json' \
+  --header "PAYMENT-SIGNATURE: ${PAYMENT_SIGNATURE}" \
+  --data @builder-request.json
+```
+
+Never construct a payment credential by hand or treat the presence of a header as proof of payment. In challenge-only mode all paid replays fail closed. In settlement mode DeltaZero forwards credentials to the OKX facilitator for cryptographic verification and settlement before returning the protected resource.
+
+### Builder request body
+
+```json
+{
     "asset": "SOL",
     "capital_usd": 5000,
     "risk_tolerance": "medium",
@@ -352,7 +391,7 @@ curl --request POST \
     "long_yield_apy": 14,
     "short_funding_apy": 3,
     "fee_drag_apy": 1
-  }'
+}
 ```
 
 ### Wallet example
@@ -410,6 +449,24 @@ export ARBITRUM_RPC_URL="your-arbitrum-rpc-url"
 
 Do not commit RPC URLs containing provider credentials.
 
+To enable safe challenge-only x402 locally, configure the receiving address, per-call price, and X Layer network identifier:
+
+```bash
+export PAYMENT_RECEIVER="0xYourReceivingAddress"
+export PAYMENT_PRICE_USDT="0.01"
+export PAYMENT_NETWORK="eip155:196"
+```
+
+To enable paid verification and settlement, additionally configure the complete official facilitator credential group:
+
+```bash
+export OKX_API_KEY="your-okx-developer-api-key"
+export OKX_SECRET_KEY="your-okx-developer-secret"
+export OKX_PASSPHRASE="your-okx-developer-passphrase"
+```
+
+If none of the three `PAYMENT_*` variables is configured, the local development app starts without the payment middleware. If any payment variable is present, all three payment variables are required. Facilitator credentials are optional only as a complete group: none enables challenge-only mode, all three enable settlement, and a partial credential group stops startup. Protected resources are never released in challenge-only mode.
+
 ### Start the frontend
 
 In a second terminal:
@@ -450,12 +507,14 @@ SDK commands are documented in the [SDK Preview](#sdk-preview) section.
 | Backend | Railway | [deltazero-production.up.railway.app](https://deltazero-production.up.railway.app) |
 | Source control | GitHub | [Teecash96/DeltaZero](https://github.com/Teecash96/DeltaZero) |
 
-Production CORS permits the deployed frontend plus local Next.js development origins. The frontend API origin is configured through `NEXT_PUBLIC_API_BASE`.
+Production CORS permits the deployed frontend plus local Next.js development origins and exposes the x402 response headers to approved browser origins. The frontend API origin is configured through `NEXT_PUBLIC_API_BASE`.
 
 ## Security Model
 
 - DeltaZero never asks for a seed phrase or private key.
-- Wallet analysis does not request signatures, approvals, or transaction permissions.
+- Wallet analysis does not request trading signatures, approvals, or transaction permissions.
+- Challenge-only x402 mode never releases a protected resource; settlement mode requires facilitator-verified payment credentials before protected business logic runs.
+- Facilitator API credentials and payment configuration belong in deployment environment variables and must never be committed.
 - Hyperliquid access uses read-only public information endpoints.
 - Aave access uses configured read-only RPC calls.
 - Morpho access uses its supported public API.
