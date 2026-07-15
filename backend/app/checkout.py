@@ -98,7 +98,7 @@ async def create_checkout(request: RiskEnginePassRequest, settings: PaymentSetti
     payload = {
         "type": "charge",
         "amount": settings.price_usdt,
-        "symbol": "USD₮0",
+        "symbol": "USDT",
         "recipient": settings.receiver,
         "description": "DeltaZero complete four-module Risk Engine Pass",
         "externalId": external_id,
@@ -132,7 +132,7 @@ async def create_checkout(request: RiskEnginePassRequest, settings: PaymentSetti
         expires_at=data["expiresAt"],
         checkout_token=token,
         amount=settings.price_usdt,
-        symbol="USD₮0",
+        symbol="USDT",
     )
 
 
