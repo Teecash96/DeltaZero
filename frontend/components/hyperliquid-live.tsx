@@ -115,7 +115,7 @@ export function HyperliquidLive() {
           ) : null}
 
           <section className="panel hyperliquid-upgrade">
-            <div><span>Free preview boundary</span><h2>Market context is free. Portfolio intelligence is premium.</h2><p>Use the paid Risk Engine for hedge-drift verdicts, Safety Buffer scoring, funding stress tests, Monte Carlo sensitivity, and operator recommendations.</p></div>
+            <div><span>Free preview boundary</span><h2>Market context is free. Deterministic DeFi risk intelligence is premium.</h2><p>Unlock hedge-drift verdicts, Safety Buffer scoring, funding stress testing, Monte Carlo sensitivity, and actionable operator recommendations through the DeltaZero Risk Engine.</p></div>
             <div><Link href="/risk-engine" className="button button-primary">Open Risk Engine →</Link><Link href="/wallet" className="button button-secondary">Audit Portfolio</Link></div>
           </section>
         </div>
