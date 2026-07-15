@@ -103,6 +103,7 @@ async def create_checkout(request: RiskEnginePassRequest, settings: PaymentSetti
         "description": "DeltaZero complete four-module Risk Engine Pass",
         "externalId": external_id,
         "expiresIn": 1800,
+        "realm": "deltazero-production.up.railway.app",
         "deliveries": {"includeUrl": True},
     }
     body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
