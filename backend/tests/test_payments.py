@@ -70,6 +70,7 @@ STRESS_PAYLOAD = {
 }
 
 PROTECTED_ROUTES = [
+    ("/risk-engine/analyze", BUILD_PAYLOAD),
     ("/strategy/build", BUILD_PAYLOAD),
     ("/strategy/audit", AUDIT_PAYLOAD),
     ("/wallet/analyze", WALLET_PAYLOAD),

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { PaymentRequiredError, auditStrategy } from "@/lib/api";
+import { PaymentRequiredError, runRiskEnginePass } from "@/lib/api";
 import type { RiskTolerance, TargetStyle } from "@/lib/types";
 
 type AgentState = "idle" | "monitoring" | "attention" | "stopped";
@@ -62,31 +62,31 @@ export function AgentOperatorConsole() {
     auditStarted.current = true;
     setState("attention");
     append("DRIFT DETECTED", `Hedge drift reached ${drift.toFixed(1)}%, above the ${thresholds[riskTolerance]}% operator policy.`, "warning");
-    append("API CALL", "Requesting live DeltaZero Hedge-Drift Analysis.");
+    append("API CALL", "Requesting the complete DeltaZero Risk Engine Pass.");
 
-    void auditStrategy({
+    void runRiskEnginePass({
       asset: "SOL",
-      long_notional_usd: 5160,
-      short_notional_usd: 4850,
-      collateral_usd: 2000,
+      capital_usd: 7000,
       risk_tolerance: riskTolerance,
+      target_style: targetStyle,
       long_yield_apy: 14,
       short_funding_apy: 3,
       fee_drag_apy: 1,
     }).then((report) => {
-      setLastRecommendation(report.recommendation.action);
-      append("AUDIT COMPLETE", `${report.recommendation.action}: ${report.recommendation.summary}`, report.recommendation.action === "HOLD" ? "positive" : "warning");
+      const audit = report.hedge_drift_audit;
+      setLastRecommendation(audit.recommendation.action);
+      append("PASS COMPLETE", `Four coordinated reports generated. Hedge verdict: ${audit.recommendation.action}.`, audit.recommendation.action === "HOLD" ? "positive" : "warning");
       append("SIMULATION READY", "A proposal-only SOL perpetual hedge intent was generated. Venue broadcast remains disabled until a compatible adapter is configured.", "neutral");
     }).catch((error: unknown) => {
       if (error instanceof PaymentRequiredError) {
         setLastRecommendation("Payment required");
-        append("PAYMENT REQUIRED", challengeSummary(error), "warning");
+        append("PAYMENT REQUIRED", `Premium risk analysis required — unlock the complete four-module assessment for 1 USDT. ${challengeSummary(error)}`, "warning");
         append("AGENT PAUSED", "Open demo access for recording, or complete payment through an Agentic Wallet client. The browser did not sign or transfer funds.", "neutral");
       } else {
         append("HEDGE CHECK FAILED", error instanceof Error ? error.message : "The hedge-drift analysis could not be completed.", "critical");
       }
     });
-  }, [drift, riskTolerance, state]);
+  }, [drift, riskTolerance, state, targetStyle]);
 
   function spawn() {
     auditStarted.current = false;

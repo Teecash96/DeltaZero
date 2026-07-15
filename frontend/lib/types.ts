@@ -264,6 +264,30 @@ export interface MonteCarloResponse {
   sample_paths: MonteCarloPath[];
 }
 
+export interface RiskEnginePassRequest {
+  asset: Asset;
+  capital_usd: number;
+  risk_tolerance: RiskTolerance;
+  target_style: TargetStyle;
+  long_yield_apy: number;
+  short_funding_apy: number;
+  fee_drag_apy: number;
+  stress_magnitude_pct?: number;
+  simulation_count?: number;
+  time_horizon_days?: number;
+  seed?: number | null;
+}
+
+export interface RiskEnginePassResponse {
+  service: "risk_engine_pass";
+  pass_scope: "one_strategy_analysis";
+  strategy_build: BuildResponse;
+  hedge_drift_audit: AuditResponse;
+  funding_stress_test: StressTestResponse;
+  monte_carlo_sensitivity: MonteCarloResponse;
+  generated_at: string;
+}
+
 export interface ImpairmentResult {
   pre_stress_equity_usd: number;
   post_stress_equity_usd: number;

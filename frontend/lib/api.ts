@@ -10,6 +10,8 @@ import type {
   HyperliquidMarketResponse,
   MonteCarloRequest,
   MonteCarloResponse,
+  RiskEnginePassRequest,
+  RiskEnginePassResponse,
 } from "./types";
 import { getDemoAccessKey } from "./demo-access";
 import { decodePaymentReceipt, storePaymentReceipt } from "./payment-receipt";
@@ -60,6 +62,7 @@ const DEMO_ACCESS_PATHS = new Set([
   "/stress-test/run",
   "/wallet/analyze",
   "/monte-carlo/run",
+  "/risk-engine/analyze",
 ]);
 
 function protectedRequestHeaders(path: string): HeadersInit {
@@ -122,6 +125,10 @@ export function analyzeWallet(
 
 export function runMonteCarlo(body: MonteCarloRequest): Promise<MonteCarloResponse> {
   return post<MonteCarloResponse>("/monte-carlo/run", body);
+}
+
+export function runRiskEnginePass(body: RiskEnginePassRequest): Promise<RiskEnginePassResponse> {
+  return post<RiskEnginePassResponse>("/risk-engine/analyze", body);
 }
 
 export async function getHyperliquidMarket(asset: string, lookbackHours = 24, dex?: string): Promise<HyperliquidMarketResponse> {

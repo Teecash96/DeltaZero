@@ -1217,6 +1217,28 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .theme-toggle { transition: none; }
 }
 
+.risk-pass-stack { display: grid; gap: 18px; margin-bottom: 34px; }
+.risk-pass-offer { display: flex; align-items: center; justify-content: space-between; gap: 28px; border-color: color-mix(in srgb, var(--accent) 48%, var(--border)); }
+.risk-pass-offer h2, .risk-pass-results h2 { margin: 8px 0; font-size: clamp(25px, 3vw, 38px); }
+.risk-pass-offer p, .risk-pass-results p { margin: 0; color: var(--muted); line-height: 1.65; }
+.risk-pass-offer > strong { min-width: 150px; color: var(--accent); font-size: 28px; text-align: right; }
+.risk-pass-offer > strong small { display: block; color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.risk-pass-form .form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.risk-pass-note { display: block; margin-top: 12px; color: var(--muted); }
+.risk-pass-results { display: grid; gap: 16px; }
+.risk-pass-result-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.risk-pass-result-grid article { min-height: 210px; }
+.risk-pass-result-grid article > span { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.risk-pass-result-grid h3 { margin: 26px 0 8px; color: var(--accent); font-size: 30px; }
+.risk-pass-result-grid strong { display: block; margin-bottom: 9px; font-size: 18px; }
+.risk-engine-included { margin-top: 34px; }
+
+@media (max-width: 760px) {
+  .risk-pass-offer { align-items: flex-start; flex-direction: column; }
+  .risk-pass-offer > strong { text-align: left; }
+  .risk-pass-form .form-grid, .risk-pass-result-grid { grid-template-columns: 1fr; }
+}
+
 /* Methodology, provenance, and support */
 .evidence-page { max-width: 1120px; }
 .methodology-principles, .support-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }

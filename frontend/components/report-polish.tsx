@@ -46,7 +46,7 @@ export function PaymentRequiredCard({ challenge, retry, loading }: { challenge: 
         <div className="payment-required-copy">
           <span className="decision-eyebrow">Premium analysis</span>
           <h2 id="payment-required-title">Unlock Premium Strategy Analysis</h2>
-          <p>This analysis is protected by the OKX x402 payment protocol. A one time payment unlocks the deterministic strategy computation. DeltaZero never requests wallet signatures, approvals, or private keys.</p>
+          <p>This analysis is protected by the OKX x402 payment protocol. Payment unlocks one complete analysis request; a new analysis requires a new payment. DeltaZero never requests wallet signatures, approvals, or private keys.</p>
           {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}{label === "Receiver" ? <button type="button" onClick={() => void copyReceiver()} aria-label="Copy receiver address">{copyFeedback ? "Copied" : "Copy"}</button> : null}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
           <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>
           <small>Payment is verified automatically by the protected endpoint.</small>

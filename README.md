@@ -403,12 +403,15 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/strategy/stress-test` | Protected legacy alias retained for SDK compatibility. |
 | `POST` | `/wallet/analyze` | Analyze supported public wallet positions. x402 payment required. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. x402 payment required. |
+| `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated paid analysis. |
 
 ### x402 payments and pricing
 
 DeltaZero uses the official OKX x402 seller middleware. An unpaid request to a protected route returns `HTTP 402 Payment Required` with a base64-encoded `PAYMENT-REQUIRED` header. The header is the authoritative payment quote and identifies the network, stablecoin contract, atomic amount, receiver, and supported payment schemes.
 
-The per-call price is configured with `PAYMENT_PRICE_USDT`; the same price currently applies to `/strategy/build` and `/wallet/analyze`. With only the three `PAYMENT_*` variables, the server operates in challenge-only mode: it returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted `PAYMENT-SIGNATURE` or legacy `X-PAYMENT` credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
+The price is configured with `PAYMENT_PRICE_USDT`. The primary product flow calls `/risk-engine/analyze`: one 1 USDT payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, Hyperliquid Live, Judge Demo, health, documentation, and OpenAPI remain free. Portfolio Audit and legacy individual analysis endpoints remain separately protected for API compatibility.
+
+With only the three `PAYMENT_*` variables, the server operates in challenge-only mode: it returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted `PAYMENT-SIGNATURE` or legacy `X-PAYMENT` credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
 
 Unpaid challenge:
 

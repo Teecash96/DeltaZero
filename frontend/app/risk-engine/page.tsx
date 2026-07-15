@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { RiskEnginePass } from "@/components/risk-engine-pass";
 
 export const metadata: Metadata = {
   title: "Risk Engine — DeltaZero",
@@ -47,26 +48,28 @@ export default function RiskEnginePage() {
       <header className="page-intro">
         <div>
           <p className="kicker">DeltaZero Risk Engine</p>
-          <h1>Choose your risk workflow.</h1>
+          <h1>One pass. Four risk views.</h1>
           <p>
             Four connected modules use the same deterministic methodology to build a hedge, audit its drift,
             test funding pressure, and measure sensitivity across thousands of bounded scenarios.
           </p>
         </div>
-        <span className="endpoint">4 MODULES</span>
+        <span className="endpoint">1 USDT · 4 MODULES</span>
       </header>
 
-      <section className="tool-grid product-grid risk-engine-grid" aria-label="Risk Engine modules">
+      <RiskEnginePass />
+
+      <section className="tool-grid product-grid risk-engine-grid risk-engine-included" aria-label="Reports included in the Risk Engine Pass">
         {modules.map((module) => (
-          <Link href={module.href} className="tool-card product-card" key={module.href}>
+          <article className="tool-card product-card" key={module.href}>
             <div className="tool-number">{module.number}</div>
             <h2>{module.title}</h2>
             <p>{module.description}</p>
             <ul className="product-bullets">
               {module.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
             </ul>
-            <span className="button button-primary risk-engine-action">{module.action} →</span>
-          </Link>
+            <span className="button button-secondary risk-engine-action">Included in pass</span>
+          </article>
         ))}
       </section>
 
