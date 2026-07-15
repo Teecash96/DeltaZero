@@ -15,6 +15,7 @@ Build strategies, audit positions, simulate economic impairment, and assess supp
 [![OKX AI Hackathon](https://img.shields.io/badge/OKX_AI-Hackathon-000000)](https://www.okx.com/)
 
 [Live Application](https://delta-zero-alpha.vercel.app) ·
+[Judge Demo](https://delta-zero-alpha.vercel.app/demo) ·
 [API Documentation](https://deltazero-production.up.railway.app/docs) ·
 [SDK Preview](#sdk-preview) ·
 [X](https://x.com/DeltaZeroASP)
@@ -22,6 +23,8 @@ Build strategies, audit positions, simulate economic impairment, and assess supp
 </div>
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
+
+The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Builder, Auditor, Monte Carlo, and Stress Test. It does not bypass or weaken x402 protection on real analysis endpoints.
 
 ## Methodology, provenance, and support
 

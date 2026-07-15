@@ -1,9 +1,8 @@
-import Link from "next/link";
-import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
+import type { Metadata } from "next";
+import { JudgeDemo } from "@/components/judge-demo";
 
-const demos = [
-  { title: "Build SOL neutral carry", description: "Allocate $5,000 using medium risk assumptions and a 10% net carry spread before fees.", href: "/builder", payload: BUILD_SAMPLE },
-  { title: "Audit hedge drift", description: "Inspect a $3,800 long against a $3,000 short and measure the resulting directional exposure.", href: "/auditor", payload: AUDIT_SAMPLE },
-  { title: "Stress adverse funding", description: "Add four points to short funding and test whether the existing position still earns its carry.", href: "/stress-test", payload: STRESS_TEST_SAMPLE },
-];
-export default function DemoPage() { return <div className="workspace"><header className="page-intro"><div><p className="kicker">Preloaded walkthroughs</p><h1>Explore DeltaZero</h1><p>Each workflow is prefilled with the verified sample payload. Open one, submit it unchanged, then adjust the assumptions to compare decisions.</p></div></header><div className="demo-cards">{demos.map((demo, index) => <article className="demo-card" key={demo.href}><span className="tool-number">0{index + 1}</span><h2>{demo.title}</h2><p>{demo.description}</p><pre className="demo-payload">{JSON.stringify(demo.payload, null, 2)}</pre><Link href={demo.href} className="button button-primary">Open workflow <span>→</span></Link></article>)}</div></div>; }
+export const metadata: Metadata = { title: "Judge Demo — DeltaZero", description: "A no-payment guided walkthrough of DeltaZero's deterministic DeFi risk workflow." };
+
+export default function DemoPage() {
+  return <div className="workspace judge-demo-page"><header className="page-intro"><div><p className="kicker">Experience the product</p><h1>DeltaZero Judge Demo</h1><p>See how DeltaZero turns strategy inputs into an explainable verdict, risk zone, metrics, and operator action—without a wallet, payment, or setup.</p></div><span className="endpoint">4-MINUTE WALKTHROUGH</span></header><JudgeDemo /></div>;
+}

@@ -198,6 +198,7 @@ export default function Home() {
           <h1>Know your hedge.<br /><span>Protect your capital.</span></h1>
           <p className="hero-copy">DeltaZero helps agents and users build, audit, and stress test pseudo delta neutral DeFi strategies using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
           <div className="hero-actions">
+            <Link href="/demo" className="button button-judge">Try Judge Demo <span>▶</span></Link>
             <Link href="/builder" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/monte-carlo" className="button button-secondary">Run Monte Carlo <span>∿</span></Link>
             <Link href="/wallet" className="button button-secondary">Audit Portfolio <span>◇</span></Link>
@@ -246,12 +247,12 @@ export default function Home() {
       </section>
 
       <section className="section-wrap action-demo-section anchor-section" aria-labelledby="action-demo-title">
-        <div className="section-heading"><div><p className="kicker">Product walkthrough</p><h2 id="action-demo-title">See DeltaZero in action</h2></div><p>A staged preview of the read-only workflow, prepared for a forthcoming product walkthrough.</p></div>
+        <div className="section-heading"><div><p className="kicker">Product walkthrough</p><h2 id="action-demo-title">See DeltaZero in action</h2></div><p>Experience the complete decision workflow with verified reference scenarios and no payment.</p></div>
         <div className="action-demo-shell glass-card">
           <div className="action-demo-track">
             {[['01', 'Wallet Auditor', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Builder', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Stress Test', 'Apply a deterministic downside scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
           </div>
-          <button className="button button-secondary" type="button" disabled>Watch demo soon</button>
+          <Link href="/demo" className="button button-judge">Open Judge Demo <span>▶</span></Link>
         </div>
       </section>
 
