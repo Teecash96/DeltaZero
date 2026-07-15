@@ -75,6 +75,14 @@ DeltaZero is differentiated by:
 
 ## Products
 
+### Agent-in-a-Box example
+
+The executable [`examples/agent-bot/agent-bot.mjs`](examples/agent-bot/agent-bot.mjs)
+demonstrates an autonomous monitoring loop: simulated wallet scan, hedge-drift
+trigger, live paid audit request, automatic x402 authorization through Onchain OS,
+and a proposal-only rebalance payload. See the
+[`example guide`](examples/agent-bot/README.md) for safeguards and run commands.
+
 ### Strategy Builder
 
 The Builder creates a proposed structure from:

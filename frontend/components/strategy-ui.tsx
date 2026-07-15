@@ -8,6 +8,7 @@ import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { RiskZonePanel } from "@/components/risk-zone-panel";
+import { StressTestLiquidationVisualizer } from "@/components/risk-visualizers";
 import type {
   AuditRequest,
   AuditResponse,
@@ -899,6 +900,7 @@ function Result({
         hedge_drift_pct: displayedMetrics.hedge_drift_pct,
         expected_impairment_loss_pct: mode === "stress-test" ? (result as StressTestResponse).estimated_impairment_loss_pct : undefined,
       }} />
+      {mode === "stress-test" ? <StressTestLiquidationVisualizer result={stress} /> : null}
       <DecisionPanel result={result} request={request} mode={mode} />
       <Summary result={result} />
       {mode === "builder" ? <StrategyBlueprint result={build} request={request as BuildRequest} /> : null}

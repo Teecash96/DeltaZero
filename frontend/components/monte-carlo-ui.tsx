@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import { PaymentRequiredCard, ReportActions } from "@/components/report-polish";
 import { RiskZonePanel } from "@/components/risk-zone-panel";
+import { MonteCarloOutcomeVisualizer } from "@/components/risk-visualizers";
 import { PaymentRequiredError, runMonteCarlo, type X402Challenge } from "@/lib/api";
 import { MONTE_CARLO_HANDOFF_KEY, MONTE_CARLO_RESULT_KEY, readSession, type MonteCarloHandoff, type MonteCarloResultHandoff } from "@/lib/handoff";
 import type { MonteCarloPath, MonteCarloRequest, MonteCarloResponse, RiskTolerance, TargetStyle } from "@/lib/types";
@@ -27,10 +28,14 @@ function MonteCarloVerdict({ result }: { result: MonteCarloResponse }) {
   return <section className="panel mc-verdict"><div><span>DELTAZERO VERDICT</span><h2>{riskFor(s.recommendation)} sensitivity risk</h2></div><div className="mc-verdict-grid">{cards.map(([label, output]) => <article key={label}><span>{label}</span><strong>{output}</strong></article>)}</div></section>;
 }
 
-function Distribution({ result }: { result: MonteCarloResponse }) {
+function PercentileDistribution({ result }: { result: MonteCarloResponse }) {
   const rows = [["P5", result.percentiles.impairment_loss_pct.p5, result.percentiles.post_stress_equity_usd.p5], ["P25", result.percentiles.impairment_loss_pct.p25, result.percentiles.post_stress_equity_usd.p25], ["P50", result.percentiles.impairment_loss_pct.p50, result.percentiles.post_stress_equity_usd.p50], ["P75", result.percentiles.impairment_loss_pct.p75, result.percentiles.post_stress_equity_usd.p75], ["P95", result.percentiles.impairment_loss_pct.p95, result.percentiles.post_stress_equity_usd.p95], ["P99", result.percentiles.impairment_loss_pct.p99, result.percentiles.post_stress_equity_usd.p99]] as const;
   const maxLoss = Math.max(...rows.map((row) => row[1]), 1); const maxEquity = Math.max(...rows.map((row) => row[2]), 1);
   return <section className="panel mc-distribution"><div className="section-label-row"><h2 className="panel-title">Outcome Distribution</h2><span>Percentile sensitivity</span></div><div className="mc-distribution-grid"><div><h3>Impairment loss distribution</h3>{rows.map(([label, loss]) => <div className="mc-bar-row" key={label}><span>{label}</span><i><b style={{ width: `${loss / maxLoss * 100}%` }} /></i><strong>{pct(loss)}</strong></div>)}</div><div><h3>Post-stress equity distribution</h3>{rows.map(([label, , equity]) => <div className="mc-bar-row equity" key={label}><span>{label}</span><i><b style={{ width: `${equity / maxEquity * 100}%` }} /></i><strong>{usd(equity)}</strong></div>)}</div></div></section>;
+}
+
+function Distribution({ result }: { result: MonteCarloResponse }) {
+  return <><MonteCarloOutcomeVisualizer result={result} /><PercentileDistribution result={result} /></>;
 }
 
 function PathTable({ paths }: { paths: MonteCarloPath[] }) { const [all, setAll] = useState(false); return <section className="panel"><div className="section-label-row"><h2 className="panel-title">Sample Paths</h2><span>First 50 returned</span></div><div className="wallet-table-scroll"><table className="mc-table"><thead><tr>{["Path", "Market shock", "Funding shift", "Slippage", "Haircut", "Protocol loss", "Impairment", "Safety Buffer", "Hedge drift"].map((h) => <th key={h}>{h}</th>)}</tr></thead><tbody>{paths.slice(0, all ? 50 : 10).map((p) => <tr key={p.path_id}><td>{p.path_id}</td><td>{pct(p.market_shock_pct)}</td><td>{pct(p.funding_shift_apy)}</td><td>{pct(p.slippage_pct)}</td><td>{pct(p.collateral_haircut_pct)}</td><td>{pct(p.protocol_loss_pct)}</td><td>{pct(p.impairment_loss_pct)}</td><td>{p.safety_buffer_score.toFixed(1)}</td><td>{pct(p.hedge_drift_pct)}</td></tr>)}</tbody></table></div>{paths.length > 10 ? <button className="wallet-table-toggle" type="button" onClick={() => setAll(!all)}>{all ? "Show first 10" : "Show all 50"}</button> : null}</section>; }
