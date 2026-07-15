@@ -65,7 +65,7 @@ export default function RiskEnginePage() {
             <ul className="product-bullets">
               {module.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
             </ul>
-            <span>{module.action} →</span>
+            <span className="button button-primary risk-engine-action">{module.action} →</span>
           </Link>
         ))}
       </section>
