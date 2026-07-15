@@ -231,6 +231,33 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .risk-engine-boundary div span { color: var(--green); font: 700 9px var(--font-geist-mono); letter-spacing: .13em; text-transform: uppercase; }
 .risk-engine-boundary div strong { font-size: 17px; }
 .risk-engine-boundary p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.hyperliquid-live-toolbar { margin-bottom: 18px; padding: 20px; display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.hyperliquid-live-toolbar > div > span, .hyperliquid-live-metrics span, .hyperliquid-live-status span, .hyperliquid-funding-range span, .hyperliquid-upgrade span { color: var(--subtle); font: 700 9px var(--font-geist-mono); letter-spacing: .12em; text-transform: uppercase; }
+.hyperliquid-asset-tabs { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.hyperliquid-asset-tabs button { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--panel); cursor: pointer; font-size: 11px; font-weight: 700; }
+.hyperliquid-asset-tabs button:hover, .hyperliquid-asset-tabs button.active { border-color: rgba(185,246,90,.45); color: var(--ink); background: var(--green-soft); }
+.hyperliquid-live-results { display: grid; gap: 16px; }
+.hyperliquid-live-status { padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.hyperliquid-live-status h2, .hyperliquid-funding-range h2, .hyperliquid-upgrade h2 { margin: 8px 0 0; font-size: 22px; letter-spacing: -.03em; }
+.hyperliquid-live-status p { margin: 8px 0 0; color: var(--muted); font-size: 11px; text-transform: capitalize; }
+.hyperliquid-live-status > div:last-child { display: grid; grid-template-columns: auto auto; align-items: center; gap: 6px 9px; text-align: right; }
+.hyperliquid-live-status i { grid-row: span 2; width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px rgba(185,246,90,.65); }
+.hyperliquid-live-status strong { color: var(--ink); font: 11px var(--font-geist-mono); }
+.hyperliquid-live-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.hyperliquid-live-metrics article { min-width: 0; min-height: 150px; padding: 20px; display: flex; flex-direction: column; }
+.hyperliquid-live-metrics strong { margin-top: auto; overflow-wrap: anywhere; font: 650 clamp(24px, 3vw, 32px) var(--font-geist-mono); letter-spacing: -.05em; }
+.hyperliquid-live-metrics small { margin-top: 8px; color: var(--muted); font-size: 10px; text-transform: capitalize; }
+.metric-positive { color: var(--green); }
+.metric-warning { color: var(--warning); }
+.hyperliquid-funding-range { padding: 24px; }
+.hyperliquid-funding-grid { margin-top: 22px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.hyperliquid-funding-grid article { min-width: 0; padding: 16px; border-right: 1px solid var(--line); }
+.hyperliquid-funding-grid article:last-child { border-right: 0; }
+.hyperliquid-funding-grid strong { display: block; margin-top: 12px; overflow-wrap: anywhere; font: 600 17px var(--font-geist-mono); }
+.hyperliquid-upgrade { padding: 26px; display: flex; align-items: center; justify-content: space-between; gap: 36px; }
+.hyperliquid-upgrade > div:first-child { max-width: 690px; }
+.hyperliquid-upgrade p { margin: 11px 0 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.hyperliquid-upgrade > div:last-child { display: flex; flex: 0 0 auto; gap: 9px; }
 .product-bullets { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
 .product-bullets li { position: relative; padding-left: 16px; color: #b5beb6; font-size: 12px; line-height: 1.5; }
 .product-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--green); }
@@ -1243,6 +1270,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .methodology-callout, [data-theme="light"] .support-safety { background: rgba(79,125,18,.07); }
 
 @media (max-width: 900px) {
+  .hyperliquid-live-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hyperliquid-upgrade { align-items: flex-start; flex-direction: column; }
   .risk-engine-boundary { grid-template-columns: 1fr; align-items: start; }
   .risk-engine-boundary .button { width: fit-content; }
   .judge-demo-console { grid-template-columns: 1fr; }
@@ -1260,6 +1289,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 @media (max-width: 600px) {
+  .hyperliquid-live-toolbar, .hyperliquid-live-status { align-items: stretch; flex-direction: column; }
+  .hyperliquid-live-toolbar .button { width: 100%; }
+  .hyperliquid-live-status > div:last-child { text-align: left; }
+  .hyperliquid-live-metrics, .hyperliquid-funding-grid { grid-template-columns: 1fr; }
+  .hyperliquid-funding-grid article { border-right: 0; border-bottom: 1px solid var(--line); }
+  .hyperliquid-funding-grid article:last-child { border-bottom: 0; }
+  .hyperliquid-upgrade > div:last-child { width: 100%; flex-direction: column; }
+  .hyperliquid-upgrade .button { width: 100%; }
   .risk-engine-grid .tool-card > .risk-engine-action { width: 100%; white-space: normal; }
   .risk-engine-boundary .button { width: 100%; }
   .judge-demo-banner, .judge-demo-footer { align-items: stretch; flex-direction: column; }

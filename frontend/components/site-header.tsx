@@ -8,13 +8,10 @@ import { hasDemoAccess, subscribeToDemoAccess } from "@/lib/demo-access";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
-  { href: "/builder", label: "Strategy Build" },
-  { href: "/auditor", label: "Hedge-Drift Auditing" },
-  { href: "/stress-test", label: "Funding Stress Testing" },
-  { href: "/monte-carlo", label: "Monte Carlo" },
+  { href: "/risk-engine", label: "Risk Engine" },
+  { href: "/hyperliquid-live", label: "Hyperliquid Live" },
   { href: "/agent", label: "Agent Console" },
   { href: "/demo", label: "Judge Demo" },
-  { href: "/#how-it-works", label: "How It Works" },
 ];
 
 function isActive(pathname: string, href: string) {
