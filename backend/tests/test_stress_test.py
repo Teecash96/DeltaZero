@@ -27,6 +27,7 @@ REQUIRED_TOP_LEVEL = {
     "metrics",
     "recommendation",
     "risk_notes",
+    "generated_at",
     "actions",
     "scenario_result",
     "pre_stress_equity_usd",
@@ -43,7 +44,11 @@ def test_stress_test_returns_200(client: TestClient) -> None:
     legacy = client.post("/strategy/stress-test", json=STRESS_PAYLOAD)
     assert canonical.status_code == 200
     assert legacy.status_code == 200
-    assert canonical.json() == legacy.json()
+    canonical_data = canonical.json()
+    legacy_data = legacy.json()
+    canonical_data.pop("generated_at")
+    legacy_data.pop("generated_at")
+    assert canonical_data == legacy_data
 
 
 def test_stress_test_response_shape(client: TestClient) -> None:

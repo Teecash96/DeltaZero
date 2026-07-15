@@ -29,6 +29,7 @@ REQUIRED_TOP_LEVEL = {
     "metrics",
     "recommendation",
     "risk_notes",
+    "generated_at",
     "recommended_structure",
 }
 

@@ -18,7 +18,8 @@ def request(**changes) -> MonteCarloRequest:
 
 def test_seed_is_repeatable_and_different_seed_changes_paths() -> None:
     first = run_monte_carlo(request())
-    assert first == run_monte_carlo(request())
+    repeated = run_monte_carlo(request())
+    assert first.model_dump(exclude={"generated_at"}) == repeated.model_dump(exclude={"generated_at"})
     assert first.sample_paths != run_monte_carlo(request(seed=8)).sample_paths
 
 
