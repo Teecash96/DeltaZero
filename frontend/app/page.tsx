@@ -200,8 +200,8 @@ export default function Home() {
           <div className="hero-actions">
             <Link href="/demo" className="button button-judge">Try Judge Demo <span>▶</span></Link>
             <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
-            <Link href="/wallet" className="button button-secondary">Audit Portfolio <span>◇</span></Link>
             <Link href="/agent" className="button button-secondary">Agent Console <span>◎</span></Link>
+            <Link href="/wallet" className="button button-secondary">Audit Portfolio <span>◇</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
             {['Read only', 'No signatures', 'Deterministic engine', 'OKX x402 boundary'].map((badge) => <span key={badge}>✓ {badge}</span>)}
