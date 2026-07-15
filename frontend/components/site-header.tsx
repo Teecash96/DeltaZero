@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 
 import { hasDemoAccess, subscribeToDemoAccess } from "@/lib/demo-access";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { href: "/builder", label: "Builder" },
@@ -48,6 +49,7 @@ export function SiteHeader() {
             </Link>
           );
         })}
+        <ThemeToggle />
       </nav>
     </header>
   );
