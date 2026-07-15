@@ -199,7 +199,7 @@ export default function Home() {
           <p className="hero-copy">DeltaZero helps agents and users build strategies, analyze hedge drift, and test funding stress for pseudo delta neutral DeFi positions using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
           <div className="hero-actions">
             <Link href="/demo" className="button button-judge">Try Judge Demo <span>▶</span></Link>
-            <Link href="/builder" className="button button-primary">Launch Risk Engine <span>→</span></Link>
+            <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/monte-carlo" className="button button-secondary">Run Monte Carlo <span>∿</span></Link>
             <Link href="/wallet" className="button button-secondary">Audit Portfolio <span>◇</span></Link>
           </div>

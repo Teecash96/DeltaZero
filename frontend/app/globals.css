@@ -222,6 +222,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .step-card h3 { margin: 28px 0 12px; font-size: 20px; letter-spacing: -.03em; }
 .step-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
 .product-grid .product-card { min-height: 365px; }
+.risk-engine-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.risk-engine-grid .tool-card { min-width: 0; }
+.risk-engine-grid .tool-card h2 { margin: 52px 0 14px; overflow-wrap: anywhere; font-size: 25px; letter-spacing: -.03em; }
+.risk-engine-boundary { margin-top: 20px; padding: 24px; display: grid; grid-template-columns: minmax(210px, .8fr) minmax(0, 1.2fr) auto; align-items: center; gap: 28px; }
+.risk-engine-boundary div { display: grid; gap: 7px; }
+.risk-engine-boundary div span { color: var(--green); font: 700 9px var(--font-geist-mono); letter-spacing: .13em; text-transform: uppercase; }
+.risk-engine-boundary div strong { font-size: 17px; }
+.risk-engine-boundary p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
 .product-bullets { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
 .product-bullets li { position: relative; padding-left: 16px; color: #b5beb6; font-size: 12px; line-height: 1.5; }
 .product-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--green); }
@@ -1234,6 +1242,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .methodology-callout, [data-theme="light"] .support-safety { background: rgba(79,125,18,.07); }
 
 @media (max-width: 900px) {
+  .risk-engine-boundary { grid-template-columns: 1fr; align-items: start; }
+  .risk-engine-boundary .button { width: fit-content; }
   .judge-demo-console { grid-template-columns: 1fr; }
   .judge-demo-context { border-right: 0; border-bottom: 1px solid var(--border); }
   .judge-demo-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1249,6 +1259,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 @media (max-width: 600px) {
+  .risk-engine-boundary .button { width: 100%; }
   .judge-demo-banner, .judge-demo-footer { align-items: stretch; flex-direction: column; }
   .judge-demo-banner .button { width: 100%; }
   .judge-demo-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
