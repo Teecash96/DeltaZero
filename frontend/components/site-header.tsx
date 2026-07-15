@@ -8,9 +8,9 @@ import { hasDemoAccess, subscribeToDemoAccess } from "@/lib/demo-access";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
-  { href: "/builder", label: "Builder" },
+  { href: "/builder", label: "Strategy Build" },
   { href: "/auditor", label: "Hedge-Drift Auditing" },
-  { href: "/stress-test", label: "Stress Test" },
+  { href: "/stress-test", label: "Funding Stress Testing" },
   { href: "/monte-carlo", label: "Monte Carlo" },
   { href: "/agent", label: "Agent Console" },
   { href: "/demo", label: "Judge Demo" },

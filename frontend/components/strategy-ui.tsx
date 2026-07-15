@@ -35,7 +35,7 @@ type DecisionSupportState = "positive" | "warning";
 const copy = {
   builder: {
     kicker: "Design from first principles",
-    title: "Deterministic Strategy Builder",
+    title: "Strategy Build",
     description:
       "Set your capital, carry assumptions, and risk posture. DeltaZero returns a balanced structure and an explicit entry decision.",
     endpoint: "POST /strategy/build",
@@ -51,11 +51,11 @@ const copy = {
   },
   "stress-test": {
     kicker: "Pressure before the market",
-    title: "Portfolio Stress Simulator",
+    title: "Funding Stress Testing",
     description:
       "Apply a deterministic market shock and see how the position, health, and recommended action respond.",
     endpoint: "POST /stress-test/run",
-    submit: "Run stress test",
+    submit: "Run funding stress test",
   },
 } satisfies Record<
   Mode,
@@ -611,9 +611,9 @@ const reportNames: Record<Mode, string> = {
 };
 
 const reportSections: Record<Mode, string> = {
-  builder: "Builder",
+  builder: "Strategy Build",
   auditor: "Hedge-Drift Auditing",
-  "stress-test": "Stress Test",
+  "stress-test": "Funding Stress Testing",
 };
 
 function MetricCard({
@@ -787,7 +787,7 @@ function StrategyBlueprint({ result, request }: { result: BuildResponse; request
     ["Estimated Hedge Cost", `${request.short_funding_apy.toFixed(1)}%`, "Submitted annual funding cost for the short hedge."],
     ["Capital Efficiency", `${result.metrics.carry_efficiency_score.toFixed(1)} / 100`, "Existing carry efficiency score for the proposed structure."],
     ["Safety Buffer", `${result.metrics.safety_buffer_score.toFixed(1)} / 100`, "Existing resilience score for the evaluated structure."],
-    ["Expected Drawdown", "Unavailable", "Run Stress Test to measure scenario impairment."],
+    ["Expected Drawdown", "Unavailable", "Run Funding Stress Testing to measure scenario impairment."],
     ["Recommendation", recommendationLabel(result.recommendation.action), result.recommendation.summary],
   ];
 
@@ -809,7 +809,7 @@ function RiskOutlook({ mode, result }: { mode: Mode; result: ResultValue }) {
   const worstValue = stress ? stress.scenario_result.health_after_stress : "Not evaluated";
   const worstCopy = stress
     ? `${stress.scenario_result.estimated_impairment_loss_pct.toFixed(1)}% estimated impairment in this scenario.`
-    : "Run Stress Test to measure a downside scenario; no worst-case state is inferred.";
+    : "Run Funding Stress Testing to measure a downside scenario; no worst-case state is inferred.";
 
   return (
     <section className="panel risk-outlook-panel">
@@ -979,7 +979,7 @@ function Result({
             <div className="hedge-direction"><span>Recommended adjustment</span><strong>{build.hedge_adjustment.adjustment_direction?.replaceAll("_", " ")}</strong></div>
             {build.market_context ? <div className="market-context-grid"><div><span>Mark Price</span><strong>{usd(build.market_context.mark_price_usd, 2)}</strong></div><div><span>Current Funding</span><strong>{build.funding_rate_apy?.toFixed(2)}%</strong></div><div><span>24h Average</span><strong>{build.market_context.historical_funding?.average_funding_apy.toFixed(2) ?? "Unavailable"}%</strong></div><div><span>Open Interest</span><strong>{usd(build.market_context.open_interest_usd)}</strong></div><div><span>24h Volume</span><strong>{usd(build.market_context.day_volume_usd)}</strong></div></div> : null}
             {build.funding_rate_apy !== undefined ? <p className="funding-impact">{build.funding_rate_apy > 0 ? "Current Hyperliquid funding pays short positions, improving expected carry for the proposed hedge." : build.funding_rate_apy < 0 ? "Current Hyperliquid funding charges short positions, reducing expected carry for the proposed hedge." : "Current funding has limited effect on expected carry."} Funding rates are variable and may change after the analysis.</p> : null}
-            <button className="button button-primary" type="button" onClick={sendProposedHedgeToStressTest}>Stress Test Proposed Hedge <span>→</span></button>
+            <button className="button button-primary" type="button" onClick={sendProposedHedgeToStressTest}>Funding Stress Test <span>→</span></button>
           </>}
         </section>
       ) : null}

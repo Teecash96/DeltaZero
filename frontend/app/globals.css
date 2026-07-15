@@ -662,10 +662,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .judge-demo-banner h2 { margin: 8px 0; color: var(--text); font-size: 23px; }
 .judge-demo-banner p, .judge-demo-footer p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
 .judge-demo-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.judge-demo-tabs button { min-height: 74px; padding: 14px 16px; display: flex; align-items: center; gap: 13px; border: 1px solid var(--border); border-radius: 11px; color: var(--muted); background: var(--panel); cursor: pointer; }
+.judge-demo-tabs button { min-width: 0; min-height: 74px; padding: 14px 16px; display: flex; align-items: center; gap: 13px; border: 1px solid var(--border); border-radius: 11px; color: var(--muted); background: var(--panel); cursor: pointer; overflow: hidden; }
 .judge-demo-tabs button:hover, .judge-demo-tabs button.active { border-color: rgba(154,224,69,.45); color: var(--text); background: rgba(154,224,69,.065); }
 .judge-demo-tabs span { color: var(--accent); font: 10px var(--font-mono), monospace; }
-.judge-demo-tabs strong { font-size: 13px; }
+.judge-demo-tabs strong { min-width: 0; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; text-align: left; }
 .judge-demo-console { padding: 0; display: grid; grid-template-columns: minmax(320px, .75fr) minmax(0, 1.25fr); overflow: hidden; }
 .judge-demo-context, .judge-demo-result { padding: clamp(25px, 4vw, 42px); }
 .judge-demo-context { border-right: 1px solid var(--border); background: rgba(0,0,0,.1); }
@@ -698,6 +698,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .judge-demo-banner { background: linear-gradient(105deg, rgba(79,125,18,.1), rgba(255,255,255,.35)); }
 [data-theme="light"] .judge-demo-context { background: rgba(32,53,37,.025); }
 [data-theme="light"] .judge-demo-action { background: rgba(79,125,18,.07); }
+
+@media (max-width: 1120px) and (min-width: 601px) {
+  .site-header { min-height: 0; padding: 14px 0; align-items: flex-start; flex-direction: column; gap: 12px; }
+  .site-header nav { width: 100%; flex-wrap: wrap; }
+  .site-nav-link { min-width: 0; padding: 8px 10px; font-size: 11px; line-height: 1.25; white-space: normal; text-align: center; overflow-wrap: anywhere; }
+}
 
 .hero-preview { margin-top: 44px; padding: 22px; text-align: left; border-color: #344536; background: linear-gradient(180deg, rgba(13,19,15,.96), rgba(10,14,11,.98)); }
 .hero-preview-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }

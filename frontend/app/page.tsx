@@ -54,11 +54,11 @@ const products = [
   {
     href: "/builder",
     number: "01",
-    title: "Deterministic Strategy Builder",
+    title: "Strategy Build",
     description:
       "Builds a pseudo delta neutral strategy from capital, market assumptions, risk tolerance, and target style.",
     bullets: ["Recommended long notional", "Short notional", "Collateral allocation", "Hedge ratio", "Carry metrics", "Safety Buffer", "Action"],
-    action: "Open Builder",
+    action: "Open Strategy Build",
   },
   {
     href: "/auditor",
@@ -72,11 +72,11 @@ const products = [
   {
     href: "/stress-test",
     number: "03",
-    title: "Portfolio Stress Simulator",
+    title: "Funding Stress Testing",
     description:
       "Applies deterministic scenarios such as funding worsens, yield drops, price shock, or collateral pressure.",
     bullets: ["Post stress metrics", "Post stress health", "Recommended action", "Scenario impact"],
-    action: "Open Stress Test",
+    action: "Run Funding Stress Test",
   },
   {
     href: "/wallet",
@@ -196,7 +196,7 @@ export default function Home() {
       <section id="home" className="hero-shell hero-marketing anchor-section">
         <div className="hero-marketing-copy">
           <h1>Know your hedge.<br /><span>Protect your capital.</span></h1>
-          <p className="hero-copy">DeltaZero helps agents and users build, audit, and stress test pseudo delta neutral DeFi strategies using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
+          <p className="hero-copy">DeltaZero helps agents and users build strategies, analyze hedge drift, and test funding stress for pseudo delta neutral DeFi positions using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
           <div className="hero-actions">
             <Link href="/demo" className="button button-judge">Try Judge Demo <span>▶</span></Link>
             <Link href="/builder" className="button button-primary">Launch Risk Engine <span>→</span></Link>
@@ -250,7 +250,7 @@ export default function Home() {
         <div className="section-heading"><div><p className="kicker">Product walkthrough</p><h2 id="action-demo-title">See DeltaZero in action</h2></div><p>Experience the complete decision workflow with verified reference scenarios and no payment.</p></div>
         <div className="action-demo-shell glass-card">
           <div className="action-demo-track">
-            {[['01', 'Wallet Auditor', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Builder', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Stress Test', 'Apply a deterministic downside scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
+            {[['01', 'Wallet Auditor', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Funding Stress Testing', 'Apply a deterministic funding scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
           </div>
           <Link href="/demo" className="button button-judge">Open Judge Demo <span>▶</span></Link>
         </div>

@@ -8,7 +8,7 @@ type DemoKey = "build" | "audit" | "monte" | "stress";
 const demos = {
   build: {
     step: "01",
-    label: "Build",
+    label: "Strategy Build",
     title: "Construct a neutral SOL strategy",
     question: "How should $5,000 be allocated for medium-risk neutral yield?",
     input: ["Capital $5,000", "Long yield 14%", "Short funding 3%", "Fee drag 1%"],
@@ -44,7 +44,7 @@ const demos = {
   },
   stress: {
     step: "04",
-    label: "Stress",
+    label: "Funding Stress Testing",
     title: "Reprice adverse funding",
     question: "What happens when short funding worsens by four APY points?",
     input: ["Long $4,000", "Short $3,840", "Collateral $1,200", "Funding +4 APY"],
@@ -93,7 +93,7 @@ export function JudgeDemo() {
 
       <section className="judge-demo-footer panel">
         <div><strong>Ready to inspect the real product?</strong><p>Protected workflows issue the live OKX x402 payment boundary. API contracts and source code remain public.</p></div>
-        <div><Link href="/builder" className="button button-primary">Open live Builder</Link><a href="https://deltazero-production.up.railway.app/docs" className="button button-secondary" target="_blank" rel="noreferrer">Inspect API</a></div>
+        <div><Link href="/builder" className="button button-primary">Open Strategy Build</Link><a href="https://deltazero-production.up.railway.app/docs" className="button button-secondary" target="_blank" rel="noreferrer">Inspect API</a></div>
       </section>
     </div>
   );

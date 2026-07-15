@@ -24,11 +24,11 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
 
-The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Builder, Hedge-Drift Auditing, Monte Carlo, and Stress Test. It does not bypass or weaken x402 protection on real analysis endpoints.
+The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Strategy Build, Hedge-Drift Auditing, Monte Carlo, and Funding Stress Testing. It does not bypass or weaken x402 protection on real analysis endpoints.
 
 ## Methodology, provenance, and support
 
-The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, risk thresholds, impairment model, Monte Carlo assumptions, data sources, and limitations. Completed Builder, Stress Test, and Wallet Auditor reports include a visible provenance panel with the source, source snapshot, report time, and data-quality context when available.
+The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, risk thresholds, impairment model, Monte Carlo assumptions, data sources, and limitations. Completed Strategy Build, Funding Stress Testing, and Wallet Auditor reports include a visible provenance panel with the source, source snapshot, report time, and data-quality context when available.
 
 For product questions, API issues, payment problems, or data-quality reports, use the [Support page](https://delta-zero-alpha.vercel.app/support). Support will never request a seed phrase, private key, wallet approval, admin bypass key, or API secret.
 
@@ -36,7 +36,7 @@ GitHub Actions runs backend tests, frontend lint and production build, and both 
 
 ## DeltaZero Risk Zones
 
-DeltaZero classifies completed Strategy Builder, Wallet Auditor, Stress Test, and Monte Carlo reports into five operator-friendly zones: **Optimal**, **Healthy**, **Watch**, **Defensive**, and **Critical**.
+DeltaZero classifies completed Strategy Build, Wallet Auditor, Funding Stress Testing, and Monte Carlo reports into five operator-friendly zones: **Optimal**, **Healthy**, **Watch**, **Defensive**, and **Critical**.
 
 Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
 
@@ -53,7 +53,7 @@ Editor Demo Access lets a trusted editor use the existing backend admin-key chec
 
 Never place the key in `NEXT_PUBLIC` variables or public code.
 
-The current product includes a Strategy Builder, Hedge-Drift Auditing, Stress Test, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
+The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -62,7 +62,7 @@ Pseudo delta-neutral strategies can look attractive while hiding hedge drift, we
 DeltaZero is differentiated by:
 
 - **Deterministic decisions** — recommendations come from documented rules and evaluated thresholds rather than opaque generated calculations.
-- **One risk language** — Builder, Hedge-Drift Auditing, Stress Test, and Wallet Auditor consistently report health, action, Safety Buffer, risk notes, and Decision Confidence.
+- **One risk language** — Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Wallet Auditor consistently report health, action, Safety Buffer, risk notes, and Decision Confidence.
 - **Read-only portfolio analysis** — supported public protocol data is analyzed without custody or wallet permissions.
 - **Agent-ready contracts** — FastAPI schemas and local TypeScript and Python SDK packages expose structured responses for dashboards and automated workflows.
 
@@ -70,9 +70,9 @@ DeltaZero is differentiated by:
 
 | Capability | Status | Description |
 | --- | --- | --- |
-| Strategy Builder | Live | Constructs a deterministic pseudo delta-neutral structure from capital, risk tolerance, target style, and market assumptions. |
+| Strategy Build | Live | Constructs a deterministic pseudo delta-neutral structure from capital, risk tolerance, target style, and market assumptions. |
 | Hedge-Drift Auditing | Live | Evaluates an existing long, short, and collateral structure and recommends corrective action. |
-| Stress Test | Live | Applies deterministic shocks and calculates post-stress risk and scenario-based economic impairment. |
+| Funding Stress Testing | Live | Applies deterministic funding shocks and calculates post-stress risk and scenario-based economic impairment. |
 | Wallet Auditor | Live · Pro Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
 | Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, pauses at x402, and prepares an approval-gated proposal without claiming payment or trade execution. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
@@ -99,7 +99,7 @@ trigger, live paid audit request, automatic x402 authorization through Onchain O
 and a proposal-only rebalance payload. See the
 [`example guide`](examples/agent-bot/README.md) for safeguards and run commands.
 
-### Strategy Builder
+### Strategy Build
 
 The Builder creates a proposed structure from:
 
@@ -125,9 +125,9 @@ Each style uses a distinct deterministic allocation and threshold profile.
 
 Hedge-Drift Auditing evaluates a supplied long, short, and collateral structure. It measures hedge alignment, net delta, carry, collateral resilience, Safety Buffer, and capital at risk before returning an action such as `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`.
 
-### Stress Test
+### Funding Stress Testing
 
-The Stress Test evaluates stressed rather than original metrics. It supports deterministic scenario inputs for funding deterioration, yield reduction, price movement, collateral pressure, exit slippage, liquidation penalties, and protocol-loss assumptions.
+Funding Stress Testing evaluates stressed rather than original metrics. It supports deterministic scenario inputs for funding deterioration, yield reduction, price movement, collateral pressure, exit slippage, liquidation penalties, and protocol-loss assumptions.
 
 Its report includes:
 
