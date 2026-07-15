@@ -4,7 +4,7 @@ import { AgentSdkSection } from "@/components/agent-sdk-section";
 const quickLinks = [
   { label: "Home", href: "#home", note: "Hero and product summary" },
   { label: "How It Works", href: "#how-it-works", note: "The five-step workflow" },
-  { label: "Products", href: "#products", note: "Builder, Auditor, Stress Test" },
+  { label: "Products", href: "#products", note: "Five connected risk services" },
   { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
   { label: "Docs", href: "#docs", note: "Repository and API references" },
   { label: "Agents", href: "#agents", note: "SDKs and automated workflows" },
@@ -77,6 +77,24 @@ const products = [
       "Applies deterministic scenarios such as funding worsens, yield drops, price shock, or collateral pressure.",
     bullets: ["Post stress metrics", "Post stress health", "Recommended action", "Scenario impact"],
     action: "Open Stress Test",
+  },
+  {
+    href: "/wallet",
+    number: "04",
+    title: "Read-Only Wallet Auditor",
+    description:
+      "Discovers supported public positions and converts portfolio exposure into an explainable risk assessment.",
+    bullets: ["Public position discovery", "Net exposure", "Hedge ratio", "Protocol allocation", "Portfolio verdict"],
+    action: "Audit Portfolio",
+  },
+  {
+    href: "/monte-carlo",
+    number: "05",
+    title: "Monte Carlo Sensitivity",
+    description:
+      "Simulates bounded stress paths to measure impairment, hedge drift, negative carry, and Safety Buffer fragility.",
+    bullets: ["P95 and P99 impairment", "Breach probabilities", "Sensitivity drivers", "Sample paths", "Risk-zone verdict"],
+    action: "Run Monte Carlo",
   },
 ];
 
@@ -178,14 +196,14 @@ export default function Home() {
       <section id="home" className="hero-shell hero-marketing anchor-section">
         <div className="hero-marketing-copy">
           <h1>Know your hedge.<br /><span>Protect your capital.</span></h1>
-          <p className="hero-copy">DeltaZero helps agents and users build, audit, and stress test pseudo delta neutral DeFi strategies using deterministic risk analysis, live market context, and Monte Carlo sensitivity.</p>
+          <p className="hero-copy">DeltaZero helps agents and users build, audit, and stress test pseudo delta neutral DeFi strategies using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
           <div className="hero-actions">
             <Link href="/builder" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/monte-carlo" className="button button-secondary">Run Monte Carlo <span>∿</span></Link>
             <Link href="/wallet" className="button button-secondary">Audit Portfolio <span>◇</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
-            {['Read only', 'No signatures', 'Deterministic engine', 'OKX x402 ready'].map((badge) => <span key={badge}>✓ {badge}</span>)}
+            {['Read only', 'No signatures', 'Deterministic engine', 'OKX x402 boundary'].map((badge) => <span key={badge}>✓ {badge}</span>)}
           </div>
         </div>
         <div className="hero-risk-dashboard glass-card" aria-label="Illustrative risk dashboard">
@@ -300,8 +318,8 @@ export default function Home() {
       <section id="products" className="section-wrap anchor-section">
         <div className="section-heading">
           <div>
-            <p className="kicker">Products</p>
-            <h2>Three services, one coherent risk workflow.</h2>
+            <p className="kicker">What DeltaZero does</p>
+            <h2>Five connected services, one coherent risk workflow.</h2>
           </div>
           <p>Each product is a focused view of the same underlying strategy engine, tuned for a different question.</p>
         </div>
