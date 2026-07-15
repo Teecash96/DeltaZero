@@ -6,7 +6,6 @@ from x402.server import x402ResourceServer
 
 from app.payments import DeltaZeroPaymentMiddleware, PaymentSettings, create_payment_server, paid_routes
 from app.routers.market import router as market_router
-from app.routers.checkout import router as checkout_router
 from app.routers.monte_carlo import router as monte_carlo_router
 from app.routers.risk_engine import router as risk_engine_router
 from app.routers.strategy import router as strategy_router, stress_router
@@ -24,7 +23,6 @@ def create_app(
         description="Pseudo-delta-neutral DeFi risk management API",
         version="0.1.0",
     )
-    application.state.payment_settings = payment_settings
 
     if payment_settings is not None:
         application.add_middleware(
@@ -55,7 +53,6 @@ def create_app(
     application.include_router(market_router)
     application.include_router(monte_carlo_router)
     application.include_router(risk_engine_router)
-    application.include_router(checkout_router)
 
     @application.get("/")
     def root() -> dict[str, str]:

@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { PaymentRequiredCard } from "@/components/report-polish";
-import { createBrowserCheckout, getBrowserCheckoutStatus, PaymentRequiredError, redeemBrowserCheckout, runRiskEnginePass, type X402Challenge } from "@/lib/api";
+import { PaymentRequiredError, payRiskEngineWithWallet, runRiskEnginePass, type X402Challenge } from "@/lib/api";
 import type { Asset, RiskEnginePassRequest, RiskEnginePassResponse, RiskTolerance, TargetStyle } from "@/lib/types";
 
 const initial: RiskEnginePassRequest = {
@@ -47,34 +47,17 @@ export function RiskEnginePass() {
   }
 
   async function payInBrowser() {
-    const paymentWindow = window.open("about:blank", "_blank");
-    if (paymentWindow) paymentWindow.opener = null;
     setLoading(true);
     setError(null);
-    setCheckoutStatus("Creating secure OKX checkout…");
+    setCheckoutStatus("Connect OKX Wallet and review the 1 USDT0 authorization.");
     try {
-      const checkout = await createBrowserCheckout(value);
-      if (paymentWindow) paymentWindow.location.href = checkout.payment_url;
-      else window.location.href = checkout.payment_url;
-      setCheckoutStatus("Checkout opened. Complete payment, then return here; verification is automatic.");
-      const deadline = Date.now() + 30 * 60 * 1000;
-      while (Date.now() < deadline) {
-        await new Promise((resolve) => window.setTimeout(resolve, 3000));
-        const status = await getBrowserCheckoutStatus(checkout.payment_id);
-        if (status.status === "completed") {
-          setCheckoutStatus("Payment confirmed. Generating all four reports…");
-          setResult(await redeemBrowserCheckout(value, checkout.checkout_token));
-          setPayment(undefined);
-          setCheckoutStatus(status.transaction_hash ? `Payment confirmed · ${status.transaction_hash.slice(0, 10)}…` : "Payment confirmed");
-          return;
-        }
-        if (status.status === "failed" || status.status === "expired") throw new Error(status.failure_message ?? `Payment ${status.status}. Start a new checkout.`);
-        setCheckoutStatus(status.status === "settling" ? "Payment submitted. Waiting for X Layer confirmation…" : "Waiting for payment in the OKX checkout…");
-      }
-      throw new Error("Checkout verification timed out. Start a fresh checkout.");
+      const paidResult = await payRiskEngineWithWallet(value);
+      setResult(paidResult);
+      setPayment(undefined);
+      setCheckoutStatus("Payment confirmed on X Layer. All four reports are unlocked.");
     } catch (caught) {
-      paymentWindow?.close();
-      setError(caught instanceof Error ? caught.message : "Browser checkout could not be completed.");
+      const message = caught instanceof Error ? caught.message : "Wallet payment could not be completed.";
+      setError(message.includes("User rejected") || message.includes("4001") ? "Payment was cancelled in the wallet." : message);
       setCheckoutStatus(null);
     } finally {
       setLoading(false);

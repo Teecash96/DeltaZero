@@ -202,8 +202,7 @@ def test_every_backend_post_route_is_payment_protected(
         if "post" in operations
     }
 
-    free_checkout_routes = {"POST /checkout/create", "POST /checkout/redeem"}
-    assert exposed_post_routes - free_checkout_routes == set(paid_routes(payment_settings))
+    assert exposed_post_routes == set(paid_routes(payment_settings))
 
 
 @pytest.mark.parametrize(("path", "payload"), PROTECTED_ROUTES)

@@ -48,8 +48,8 @@ export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser }:
           <h2 id="payment-required-title">Unlock Premium Strategy Analysis</h2>
           <p>This analysis is protected by the OKX x402 payment protocol. Payment unlocks one complete analysis request; a new analysis requires a new payment. DeltaZero never requests wallet signatures, approvals, or private keys.</p>
           {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}{label === "Receiver" ? <button type="button" onClick={() => void copyReceiver()} aria-label="Copy receiver address">{copyFeedback ? "Copied" : "Copy"}</button> : null}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
-          {payInBrowser ? <button className="button button-primary payment-verify" type="button" onClick={payInBrowser} disabled={loading}>{loading ? "Preparing checkout..." : "Pay with OKX →"}</button> : <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>}
-          <small>{payInBrowser ? "Complete checkout in the new window. DeltaZero verifies settlement automatically." : "Payment is verified automatically by the protected endpoint."}</small>
+          {payInBrowser ? <button className="button button-primary payment-verify" type="button" onClick={payInBrowser} disabled={loading}>{loading ? "Waiting for wallet..." : "Pay with OKX Wallet →"}</button> : <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>}
+          <small>{payInBrowser ? "Your wallet shows the exact token, amount, network, and recipient before you approve." : "Payment is verified automatically by the protected endpoint."}</small>
         </div>
       </section>
       <section className="panel payment-trust-panel" aria-labelledby="payment-trust-title">

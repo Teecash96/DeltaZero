@@ -288,22 +288,6 @@ export interface RiskEnginePassResponse {
   generated_at: string;
 }
 
-export interface CheckoutCreateResponse {
-  payment_id: string;
-  payment_url: string;
-  status: string;
-  expires_at: string;
-  checkout_token: string;
-  amount: string;
-  symbol: string;
-}
-
-export interface CheckoutStatusResponse {
-  payment_id: string;
-  status: "pending" | "settling" | "completed" | "failed" | "expired";
-  transaction_hash?: string | null;
-  failure_message?: string | null;
-}
 
 export interface ImpairmentResult {
   pre_stress_equity_usd: number;

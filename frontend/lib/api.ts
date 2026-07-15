@@ -12,8 +12,6 @@ import type {
   MonteCarloResponse,
   RiskEnginePassRequest,
   RiskEnginePassResponse,
-  CheckoutCreateResponse,
-  CheckoutStatusResponse,
 } from "./types";
 import { getDemoAccessKey } from "./demo-access";
 import { decodePaymentReceipt, storePaymentReceipt } from "./payment-receipt";
@@ -133,37 +131,66 @@ export function runRiskEnginePass(body: RiskEnginePassRequest): Promise<RiskEngi
   return post<RiskEnginePassResponse>("/risk-engine/analyze", body);
 }
 
-async function jsonRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, init);
-  if (!response.ok) {
-    let detail = response.statusText;
-    try {
-      const body = await response.json();
-      detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body);
-    } catch { /* retain status text */ }
-    throw new Error(detail);
+type Eip1193Provider = {
+  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
+};
+
+declare global {
+  interface Window {
+    okxwallet?: Eip1193Provider;
+    ethereum?: Eip1193Provider;
   }
-  return response.json() as Promise<T>;
 }
 
-export function createBrowserCheckout(body: RiskEnginePassRequest): Promise<CheckoutCreateResponse> {
-  return jsonRequest<CheckoutCreateResponse>("/checkout/create", {
+export async function payRiskEngineWithWallet(body: RiskEnginePassRequest): Promise<RiskEnginePassResponse> {
+  if (typeof window === "undefined") throw new Error("Wallet payment is only available in the browser.");
+  const provider = window.okxwallet ?? window.ethereum;
+  if (!provider) throw new Error("OKX Wallet was not detected. Install or open the OKX Wallet extension, then try again.");
+
+  try {
+    await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xc4" }] });
+  } catch (error) {
+    const code = typeof error === "object" && error && "code" in error ? Number(error.code) : null;
+    if (code !== 4902) throw error;
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [{ chainId: "0xc4", chainName: "X Layer", nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 }, rpcUrls: ["https://rpc.xlayer.tech"], blockExplorerUrls: ["https://www.oklink.com/xlayer"] }],
+    });
+  }
+
+  const accounts = await provider.request({ method: "eth_requestAccounts" });
+  const address = Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0] as `0x${string}` : null;
+  if (!address) throw new Error("No wallet account was authorized.");
+
+  const [{ x402Client, wrapFetchWithPayment }, { ExactEvmScheme }] = await Promise.all([
+    import("@okxweb3/x402-fetch"),
+    import("@okxweb3/x402-evm"),
+  ]);
+  const signer = {
+    address,
+    async signTypedData(typedData: { domain: Record<string, unknown>; types: Record<string, unknown>; primaryType: string; message: Record<string, unknown> }) {
+      const json = JSON.stringify(typedData, (_, value) => typeof value === "bigint" ? value.toString() : value);
+      return provider.request({ method: "eth_signTypedData_v4", params: [address, json] }) as Promise<`0x${string}`>;
+    },
+  };
+  const client = new x402Client().register("eip155:196", new ExactEvmScheme(signer));
+  const paidFetch = wrapFetchWithPayment(fetch, client);
+  const response = await paidFetch(`${API_BASE}/risk-engine/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-}
-
-export function getBrowserCheckoutStatus(paymentId: string): Promise<CheckoutStatusResponse> {
-  return jsonRequest<CheckoutStatusResponse>(`/checkout/status/${encodeURIComponent(paymentId)}`);
-}
-
-export function redeemBrowserCheckout(body: RiskEnginePassRequest, checkoutToken: string): Promise<RiskEnginePassResponse> {
-  return jsonRequest<RiskEnginePassResponse>("/checkout/redeem", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ request: body, checkout_token: checkoutToken }),
-  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const responseBody = await response.json();
+      detail = typeof responseBody.detail === "string" ? responseBody.detail : JSON.stringify(responseBody);
+    } catch { /* retain status text */ }
+    throw new Error(`Payment failed: ${detail}`);
+  }
+  const paymentReceipt = decodePaymentReceipt(response.headers.get("PAYMENT-RESPONSE"));
+  if (paymentReceipt) storePaymentReceipt(paymentReceipt);
+  return response.json() as Promise<RiskEnginePassResponse>;
 }
 
 export async function getHyperliquidMarket(asset: string, lookbackHours = 24, dex?: string): Promise<HyperliquidMarketResponse> {
