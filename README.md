@@ -42,7 +42,7 @@ Editor Demo Access lets a trusted editor use the existing backend admin-key chec
 
 Never place the key in `NEXT_PUBLIC` variables or public code.
 
-The current product includes a Strategy Builder, Position Auditor, Stress Test, and read-only Wallet Auditor. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
+The current product includes a Strategy Builder, Position Auditor, Stress Test, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -63,6 +63,7 @@ DeltaZero is differentiated by:
 | Position Auditor | Live | Evaluates an existing long, short, and collateral structure and recommends corrective action. |
 | Stress Test | Live | Applies deterministic shocks and calculates post-stress risk and scenario-based economic impairment. |
 | Wallet Auditor | Live · Pro Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
+| Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, pauses at x402, and prepares an approval-gated proposal without claiming payment or trade execution. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | x402 Payment Gate | Ready locally | Issues standards-compliant challenges and supports facilitator-verified per-call settlement when official credentials are configured. |
@@ -74,6 +75,10 @@ DeltaZero is differentiated by:
 | Morpho | Live | Reads supported market and vault positions from Morpho's public API. |
 
 ## Products
+
+### Agent Operator Console
+
+The `/agent` console turns DeltaZero's structured API into a transparent operator workflow. A user selects risk tolerance and strategy mandate, spawns a session-only guard, and watches the guard compare simulated hedge drift against the configured intervention boundary. When the boundary is breached, the console calls the live Position Auditor. It either displays the returned recommendation or pauses at the x402 payment boundary. Execution authority remains disabled until a separately authorized and compatible venue adapter is configured.
 
 ### Agent-in-a-Box example
 

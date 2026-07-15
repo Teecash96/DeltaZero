@@ -12,6 +12,7 @@ const navItems = [
   { href: "/auditor", label: "Auditor" },
   { href: "/stress-test", label: "Stress Test" },
   { href: "/monte-carlo", label: "Monte Carlo" },
+  { href: "/agent", label: "Agent Console" },
   { href: "/#how-it-works", label: "How It Works" },
 ];
 
