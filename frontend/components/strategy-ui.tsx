@@ -9,6 +9,7 @@ import { RiskGauge } from "@/components/risk-gauge";
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { RiskZonePanel } from "@/components/risk-zone-panel";
 import { StressTestLiquidationVisualizer } from "@/components/risk-visualizers";
+import { PaymentReceiptCard } from "@/components/payment-receipt-card";
 import type {
   AuditRequest,
   AuditResponse,
@@ -893,6 +894,7 @@ function Result({
         <strong>{reportNames[mode]}</strong>
       </div>
       <DeltaZeroVerdict health={result.strategy_health} action={result.recommendation.action} confidence={result.decision_confidence} safetyBuffer={displayedMetrics.safety_buffer_score} />
+      <PaymentReceiptCard />
       <RiskZonePanel metrics={{
         recommendation: result.recommendation.action,
         risk_level: result.strategy_health,

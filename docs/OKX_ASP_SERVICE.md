@@ -1,5 +1,25 @@
 # DeltaZero OKX ASP Service Preparation
 
+## Closed-loop agent workflow
+
+The executable example in `examples/agent-bot` demonstrates:
+
+1. Detect hedge drift in a simulated position.
+2. Call the paid DeltaZero Position Auditor.
+3. Authorize and replay an x402 request through Onchain OS.
+4. Generate an exact rebalance intent.
+5. Simulate the proposed adjustment and require approval.
+6. Apply the adjustment to the demo ledger and re-audit the position.
+
+The on-chain broadcast stage is deliberately disabled. DeltaZero requires a
+supported perpetual-venue adapter before it can represent a short-perpetual
+adjustment as an Agentic Wallet transaction. A generic token swap is not treated
+as an equivalent hedge operation.
+
+When a successful paid replay includes `PAYMENT-RESPONSE`, the frontend decodes
+the returned settlement receipt and displays it beside the analysis. Challenge-
+only deployments do not fabricate a receipt.
+
 ## Service Name
 
 DeltaZero Wallet Auditor

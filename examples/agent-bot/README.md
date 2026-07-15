@@ -20,6 +20,10 @@ DELTAZERO_MAX_PAYMENT_BASE_UNITS=10000 \
 node examples/agent-bot/agent-bot.mjs
 ```
 
+The script asks before applying the rebalance to its simulated wallet ledger.
+For a non-interactive demo, add `DELTAZERO_APPROVE_SIMULATION=1`. This approves
+the simulated ledger update only; it does not authorize an on-chain transaction.
+
 The default maximum is `10000` base units, matching the current DeltaZero
 challenge. The script stops instead of signing if a server requests more.
 
@@ -42,3 +46,6 @@ DELTAZERO_API_BASE=https://deltazero-production.up.railway.app
   assemble payment proofs itself.
 - The final execution object is printed with `mode: "PROPOSAL_ONLY"` and is not
   broadcast to a venue.
+- The closed-loop demo re-audits the simulated wallet after approval.
+- Real short-perpetual execution remains disabled until a supported venue adapter
+  can simulate, risk-check, sign, broadcast, and return a transaction receipt.

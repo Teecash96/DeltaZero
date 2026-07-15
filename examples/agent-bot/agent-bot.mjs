@@ -11,6 +11,8 @@
  */
 
 import { spawnSync } from "node:child_process";
+import { createInterface } from "node:readline/promises";
+import { stdin, stdout } from "node:process";
 
 const API_BASE = process.env.DELTAZERO_API_BASE ?? "https://deltazero-production.up.railway.app";
 const POLL_MS = Number(process.env.DELTAZERO_POLL_MS ?? 5000);
@@ -18,6 +20,7 @@ const MAX_ITERATIONS = Number(process.env.DELTAZERO_MAX_ITERATIONS ?? 6);
 const AUTO_PAY = process.env.DELTAZERO_AUTO_PAY === "1";
 const MAX_PAYMENT_BASE_UNITS = BigInt(process.env.DELTAZERO_MAX_PAYMENT_BASE_UNITS ?? "10000");
 const ADMIN_KEY = process.env.DELTAZERO_ADMIN_KEY;
+const APPROVE_SIMULATION = process.env.DELTAZERO_APPROVE_SIMULATION === "1";
 
 const wallet = {
   asset: "SOL",
@@ -102,6 +105,15 @@ async function paidAudit() {
   console.log(`[payment] ${option.amount} base units on ${option.network} to ${option.payTo}`);
   const signed = authorizePayment(rawChallenge, index);
   response = await postAudit({ [signed.headerName]: signed.authorization });
+  const receipt = response.headers.get("PAYMENT-RESPONSE");
+  if (receipt) {
+    try {
+      const decoded = decodeChallenge(receipt);
+      console.log(`[receipt] status=${decoded.status ?? "verified"} network=${decoded.network ?? "not returned"} transaction=${decoded.transaction ?? "not returned"}`);
+    } catch {
+      console.log("[receipt] Settlement response was returned but could not be decoded by this client version.");
+    }
+  }
   return response;
 }
 
@@ -127,6 +139,12 @@ function executionPayload(report) {
     current_short_notional_usd: wallet.short_notional_usd,
     max_slippage_bps: 25,
     requires_human_or_policy_approval: true,
+    agentic_wallet: {
+      lifecycle: ["SIMULATE", "RISK_CHECK", "APPROVE", "EXECUTE", "RE_AUDIT"],
+      execution_adapter: "HYPERLIQUID_PERP_REQUIRED",
+      execution_enabled: false,
+      reason: "A supported perpetual-venue adapter must be configured before broadcast.",
+    },
     deltazero: {
       recommendation: report.recommendation.action,
       summary: report.recommendation.summary,
@@ -135,6 +153,32 @@ function executionPayload(report) {
       decision_confidence: report.decision_confidence,
     },
   };
+}
+
+function simulateRebalance(payload) {
+  const estimatedSlippageUsd = Number((payload.notional_delta_usd * payload.max_slippage_bps / 10_000).toFixed(2));
+  const projectedShort = payload.action === "INCREASE_SHORT"
+    ? wallet.short_notional_usd + payload.notional_delta_usd
+    : wallet.short_notional_usd - payload.notional_delta_usd;
+  const projectedDrift = Math.abs(wallet.long_notional_usd - projectedShort) / wallet.long_notional_usd * 100;
+  return {
+    status: "SIMULATED",
+    execution_adapter: "DEMO_POSITION_LEDGER",
+    projected_short_notional_usd: Number(projectedShort.toFixed(2)),
+    projected_hedge_drift_pct: Number(projectedDrift.toFixed(2)),
+    maximum_slippage_cost_usd: estimatedSlippageUsd,
+    risk_action: projectedDrift <= 5 ? "ALLOW" : "WARN",
+    broadcast: false,
+  };
+}
+
+async function confirmSimulation() {
+  if (APPROVE_SIMULATION) return true;
+  if (!stdin.isTTY || !stdout.isTTY) return false;
+  const prompt = createInterface({ input: stdin, output: stdout });
+  const answer = await prompt.question("Apply this change to the simulated wallet and re-audit? (yes/no) ");
+  prompt.close();
+  return answer.trim().toLowerCase() === "yes";
 }
 
 async function run() {
@@ -149,8 +193,23 @@ async function run() {
       const body = await response.json();
       if (!response.ok) throw new Error(`DeltaZero API ${response.status}: ${JSON.stringify(body)}`);
       console.log(`[recommendation] ${body.recommendation.action}: ${body.recommendation.summary}`);
+      const payload = executionPayload(body);
       console.log("[execution payload — not submitted]");
-      console.log(JSON.stringify(executionPayload(body), null, 2));
+      console.log(JSON.stringify(payload, null, 2));
+      const simulation = simulateRebalance(payload);
+      console.log("[Agentic Wallet lifecycle — simulation stage]");
+      console.log(JSON.stringify(simulation, null, 2));
+      if (!await confirmSimulation()) {
+        console.log("[approval] No approval received. Nothing changed and nothing was broadcast.");
+        return;
+      }
+      wallet.short_notional_usd = simulation.projected_short_notional_usd;
+      console.log("[approval] Applied to the simulated wallet ledger. Running post-action audit...");
+      const verificationResponse = await paidAudit();
+      const verification = await verificationResponse.json();
+      if (!verificationResponse.ok) throw new Error(`DeltaZero re-audit ${verificationResponse.status}: ${JSON.stringify(verification)}`);
+      console.log(`[verification] action=${verification.recommendation.action} drift=${verification.metrics.hedge_drift_pct.toFixed(2)}% safety=${verification.metrics.safety_buffer_score.toFixed(1)}`);
+      console.log("[closed loop] DETECT → ACCESS PAID API → RECOMMEND → SIMULATE → APPROVE → APPLY TO DEMO LEDGER → RE-AUDIT");
       return;
     }
     if (iteration < MAX_ITERATIONS) await sleep(POLL_MS);

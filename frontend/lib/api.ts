@@ -12,6 +12,7 @@ import type {
   MonteCarloResponse,
 } from "./types";
 import { getDemoAccessKey } from "./demo-access";
+import { decodePaymentReceipt, storePaymentReceipt } from "./payment-receipt";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -92,6 +93,9 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     }
     throw new Error(`API ${response.status}: ${detail}`);
   }
+
+  const paymentReceipt = decodePaymentReceipt(response.headers.get("PAYMENT-RESPONSE"));
+  if (paymentReceipt) storePaymentReceipt(paymentReceipt);
 
   return response.json() as Promise<T>;
 }
