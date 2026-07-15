@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 import hashlib
 import hmac
 import json
-import secrets
 from typing import Any
 
 import httpx
@@ -94,17 +93,14 @@ async def create_checkout(request: RiskEnginePassRequest, settings: PaymentSetti
     if not settings.has_facilitator_credentials:
         raise RuntimeError("Browser checkout is not configured")
     path = "/api/v6/pay/a2a/payment/create"
-    external_id = f"dz-{_request_digest(request)[:20]}-{secrets.token_hex(5)}"
     payload = {
         "type": "charge",
         "amount": settings.price_usdt,
         "symbol": "USDT",
         "recipient": settings.receiver,
         "description": "DeltaZero complete four-module Risk Engine Pass",
-        "externalId": external_id,
         "expiresIn": 1800,
         "realm": "deltazero-production.up.railway.app",
-        "deliveries": {"includeUrl": True},
     }
     body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
     timestamp = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
