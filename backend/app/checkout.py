@@ -119,7 +119,8 @@ async def create_checkout(request: RiskEnginePassRequest, settings: PaymentSetti
     response.raise_for_status()
     envelope = response.json()
     if envelope.get("code") != "0" or not envelope.get("data"):
-        raise RuntimeError(envelope.get("msg") or "OKX could not create the checkout")
+        message = envelope.get("msg") or "OKX could not create the checkout"
+        raise RuntimeError(f"{message} (code {envelope.get('code', 'unknown')})")
     data = envelope["data"]
     delivery = next((item for item in data.get("deliveries", []) if item.get("type") == "url"), None)
     if not delivery:
