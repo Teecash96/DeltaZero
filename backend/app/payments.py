@@ -261,6 +261,40 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
     }
 
 
+def mcp_paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
+    """Protect premium MCP tool calls without charging initialization or discovery."""
+
+    price = f"${settings.price_usdt}"
+    options = [
+        PaymentOption(
+            scheme="exact",
+            price=price,
+            network=settings.network,
+            pay_to=settings.receiver,
+        ),
+        PaymentOption(
+            scheme="aggr_deferred",
+            price=price,
+            network=settings.network,
+            pay_to=settings.receiver,
+        ),
+    ]
+    return {
+        "POST /mcp": RouteConfig(
+            accepts=options,
+            resource="/mcp",
+            description="Run a premium deterministic DeltaZero MCP risk tool",
+            mime_type="application/json",
+        ),
+        "POST /mcp/": RouteConfig(
+            accepts=options,
+            resource="/mcp",
+            description="Run a premium deterministic DeltaZero MCP risk tool",
+            mime_type="application/json",
+        ),
+    }
+
+
 class DeltaZeroPaymentMiddleware:
     """Apply x402 unless a configured owner-testing key matches exactly.
 

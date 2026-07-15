@@ -116,6 +116,22 @@ export default function MethodologyPage() {
       </section>
 
       <section className="panel methodology-section">
+        <div className="methodology-heading"><span>Agent interface</span><h2>Live Model Context Protocol server</h2></div>
+        <p>Compatible agents can discover DeltaZero&apos;s typed tools and consume structured deterministic outputs directly—without endpoint-specific wrapper parsers.</p>
+        <div className="methodology-worked-example">
+          <div><span>Streamable HTTP endpoint</span><h3>Production MCP</h3></div>
+          <code>https://deltazero-production.up.railway.app/mcp</code>
+          <p>Initialization, discovery, methodology resources, and Hyperliquid market context are free. Premium calculation calls preserve the 1 USDT OKX Agent Payments Protocol boundary.</p>
+        </div>
+        <div className="source-list">
+          <article><strong>Native schemas</strong><p>Tool inputs and structured outputs are generated from the same validated Pydantic contracts as the API.</p></article>
+          <article><strong>One calculation engine</strong><p>MCP tools call the existing deterministic services directly; formulas and verdict logic are not duplicated.</p></article>
+          <article><strong>Six discoverable tools</strong><p>Live market context plus Strategy Build, Hedge-Drift, Funding Stress, Monte Carlo, and the complete Risk Engine.</p></article>
+          <article><strong>Payment-aware</strong><p>Agents can inspect capabilities before invoking a premium tool and receiving the standardized payment challenge.</p></article>
+        </div>
+      </section>
+
+      <section className="panel methodology-section">
         <div className="methodology-heading"><span>Data integrity</span><h2>Sources and freshness</h2></div>
         <div className="source-list">
           <article><strong>Hyperliquid</strong><p>Public market and supported position data. Live responses carry a source timestamp and data-quality label.</p></article>

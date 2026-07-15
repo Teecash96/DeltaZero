@@ -30,6 +30,32 @@ The public Judge Demo provides a no-payment walkthrough of verified reference sc
 
 The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, worked Safety Buffer calculation, threshold provenance, model card, impairment model, Monte Carlo assumptions, reproducibility requirements, validation status, data sources, and limitations. Completed Strategy Build, Funding Stress Testing, and Wallet Auditor reports include a visible provenance panel with the source, source snapshot, report time, and data-quality context when available. DeltaZero does not claim historical validation or empirical threshold calibration until a versioned, time-aligned replay dataset is published.
 
+## Live MCP server
+
+DeltaZero exposes a standards-compliant, stateless Streamable HTTP Model Context Protocol server at:
+
+```text
+https://deltazero-production.up.railway.app/mcp
+```
+
+MCP initialization, tool discovery, methodology resources, and `get_hyperliquid_market_context` are free. Premium deterministic tools preserve the existing 1 USDT **OKX Agent Payments Protocol** boundary and return a standard HTTP 402 challenge when invoked without payment:
+
+- `build_neutral_strategy`
+- `audit_hedge_drift`
+- `run_funding_stress`
+- `run_monte_carlo`
+- `run_complete_risk_engine` — all four coordinated reports in one paid invocation
+
+The MCP tools call the same Python service functions used by the REST API; formulas and recommendation logic are not duplicated. Tool inputs and structured outputs are generated from the same Pydantic contracts, so compatible agents do not need endpoint-specific response parsers.
+
+Connect locally with MCP Inspector:
+
+```bash
+npx -y @modelcontextprotocol/inspector
+```
+
+Then use `http://127.0.0.1:8000/mcp` as the Streamable HTTP server URL.
+
 For product questions, API issues, payment problems, or data-quality reports, use the [Support page](https://delta-zero-alpha.vercel.app/support). Support will never request a seed phrase, private key, wallet approval, admin bypass key, or API secret.
 
 GitHub Actions runs backend tests, frontend lint and production build, and both SDK test suites for pushes to `main` and pull requests. No production credentials are required by CI.

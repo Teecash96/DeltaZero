@@ -4,3 +4,4 @@ pydantic>=2.9.0
 pytest>=8.3.0
 httpx>=0.27.0
 okxweb3-app-x402[evm]==0.1.1
+mcp>=1.28,<2
