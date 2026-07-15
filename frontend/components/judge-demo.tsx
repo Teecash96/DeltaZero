@@ -17,8 +17,8 @@ const demos = {
     summary: "The proposed hedge is aligned and expected carry remains positive after funding and fees.",
     metrics: [["Long leg", "$3,800"], ["Short hedge", "$3,648"], ["Net carry", "10.12%"], ["Hedge drift", "4.00%"], ["Safety Buffer", "65.79"]],
     action: "Deploy only after verifying current venue funding, liquidity, and margin rules.",
-    ctaHref: "/builder",
-    ctaLabel: "Open Strategy Build",
+    ctaHref: "/risk-engine",
+    ctaLabel: "Launch Risk Engine",
   },
   audit: {
     step: "02",
