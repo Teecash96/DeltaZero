@@ -13,6 +13,15 @@
   --deep: #080c09;
   --danger: #ff8d85;
   --warning: #f4ce69;
+  /* Semantic aliases keep newer product surfaces theme-safe. */
+  --text: var(--ink);
+  --text-secondary: var(--muted);
+  --surface: var(--panel);
+  --surface-raised: var(--panel-raised);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --accent: var(--green);
+  --lime: var(--green);
   --font-geist-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
@@ -911,6 +920,208 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .json-box,
 [data-theme="light"] .demo-payload { color: #243329; background: #edf3ee; border-color: #ccd8ce; }
 [data-theme="light"] .site-footer { border-top-color: #d4ddd6; }
+
+/* Light-mode contrast pass. Nested report surfaces previously inherited
+   dark-theme literals; these rules restore a consistent paper hierarchy. */
+[data-theme="light"] .panel-title,
+[data-theme="light"] .form-section h2,
+[data-theme="light"] .field label,
+[data-theme="light"] .summary-grid strong,
+[data-theme="light"] .verdict-grid article > strong,
+[data-theme="light"] .assessment-main h2,
+[data-theme="light"] .wallet-choice strong,
+[data-theme="light"] .wallet-position-grid strong,
+[data-theme="light"] .wallet-assessment-grid strong,
+[data-theme="light"] .wallet-driver > strong,
+[data-theme="light"] .wallet-exposure-grid strong,
+[data-theme="light"] .wallet-risk-grid strong,
+[data-theme="light"] .wallet-risk-grid article > b,
+[data-theme="light"] .wallet-timeline-panel article strong,
+[data-theme="light"] .market-snapshot strong,
+[data-theme="light"] .import-grid strong,
+[data-theme="light"] .market-context-grid strong,
+[data-theme="light"] .wallet-allocation-row strong,
+[data-theme="light"] .wallet-plan-panel li strong,
+[data-theme="light"] .wallet-stress-grid strong,
+[data-theme="light"] .metric-card strong,
+[data-theme="light"] .structure-item strong,
+[data-theme="light"] .risk-gauge-copy strong,
+[data-theme="light"] .risk-gauge-copy span,
+[data-theme="light"] .hero-preview-summary strong,
+[data-theme="light"] .decision-detail-grid strong,
+[data-theme="light"] .blueprint-grid strong,
+[data-theme="light"] .risk-outlook-grid strong,
+[data-theme="light"] .wallet-summary-strip strong,
+[data-theme="light"] .mc-assumptions summary,
+[data-theme="light"] .mc-verdict-grid strong,
+[data-theme="light"] .mc-percentiles strong,
+[data-theme="light"] .mc-distribution-grid h3,
+[data-theme="light"] .mc-bar-row strong,
+[data-theme="light"] .mc-drivers strong,
+[data-theme="light"] .step-progress-head,
+[data-theme="light"] .step-progress li.active,
+[data-theme="light"] .builder-mc-grid strong,
+[data-theme="light"] .trust-grid h3 { color: #17231b; }
+
+[data-theme="light"] .panel-copy,
+[data-theme="light"] .field small,
+[data-theme="light"] .form-note,
+[data-theme="light"] .empty-state p,
+[data-theme="light"] .empty-state small,
+[data-theme="light"] .summary-meta,
+[data-theme="light"] .summary-grid label,
+[data-theme="light"] .report-breadcrumb,
+[data-theme="light"] .verdict-heading small,
+[data-theme="light"] .verdict-grid article > span,
+[data-theme="light"] .verdict-grid article > small,
+[data-theme="light"] .analysis-confidence span,
+[data-theme="light"] .analysis-confidence small,
+[data-theme="light"] .decision-label,
+[data-theme="light"] .recommendation-reason,
+[data-theme="light"] .health-context p,
+[data-theme="light"] .decision-rationale > span,
+[data-theme="light"] .decision-rationale li,
+[data-theme="light"] .safety-kicker,
+[data-theme="light"] .safety-hero p,
+[data-theme="light"] .wallet-status-note,
+[data-theme="light"] .wallet-choice small,
+[data-theme="light"] .wallet-position-head span,
+[data-theme="light"] .wallet-position-grid label,
+[data-theme="light"] .wallet-clarity-copy,
+[data-theme="light"] .wallet-clarity-details p,
+[data-theme="light"] .wallet-clarity-details li,
+[data-theme="light"] .wallet-executive-summary > p,
+[data-theme="light"] .wallet-section-heading span,
+[data-theme="light"] .wallet-section-heading small,
+[data-theme="light"] .wallet-driver span,
+[data-theme="light"] .wallet-driver p,
+[data-theme="light"] .wallet-exposure-grid span,
+[data-theme="light"] .wallet-risk-grid span,
+[data-theme="light"] .wallet-exposure-grid p,
+[data-theme="light"] .wallet-risk-grid p,
+[data-theme="light"] .wallet-timeline-panel article p,
+[data-theme="light"] .mode-toggle button,
+[data-theme="light"] .market-refresh,
+[data-theme="light"] .import-actions button,
+[data-theme="light"] .import-actions a,
+[data-theme="light"] .override-check,
+[data-theme="light"] .market-snapshot span,
+[data-theme="light"] .market-snapshot small,
+[data-theme="light"] .imported-wallet-panel > p,
+[data-theme="light"] .import-grid span,
+[data-theme="light"] .market-context-grid span,
+[data-theme="light"] .funding-impact,
+[data-theme="light"] .wallet-allocation-row span,
+[data-theme="light"] .wallet-plan-panel li p,
+[data-theme="light"] .wallet-position-table td,
+[data-theme="light"] .wallet-stress-grid span,
+[data-theme="light"] .wallet-stress-panel > p,
+[data-theme="light"] .wallet-export-row span,
+[data-theme="light"] .section-label-row > span,
+[data-theme="light"] .metric-card label,
+[data-theme="light"] .metric-card small,
+[data-theme="light"] .structure-item label,
+[data-theme="light"] .risk-list li,
+[data-theme="light"] .context-card p,
+[data-theme="light"] .json-box summary,
+[data-theme="light"] .risk-gauge-copy small,
+[data-theme="light"] .hero-preview-copy,
+[data-theme="light"] .hero-preview-summary span,
+[data-theme="light"] .sdk-status,
+[data-theme="light"] .sdk-copy,
+[data-theme="light"] .sdk-links ul,
+[data-theme="light"] .sdk-link-card span,
+[data-theme="light"] .sdk-note,
+[data-theme="light"] .confidence-bar-label,
+[data-theme="light"] .decision-detail-grid span,
+[data-theme="light"] .decision-rationale > p,
+[data-theme="light"] .blueprint-grid span,
+[data-theme="light"] .blueprint-grid p,
+[data-theme="light"] .risk-outlook-grid span,
+[data-theme="light"] .risk-outlook-grid p,
+[data-theme="light"] .report-actions > span,
+[data-theme="light"] .wallet-summary-strip span,
+[data-theme="light"] .wallet-summary-strip small,
+[data-theme="light"] .mc-import p,
+[data-theme="light"] .mc-verdict-grid span,
+[data-theme="light"] .mc-percentiles span,
+[data-theme="light"] .mc-bar-row span,
+[data-theme="light"] .mc-drivers p,
+[data-theme="light"] .mc-table th,
+[data-theme="light"] .mc-table td,
+[data-theme="light"] .builder-mc-grid span,
+[data-theme="light"] .builder-mc-note,
+[data-theme="light"] .builder-mc-empty p,
+[data-theme="light"] .wallet-demo-note,
+[data-theme="light"] .trust-grid p { color: #4b5c51; }
+
+[data-theme="light"] .endpoint,
+[data-theme="light"] .empty-state,
+[data-theme="light"] .loading-state,
+[data-theme="light"] .summary-grid > div,
+[data-theme="light"] .verdict-grid article,
+[data-theme="light"] .decision-detail-grid > div,
+[data-theme="light"] .blueprint-grid > div,
+[data-theme="light"] .risk-outlook-grid article,
+[data-theme="light"] .wallet-choice,
+[data-theme="light"] .wallet-position-card,
+[data-theme="light"] .wallet-driver,
+[data-theme="light"] .wallet-exposure-grid article,
+[data-theme="light"] .wallet-risk-grid article,
+[data-theme="light"] .wallet-observations-panel li,
+[data-theme="light"] .mode-toggle button,
+[data-theme="light"] .market-refresh,
+[data-theme="light"] .import-actions button,
+[data-theme="light"] .import-actions a,
+[data-theme="light"] .market-snapshot,
+[data-theme="light"] .import-grid > div,
+[data-theme="light"] .market-context-grid > div,
+[data-theme="light"] .wallet-position-table,
+[data-theme="light"] .wallet-table-toggle,
+[data-theme="light"] .wallet-export-row button,
+[data-theme="light"] .metric-card,
+[data-theme="light"] .structure-item,
+[data-theme="light"] .actions-row span,
+[data-theme="light"] .hero-preview-summary div,
+[data-theme="light"] .preview-toggle,
+[data-theme="light"] .sdk-tabs,
+[data-theme="light"] .sdk-link-card,
+[data-theme="light"] .decision-detail-grid > div,
+[data-theme="light"] .builder-mc-grid article { border-color: #c3d0c6; background: #f8fbf8; }
+
+[data-theme="light"] .form-section { border-bottom-color: #ced8d0; }
+[data-theme="light"] .form-section h2 span,
+[data-theme="light"] .signal-chip,
+[data-theme="light"] .wallet-summary-facts span { border-color: #b7c6ba; background: #f7faf7; color: #26362b; }
+[data-theme="light"] .payment-required-card { border-color: #a9bd97; background: #f5faef; }
+[data-theme="light"] .payment-required-copy > p,
+[data-theme="light"] .payment-required-copy > small { color: #405247; }
+[data-theme="light"] .payment-required-details div,
+[data-theme="light"] .payment-trust-grid article { border-color: #c0cec3; background: #fff; }
+[data-theme="light"] .payment-required-details dd,
+[data-theme="light"] .payment-trust-grid strong { color: #17231b; }
+[data-theme="light"] .payment-trust-grid p { color: #4b5c51; }
+[data-theme="light"] .report-actions button,
+[data-theme="light"] .wallet-demo-button,
+[data-theme="light"] .wallet-table-toggle,
+[data-theme="light"] .wallet-export-row button,
+[data-theme="light"] .sdk-copy-button { border-color: #aebfb2; background: #fff; color: #203026; }
+[data-theme="light"] .button:disabled,
+[data-theme="light"] button:disabled { opacity: .68; }
+[data-theme="light"] .confidence-bar-track,
+[data-theme="light"] .step-progress-track { background: #dce5de; }
+[data-theme="light"] .mc-table th,
+[data-theme="light"] .mc-table td,
+[data-theme="light"] .wallet-position-table th,
+[data-theme="light"] .wallet-position-table td,
+[data-theme="light"] .wallet-contributors-table th,
+[data-theme="light"] .wallet-contributors-table td { border-color: #cbd7cd; }
+[data-theme="light"] .wallet-position-table th { background: #edf3ee; color: #435449; }
+[data-theme="light"] .error-box { border-color: #d8a6a2; background: #fff3f2; }
+[data-theme="light"] .error-box strong { color: #7e211c; }
+[data-theme="light"] .error-box p { color: #8f332d; }
+[data-theme="light"] .error-box small { color: #994b46; }
+[data-theme="light"] .state-icon { background: #f6d9d7; }
 
 @media (prefers-reduced-motion: reduce) {
   .theme-toggle { transition: none; }
