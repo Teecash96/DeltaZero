@@ -23,6 +23,14 @@ Build strategies, audit positions, simulate economic impairment, and assess supp
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
 
+## Methodology, provenance, and support
+
+The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, risk thresholds, impairment model, Monte Carlo assumptions, data sources, and limitations. Completed Builder, Stress Test, and Wallet Auditor reports include a visible provenance panel with the source, source snapshot, report time, and data-quality context when available.
+
+For product questions, API issues, payment problems, or data-quality reports, use the [Support page](https://delta-zero-alpha.vercel.app/support). Support will never request a seed phrase, private key, wallet approval, admin bypass key, or API secret.
+
+GitHub Actions runs backend tests, frontend lint and production build, and both SDK test suites for pushes to `main` and pull requests. No production credentials are required by CI.
+
 ## DeltaZero Risk Zones
 
 DeltaZero classifies completed Strategy Builder, Wallet Auditor, Stress Test, and Monte Carlo reports into five operator-friendly zones: **Optimal**, **Healthy**, **Watch**, **Defensive**, and **Critical**.

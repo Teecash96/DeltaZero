@@ -1,5 +1,6 @@
 """Shared request and response models."""
 
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -149,6 +150,7 @@ class StrategyResponseBase(BaseModel):
     metrics: Metrics
     recommendation: Recommendation
     risk_notes: list[str]
+    generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class BuildResponse(StrategyResponseBase):

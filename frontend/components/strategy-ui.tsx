@@ -8,6 +8,7 @@ import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { RiskZonePanel } from "@/components/risk-zone-panel";
+import { AnalysisProvenance } from "@/components/analysis-provenance";
 import { StressTestLiquidationVisualizer } from "@/components/risk-visualizers";
 import { PaymentReceiptCard } from "@/components/payment-receipt-card";
 import type {
@@ -902,6 +903,13 @@ function Result({
         hedge_drift_pct: displayedMetrics.hedge_drift_pct,
         expected_impairment_loss_pct: mode === "stress-test" ? (result as StressTestResponse).estimated_impairment_loss_pct : undefined,
       }} />
+      <AnalysisProvenance
+        source={mode === "builder" && build.market_data_source === "hyperliquid" ? "Hyperliquid public market data" : "User-supplied strategy assumptions"}
+        sourceTimestamp={mode === "builder" ? build.market_data_timestamp : null}
+        generatedAt={result.generated_at}
+        quality={mode === "builder" ? build.market_data_quality ?? "manual inputs" : "validated inputs"}
+        note={mode === "stress-test" ? "Stress results use the submitted scenario and deterministic impairment model; no live price forecast is applied." : "Financial outputs are computed by DeltaZero's deterministic engine."}
+      />
       {mode === "stress-test" ? <StressTestLiquidationVisualizer result={stress} /> : null}
       <DecisionPanel result={result} request={request} mode={mode} />
       <Summary result={result} />

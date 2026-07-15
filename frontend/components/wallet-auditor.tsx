@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { RiskZonePanel } from "@/components/risk-zone-panel";
+import { AnalysisProvenance } from "@/components/analysis-provenance";
 import { analyzeWallet, PaymentRequiredError, type X402Challenge } from "@/lib/api";
 import { MONTE_CARLO_HANDOFF_KEY, type MonteCarloHandoff, writeWalletHandoff } from "@/lib/handoff";
 import type {
@@ -518,6 +519,13 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
         hedge_drift_pct: result.risk_metrics.hedge_drift_pct,
         expected_impairment_loss_pct: result.risk_metrics.estimated_impairment_loss_pct,
       }} />
+      <AnalysisProvenance
+        source={protocols.length ? protocols.join(", ") : "Supported public protocol sources"}
+        sourceTimestamp={result.data_timestamp}
+        generatedAt={result.data_timestamp}
+        quality={result.data_quality}
+        note="Coverage includes only supported positions returned by the selected read-only integrations."
+      />
       <ExecutiveSummary result={result} />
       <PortfolioSummaryStrip result={result} protocols={protocols} />
       <AssessmentHeader result={result} protocols={protocols} />

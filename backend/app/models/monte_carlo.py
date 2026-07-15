@@ -1,5 +1,6 @@
 """Typed Monte Carlo sensitivity analysis contracts."""
 
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -96,3 +97,4 @@ class MonteCarloResponse(BaseModel):
     percentiles: MonteCarloPercentiles
     sensitivity: list[SensitivityFactor]
     sample_paths: list[MonteCarloPath]
+    generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())

@@ -194,6 +194,7 @@ export interface StrategyResponseBase {
   metrics: Metrics;
   recommendation: Recommendation;
   risk_notes: string[];
+  generated_at: string;
 }
 
 export interface BuildResponse extends StrategyResponseBase {
@@ -256,6 +257,7 @@ export interface MonteCarloSummary {
 export interface MonteCarloPath { path_id: number; market_shock_pct: number; funding_shift_apy: number; slippage_pct: number; collateral_haircut_pct: number; protocol_loss_pct: number; impairment_loss_pct: number; post_stress_equity_usd: number; safety_buffer_score: number; hedge_drift_pct: number; }
 export interface MonteCarloResponse {
   asset: Asset; simulation_count: number; time_horizon_days: number; seed: number | null; risk_tolerance: RiskTolerance; target_style: TargetStyle;
+  generated_at: string;
   summary: MonteCarloSummary;
   percentiles: { impairment_loss_pct: Record<"p5" | "p25" | "p50" | "p75" | "p95" | "p99", number>; post_stress_equity_usd: Record<"p5" | "p25" | "p50" | "p75" | "p95" | "p99", number>; };
   sensitivity: Array<{ factor: string; contribution_pct: number; direction: "positive" | "negative" | "mixed"; explanation: string }>;
