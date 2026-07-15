@@ -413,6 +413,12 @@ The price is configured with `PAYMENT_PRICE_USDT`. The primary product flow call
 
 With only the three `PAYMENT_*` variables, the server operates in challenge-only mode: it returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted `PAYMENT-SIGNATURE` or legacy `X-PAYMENT` credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
 
+### Browser checkout
+
+Human users can complete the same one-time purchase without a command-line wallet. After the Risk Engine returns its payment boundary, the web app requests an OKX-hosted checkout URL from `POST /checkout/create`, opens the official payment page, polls `GET /checkout/status/{payment_id}`, and calls `POST /checkout/redeem` only after on-chain settlement is reported as completed.
+
+The checkout token cryptographically binds the payment ID to the exact analysis inputs and expiry. Changing the inputs invalidates redemption. OKX API credentials and signing material remain server-side; DeltaZero never exposes them to browser code and never requests a private key.
+
 Unpaid challenge:
 
 ```bash

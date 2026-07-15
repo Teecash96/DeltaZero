@@ -12,6 +12,8 @@ import type {
   MonteCarloResponse,
   RiskEnginePassRequest,
   RiskEnginePassResponse,
+  CheckoutCreateResponse,
+  CheckoutStatusResponse,
 } from "./types";
 import { getDemoAccessKey } from "./demo-access";
 import { decodePaymentReceipt, storePaymentReceipt } from "./payment-receipt";
@@ -129,6 +131,39 @@ export function runMonteCarlo(body: MonteCarloRequest): Promise<MonteCarloRespon
 
 export function runRiskEnginePass(body: RiskEnginePassRequest): Promise<RiskEnginePassResponse> {
   return post<RiskEnginePassResponse>("/risk-engine/analyze", body);
+}
+
+async function jsonRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, init);
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const body = await response.json();
+      detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body);
+    } catch { /* retain status text */ }
+    throw new Error(detail);
+  }
+  return response.json() as Promise<T>;
+}
+
+export function createBrowserCheckout(body: RiskEnginePassRequest): Promise<CheckoutCreateResponse> {
+  return jsonRequest<CheckoutCreateResponse>("/checkout/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export function getBrowserCheckoutStatus(paymentId: string): Promise<CheckoutStatusResponse> {
+  return jsonRequest<CheckoutStatusResponse>(`/checkout/status/${encodeURIComponent(paymentId)}`);
+}
+
+export function redeemBrowserCheckout(body: RiskEnginePassRequest, checkoutToken: string): Promise<RiskEnginePassResponse> {
+  return jsonRequest<RiskEnginePassResponse>("/checkout/redeem", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ request: body, checkout_token: checkoutToken }),
+  });
 }
 
 export async function getHyperliquidMarket(asset: string, lookbackHours = 24, dex?: string): Promise<HyperliquidMarketResponse> {

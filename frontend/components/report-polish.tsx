@@ -25,7 +25,7 @@ function shortAddress(address: string | undefined) {
   return address && address.length > 12 ? `${address.slice(0, 6)}...${address.slice(-5)}` : address ?? "Unavailable";
 }
 
-export function PaymentRequiredCard({ challenge, retry, loading }: { challenge: X402Challenge | null; retry: () => void; loading: boolean }) {
+export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser }: { challenge: X402Challenge | null; retry: () => void; loading: boolean; payInBrowser?: () => void }) {
   const option = challenge?.accepts?.[0];
   const [copyFeedback, setCopyFeedback] = useState(false);
   const details = [["Cost", paymentPrice(option)], ["Network", networkName(option?.network)], ["Receiver", shortAddress(option?.payTo)], ["Verification", "Automatic"]];
@@ -48,8 +48,8 @@ export function PaymentRequiredCard({ challenge, retry, loading }: { challenge: 
           <h2 id="payment-required-title">Unlock Premium Strategy Analysis</h2>
           <p>This analysis is protected by the OKX x402 payment protocol. Payment unlocks one complete analysis request; a new analysis requires a new payment. DeltaZero never requests wallet signatures, approvals, or private keys.</p>
           {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}{label === "Receiver" ? <button type="button" onClick={() => void copyReceiver()} aria-label="Copy receiver address">{copyFeedback ? "Copied" : "Copy"}</button> : null}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
-          <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>
-          <small>Payment is verified automatically by the protected endpoint.</small>
+          {payInBrowser ? <button className="button button-primary payment-verify" type="button" onClick={payInBrowser} disabled={loading}>{loading ? "Preparing checkout..." : "Pay with OKX →"}</button> : <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>}
+          <small>{payInBrowser ? "Complete checkout in the new window. DeltaZero verifies settlement automatically." : "Payment is verified automatically by the protected endpoint."}</small>
         </div>
       </section>
       <section className="panel payment-trust-panel" aria-labelledby="payment-trust-title">

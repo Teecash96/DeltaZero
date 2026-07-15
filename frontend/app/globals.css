@@ -1232,6 +1232,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .risk-pass-result-grid h3 { margin: 26px 0 8px; color: var(--accent); font-size: 30px; }
 .risk-pass-result-grid strong { display: block; margin-bottom: 9px; font-size: 18px; }
 .risk-engine-included { margin-top: 34px; }
+.checkout-status { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.checkout-status strong { max-width: 720px; font-size: 14px; }
 
 @media (max-width: 760px) {
   .risk-pass-offer { align-items: flex-start; flex-direction: column; }

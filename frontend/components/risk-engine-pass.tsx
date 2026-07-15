@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { PaymentRequiredCard } from "@/components/report-polish";
-import { PaymentRequiredError, runRiskEnginePass, type X402Challenge } from "@/lib/api";
+import { createBrowserCheckout, getBrowserCheckoutStatus, PaymentRequiredError, redeemBrowserCheckout, runRiskEnginePass, type X402Challenge } from "@/lib/api";
 import type { Asset, RiskEnginePassRequest, RiskEnginePassResponse, RiskTolerance, TargetStyle } from "@/lib/types";
 
 const initial: RiskEnginePassRequest = {
@@ -29,6 +29,7 @@ export function RiskEnginePass() {
   const [payment, setPayment] = useState<X402Challenge | null | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
 
   async function submit(event?: React.FormEvent) {
     event?.preventDefault();
@@ -40,6 +41,41 @@ export function RiskEnginePass() {
     } catch (caught) {
       if (caught instanceof PaymentRequiredError) setPayment(caught.challenge);
       else setError(caught instanceof Error ? caught.message : "Risk Engine Pass could not be completed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function payInBrowser() {
+    const paymentWindow = window.open("about:blank", "_blank");
+    if (paymentWindow) paymentWindow.opener = null;
+    setLoading(true);
+    setError(null);
+    setCheckoutStatus("Creating secure OKX checkout…");
+    try {
+      const checkout = await createBrowserCheckout(value);
+      if (paymentWindow) paymentWindow.location.href = checkout.payment_url;
+      else window.location.href = checkout.payment_url;
+      setCheckoutStatus("Checkout opened. Complete payment, then return here; verification is automatic.");
+      const deadline = Date.now() + 30 * 60 * 1000;
+      while (Date.now() < deadline) {
+        await new Promise((resolve) => window.setTimeout(resolve, 3000));
+        const status = await getBrowserCheckoutStatus(checkout.payment_id);
+        if (status.status === "completed") {
+          setCheckoutStatus("Payment confirmed. Generating all four reports…");
+          setResult(await redeemBrowserCheckout(value, checkout.checkout_token));
+          setPayment(undefined);
+          setCheckoutStatus(status.transaction_hash ? `Payment confirmed · ${status.transaction_hash.slice(0, 10)}…` : "Payment confirmed");
+          return;
+        }
+        if (status.status === "failed" || status.status === "expired") throw new Error(status.failure_message ?? `Payment ${status.status}. Start a new checkout.`);
+        setCheckoutStatus(status.status === "settling" ? "Payment submitted. Waiting for X Layer confirmation…" : "Waiting for payment in the OKX checkout…");
+      }
+      throw new Error("Checkout verification timed out. Start a fresh checkout.");
+    } catch (caught) {
+      paymentWindow?.close();
+      setError(caught instanceof Error ? caught.message : "Browser checkout could not be completed.");
+      setCheckoutStatus(null);
     } finally {
       setLoading(false);
     }
@@ -71,7 +107,8 @@ export function RiskEnginePass() {
         <small className="risk-pass-note">One paid request generates all four reports. Starting another analysis requires a new pass.</small>
       </form>
 
-      {payment !== undefined ? <PaymentRequiredCard challenge={payment} retry={() => void submit()} loading={loading} /> : null}
+      {payment !== undefined ? <PaymentRequiredCard challenge={payment} retry={() => void submit()} payInBrowser={() => void payInBrowser()} loading={loading} /> : null}
+      {checkoutStatus ? <div className="panel checkout-status" role="status"><span className="decision-eyebrow">OKX checkout</span><strong>{checkoutStatus}</strong></div> : null}
       {error ? <div className="error-box" role="alert"><strong>Assessment could not be completed</strong><p>{error}</p></div> : null}
       {result ? <div className="risk-pass-results">
         <header className="panel"><span className="decision-eyebrow">Risk Engine Pass complete</span><h2>Four reports. One strategy. One payment.</h2><p>Generated {new Date(result.generated_at).toLocaleString()} from a shared set of assumptions.</p></header>
