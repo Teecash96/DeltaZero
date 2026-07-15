@@ -28,7 +28,7 @@ The public Judge Demo provides a no-payment walkthrough of verified reference sc
 
 ## Methodology, provenance, and support
 
-The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, risk thresholds, impairment model, Monte Carlo assumptions, data sources, and limitations. Completed Strategy Build, Funding Stress Testing, and Wallet Auditor reports include a visible provenance panel with the source, source snapshot, report time, and data-quality context when available.
+The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, worked Safety Buffer calculation, threshold provenance, model card, impairment model, Monte Carlo assumptions, reproducibility requirements, validation status, data sources, and limitations. Completed Strategy Build, Funding Stress Testing, and Wallet Auditor reports include a visible provenance panel with the source, source snapshot, report time, and data-quality context when available. DeltaZero does not claim historical validation or empirical threshold calibration until a versioned, time-aligned replay dataset is published.
 
 For product questions, API issues, payment problems, or data-quality reports, use the [Support page](https://delta-zero-alpha.vercel.app/support). Support will never request a seed phrase, private key, wallet approval, admin bypass key, or API secret.
 

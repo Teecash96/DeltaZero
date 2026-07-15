@@ -1264,6 +1264,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .methodology-table th { color: var(--muted); font-size: 9px; letter-spacing: .09em; text-transform: uppercase; }
 .methodology-table td { color: var(--text); font: 12px var(--font-mono), monospace; }
 .methodology-note { margin-bottom: 0; font-size: 11px; }
+.model-card-grid, .validation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--border); }
+.model-card-grid article, .validation-grid article { min-width: 0; padding: 18px; background: var(--panel); }
+.model-card-grid span, .validation-grid span, .methodology-worked-example span { color: var(--muted); font: 700 9px var(--font-mono), monospace; letter-spacing: .1em; text-transform: uppercase; }
+.model-card-grid strong, .validation-grid strong { display: block; margin-top: 8px; color: var(--text); font-size: 15px; }
+.validation-grid p { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.methodology-worked-example { display: grid; gap: 14px; margin-top: 22px; padding: 22px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.methodology-worked-example h3 { margin: 7px 0 0; color: var(--text); font-size: 19px; }
+.methodology-worked-example code { overflow-x: auto; color: var(--accent); font: 600 14px var(--font-mono), monospace; white-space: nowrap; }
+.methodology-worked-example p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.75; }
 .methodology-callout, .support-safety { margin-top: 22px; padding: 18px; border-left: 3px solid var(--accent); background: rgba(154,224,69,.055); }
 .methodology-callout p, .support-safety p { margin: 7px 0 0; color: var(--muted); line-height: 1.65; }
 .source-list { display: grid; gap: 0; }
@@ -1337,7 +1346,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .judge-demo-metrics span { min-height: 0; }
   .judge-demo-footer > div:last-child { flex-direction: column; }
   .judge-demo-footer .button { width: 100%; }
-  .methodology-principles, .formula-grid, .provenance-grid { grid-template-columns: 1fr; }
+  .methodology-principles, .formula-grid, .provenance-grid, .model-card-grid, .validation-grid { grid-template-columns: 1fr; }
   .methodology-principles article, .formula-grid article { min-height: 0; }
   .source-list article { grid-template-columns: 1fr; gap: 7px; }
   .methodology-actions { align-items: stretch; flex-direction: column; }
