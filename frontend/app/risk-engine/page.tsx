@@ -68,7 +68,9 @@ export default function RiskEnginePage() {
             <ul className="product-bullets">
               {module.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
             </ul>
-            <span className="button button-secondary risk-engine-action">Included in pass</span>
+            <Link className="button button-secondary risk-engine-action" href={module.href}>
+              {module.action} <span aria-hidden="true">→</span>
+            </Link>
           </article>
         ))}
       </section>
