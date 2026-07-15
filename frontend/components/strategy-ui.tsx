@@ -42,12 +42,12 @@ const copy = {
     submit: "Analyze Strategy",
   },
   auditor: {
-    kicker: "Inspect the position",
-    title: "Position Auditor",
+    kicker: "Measure neutral alignment",
+    title: "Hedge-Drift Auditing",
     description:
       "Assess an existing long and short structure for hedge alignment, carry quality, and collateral resilience.",
     endpoint: "POST /strategy/audit",
-    submit: "Audit position",
+    submit: "Analyze hedge drift",
   },
   "stress-test": {
     kicker: "Pressure before the market",
@@ -606,13 +606,13 @@ const structureIcons: Record<string, string> = {
 
 const reportNames: Record<Mode, string> = {
   builder: "AI Strategy Report",
-  auditor: "Position Risk Report",
+  auditor: "Hedge-Drift Report",
   "stress-test": "Scenario Risk Report",
 };
 
 const reportSections: Record<Mode, string> = {
   builder: "Builder",
-  auditor: "Auditor",
+  auditor: "Hedge-Drift Auditing",
   "stress-test": "Stress Test",
 };
 

@@ -63,11 +63,11 @@ const products = [
   {
     href: "/auditor",
     number: "02",
-    title: "Position Auditor",
+    title: "Hedge-Drift Auditing",
     description:
       "Analyzes an existing long, short, and collateral structure for current health and corrective action.",
     bullets: ["Current health", "Hedge drift", "Capital risk", "Safety Buffer", "Corrective action"],
-    action: "Open Auditor",
+    action: "Analyze Hedge Drift",
   },
   {
     href: "/stress-test",

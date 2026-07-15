@@ -26,7 +26,7 @@ export function SiteFooter() {
           <span className="logo-mark">Δ</span>
           DELTA<span>ZERO</span>
         </Link>
-        <p>AI risk analyst for pseudo delta neutral DeFi strategies. Build. Audit. Stress test.</p>
+        <p>AI risk analyst for pseudo delta neutral DeFi strategies. Build. Measure hedge drift. Stress test.</p>
         <div className="footer-labs">
           <span className="footer-label">BUILT BY</span>
           <span className="footer-labs-brand">

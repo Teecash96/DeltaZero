@@ -164,7 +164,7 @@ const progressSteps: Record<ProgressKind, string[]> = {
 
 const progressTitles: Record<ProgressKind, string> = {
   builder: "Analyzing strategy",
-  auditor: "Auditing position",
+  auditor: "Analyzing hedge drift",
   "stress-test": "Simulating portfolio stress",
   wallet: "Auditing wallet",
   "monte-carlo": "Running sensitivity analysis",

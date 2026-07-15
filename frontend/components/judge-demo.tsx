@@ -20,7 +20,7 @@ const demos = {
   },
   audit: {
     step: "02",
-    label: "Audit",
+    label: "Hedge-Drift Auditing",
     title: "Detect hedge drift",
     question: "Is a $3,800 long against a $3,000 short still neutral?",
     input: ["Long $3,800", "Short $3,000", "Collateral $1,200", "Medium risk"],

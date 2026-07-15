@@ -62,7 +62,7 @@ export function AgentOperatorConsole() {
     auditStarted.current = true;
     setState("attention");
     append("DRIFT DETECTED", `Hedge drift reached ${drift.toFixed(1)}%, above the ${thresholds[riskTolerance]}% operator policy.`, "warning");
-    append("API CALL", "Requesting a live DeltaZero Position Audit.");
+    append("API CALL", "Requesting live DeltaZero Hedge-Drift Analysis.");
 
     void auditStrategy({
       asset: "SOL",
@@ -83,7 +83,7 @@ export function AgentOperatorConsole() {
         append("PAYMENT REQUIRED", challengeSummary(error), "warning");
         append("AGENT PAUSED", "Open demo access for recording, or complete payment through an Agentic Wallet client. The browser did not sign or transfer funds.", "neutral");
       } else {
-        append("AUDIT FAILED", error instanceof Error ? error.message : "The audit could not be completed.", "critical");
+        append("HEDGE CHECK FAILED", error instanceof Error ? error.message : "The hedge-drift analysis could not be completed.", "critical");
       }
     });
   }, [drift, riskTolerance, state]);
@@ -158,7 +158,7 @@ export function AgentOperatorConsole() {
         <article><span>02</span><strong>Pay or pause</strong><p>Never fabricate settlement or silently bypass x402.</p></article>
         <article><span>03</span><strong>Simulate</strong><p>Generate a proposal and measure its effect before approval.</p></article>
         <article><span>04</span><strong>Approve</strong><p>Require explicit user or policy authority before execution.</p></article>
-        <article><span>05</span><strong>Verify</strong><p>Re-audit after an authorized adapter reports completion.</p></article>
+        <article><span>05</span><strong>Verify</strong><p>Recheck hedge drift after an authorized adapter reports completion.</p></article>
       </section>
     </div>
   );

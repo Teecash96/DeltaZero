@@ -2,7 +2,7 @@
 
 ## Deterministic risk intelligence for pseudo delta neutral DeFi strategies
 
-Build strategies, audit positions, simulate economic impairment, and assess supported public wallet portfolios through one transparent risk engine.
+Build strategies, analyze hedge drift, simulate economic impairment, and assess supported public wallet portfolios through one transparent risk engine.
 
 <div align="center">
 
@@ -24,7 +24,7 @@ Build strategies, audit positions, simulate economic impairment, and assess supp
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
 
-The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Builder, Auditor, Monte Carlo, and Stress Test. It does not bypass or weaken x402 protection on real analysis endpoints.
+The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Builder, Hedge-Drift Auditing, Monte Carlo, and Stress Test. It does not bypass or weaken x402 protection on real analysis endpoints.
 
 ## Methodology, provenance, and support
 
@@ -53,7 +53,7 @@ Editor Demo Access lets a trusted editor use the existing backend admin-key chec
 
 Never place the key in `NEXT_PUBLIC` variables or public code.
 
-The current product includes a Strategy Builder, Position Auditor, Stress Test, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
+The current product includes a Strategy Builder, Hedge-Drift Auditing, Stress Test, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -62,7 +62,7 @@ Pseudo delta-neutral strategies can look attractive while hiding hedge drift, we
 DeltaZero is differentiated by:
 
 - **Deterministic decisions** — recommendations come from documented rules and evaluated thresholds rather than opaque generated calculations.
-- **One risk language** — Builder, Auditor, Stress Test, and Wallet Auditor consistently report health, action, Safety Buffer, risk notes, and Decision Confidence.
+- **One risk language** — Builder, Hedge-Drift Auditing, Stress Test, and Wallet Auditor consistently report health, action, Safety Buffer, risk notes, and Decision Confidence.
 - **Read-only portfolio analysis** — supported public protocol data is analyzed without custody or wallet permissions.
 - **Agent-ready contracts** — FastAPI schemas and local TypeScript and Python SDK packages expose structured responses for dashboards and automated workflows.
 
@@ -71,7 +71,7 @@ DeltaZero is differentiated by:
 | Capability | Status | Description |
 | --- | --- | --- |
 | Strategy Builder | Live | Constructs a deterministic pseudo delta-neutral structure from capital, risk tolerance, target style, and market assumptions. |
-| Position Auditor | Live | Evaluates an existing long, short, and collateral structure and recommends corrective action. |
+| Hedge-Drift Auditing | Live | Evaluates an existing long, short, and collateral structure and recommends corrective action. |
 | Stress Test | Live | Applies deterministic shocks and calculates post-stress risk and scenario-based economic impairment. |
 | Wallet Auditor | Live · Pro Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
 | Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, pauses at x402, and prepares an approval-gated proposal without claiming payment or trade execution. |
@@ -89,7 +89,7 @@ DeltaZero is differentiated by:
 
 ### Agent Operator Console
 
-The `/agent` console turns DeltaZero's structured API into a transparent operator workflow. A user selects risk tolerance and strategy mandate, spawns a session-only guard, and watches the guard compare simulated hedge drift against the configured intervention boundary. When the boundary is breached, the console calls the live Position Auditor. It either displays the returned recommendation or pauses at the x402 payment boundary. Execution authority remains disabled until a separately authorized and compatible venue adapter is configured.
+The `/agent` console turns DeltaZero's structured API into a transparent operator workflow. A user selects risk tolerance and strategy mandate, spawns a session-only guard, and watches the guard compare simulated hedge drift against the configured intervention boundary. When the boundary is breached, the console calls live Hedge-Drift Auditing. It either displays the returned recommendation or pauses at the x402 payment boundary. Execution authority remains disabled until a separately authorized and compatible venue adapter is configured.
 
 ### Agent-in-a-Box example
 
@@ -121,9 +121,9 @@ Supported target styles are:
 
 Each style uses a distinct deterministic allocation and threshold profile.
 
-### Position Auditor
+### Hedge-Drift Auditing
 
-The Auditor evaluates a supplied long, short, and collateral structure. It measures hedge alignment, net delta, carry, collateral resilience, Safety Buffer, and capital at risk before returning an action such as `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`.
+Hedge-Drift Auditing evaluates a supplied long, short, and collateral structure. It measures hedge alignment, net delta, carry, collateral resilience, Safety Buffer, and capital at risk before returning an action such as `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`.
 
 ### Stress Test
 

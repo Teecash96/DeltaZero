@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { href: "/builder", label: "Builder" },
-  { href: "/auditor", label: "Auditor" },
+  { href: "/auditor", label: "Hedge-Drift Auditing" },
   { href: "/stress-test", label: "Stress Test" },
   { href: "/monte-carlo", label: "Monte Carlo" },
   { href: "/agent", label: "Agent Console" },
