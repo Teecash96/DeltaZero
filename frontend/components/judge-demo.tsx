@@ -17,6 +17,8 @@ const demos = {
     summary: "The proposed hedge is aligned and expected carry remains positive after funding and fees.",
     metrics: [["Long leg", "$3,800"], ["Short hedge", "$3,648"], ["Net carry", "10.12%"], ["Hedge drift", "4.00%"], ["Safety Buffer", "65.79"]],
     action: "Deploy only after verifying current venue funding, liquidity, and margin rules.",
+    ctaHref: "/builder",
+    ctaLabel: "Open Strategy Build",
   },
   audit: {
     step: "02",
@@ -29,6 +31,8 @@ const demos = {
     summary: "The short leg is materially underweight and the position has moved outside the neutral band.",
     metrics: [["Hedge ratio", "0.7895"], ["Hedge drift", "21.05%"], ["Net delta", "+21.05%"], ["Net carry", "7.84%"], ["Safety Buffer", "80.00"]],
     action: "Increase the short hedge toward the configured target before adding capital.",
+    ctaHref: "/auditor",
+    ctaLabel: "Open Hedge-Drift Audit",
   },
   monte: {
     step: "03",
@@ -41,6 +45,8 @@ const demos = {
     summary: "Tail impairment remains contained, but hedge-drift breaches occur often enough to require monitoring.",
     metrics: [["Expected impairment", "1.94%"], ["P95 impairment", "4.46%"], ["P99 impairment", "5.63%"], ["Drift breach", "67.50%"], ["Negative carry", "9.90%"]],
     action: "Tighten the rebalance policy or increase the hedge reserve before autonomous use.",
+    ctaHref: "/monte-carlo",
+    ctaLabel: "Open Monte Carlo",
   },
   stress: {
     step: "04",
@@ -53,6 +59,8 @@ const demos = {
     summary: "Carry compresses but remains positive, while hedge alignment and collateral coverage stay inside tolerance.",
     metrics: [["Stressed carry", "3.32%"], ["Hedge drift", "4.00%"], ["Safety Buffer", "62.50"], ["Impairment", "1.04%"], ["Post-stress equity", "$5,146"]],
     action: "Continue monitoring funding; reassess if net carry approaches zero.",
+    ctaHref: "/stress-test",
+    ctaLabel: "Open Funding Stress Test",
   },
 } as const;
 
@@ -93,7 +101,7 @@ export function JudgeDemo() {
 
       <section className="judge-demo-footer panel">
         <div><strong>Ready to inspect the real product?</strong><p>Protected workflows issue the live OKX x402 payment boundary. API contracts and source code remain public.</p></div>
-        <div><Link href="/builder" className="button button-primary">Open Strategy Build</Link><a href="https://deltazero-production.up.railway.app/docs" className="button button-secondary" target="_blank" rel="noreferrer">Inspect API</a></div>
+        <div><Link href={demo.ctaHref} className="button button-primary">{demo.ctaLabel}</Link><a href="https://deltazero-production.up.railway.app/docs" className="button button-secondary" target="_blank" rel="noreferrer">Inspect API</a></div>
       </section>
     </div>
   );
