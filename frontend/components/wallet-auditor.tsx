@@ -510,7 +510,7 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
           <p>This assessment includes only the supported positions successfully retrieved. Do not treat it as a complete wallet inventory.</p>
         </section>
       ) : null}
-      <div className="report-breadcrumb" aria-label="Report location"><span>Wallet Auditor</span><i aria-hidden="true">/</i><strong>Portfolio Intelligence Report</strong></div>
+      <div className="report-breadcrumb" aria-label="Report location"><span>Hedge Intelligence</span><i aria-hidden="true">/</i><strong>Hedge Integrity Report</strong></div>
       <DeltaZeroVerdict health={result.strategy_health} action={result.recommendation?.action} confidence={result.decision_confidence ?? 0} safetyBuffer={result.risk_metrics.safety_buffer_score} />
       <RiskZonePanel metrics={{
         recommendation: result.recommendation?.action,
@@ -547,7 +547,7 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       <ProtocolWarnings result={result} />
       <ReportActions
         data={result}
-        analysis={`DeltaZero Wallet Auditor\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
+        analysis={`DeltaZero Hedge Intelligence\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
         filename={`deltazero-wallet-${result.wallet_address.slice(0, 10)}.json`}
         title="DeltaZero Wallet Portfolio Assessment"
       />
@@ -592,7 +592,7 @@ export function WalletPortfolioWorkspace() {
   return (
     <div className="workspace">
       <header className="page-intro wallet-page-intro">
-        <div><p className="kicker">Wallet Auditor</p><h1>Read Only Wallet Auditor</h1><div className="wallet-pro-badge">PRO PREVIEW</div><p>Audit supported public wallet positions and receive a read-only DeltaZero risk assessment.</p></div>
+        <div><p className="kicker">Hedge Intelligence</p><h1>Read-Only Hedge Intelligence</h1><div className="wallet-pro-badge">PRO PREVIEW</div><p>Analyze supported public positions for hedge drift, exposure integrity, and corrective action.</p></div>
         <div className="wallet-page-side"><span className="endpoint">POST /wallet/analyze</span><p className="wallet-readonly-note">DeltaZero only reads public wallet and protocol data. It never requests signatures, private keys, or transaction permissions.</p></div>
       </header>
       <div className="workspace-grid wallet-workspace-grid">

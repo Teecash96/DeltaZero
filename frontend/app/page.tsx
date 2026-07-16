@@ -81,11 +81,11 @@ const products = [
   {
     href: "/wallet",
     number: "04",
-    title: "Read-Only Wallet Auditor",
+    title: "Hedge Intelligence",
     description:
       "Discovers supported public positions and converts portfolio exposure into an explainable risk assessment.",
     bullets: ["Public position discovery", "Net exposure", "Hedge ratio", "Protocol allocation", "Portfolio verdict"],
-    action: "Audit Portfolio",
+    action: "Open Hedge Intelligence",
   },
   {
     href: "/monte-carlo",
@@ -177,7 +177,7 @@ const faqs = [
   {
     question: "Are protocol integrations live?",
     answer:
-      "Hyperliquid, Aave, and Morpho are live read-only integrations. Pendle, Ethena, live funding inputs, and additional coverage remain planned. Wallet Auditor is available as a PRO PREVIEW.",
+      "Hyperliquid, Aave, and Morpho are live read-only integrations. Pendle, Ethena, live funding inputs, and additional coverage remain planned. Hedge Intelligence is available as a PRO PREVIEW.",
   },
   {
     question: "Is my data stored?",
@@ -201,7 +201,7 @@ export default function Home() {
             <Link href="/demo" className="button button-judge">Try Judge Demo <span>▶</span></Link>
             <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/agent" className="button button-secondary">Agent Console <span>◎</span></Link>
-            <Link href="/wallet" className="button button-secondary">Audit Portfolio <span>◇</span></Link>
+            <Link href="/wallet" className="button button-secondary">Hedge Intelligence <span>◇</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
             {['Read only', 'No signatures', 'Deterministic engine', 'OKX x402 boundary'].map((badge) => <span key={badge}>✓ {badge}</span>)}
@@ -250,7 +250,7 @@ export default function Home() {
         <div className="section-heading"><div><p className="kicker">Product walkthrough</p><h2 id="action-demo-title">See DeltaZero in action</h2></div><p>Experience the complete decision workflow with verified reference scenarios and no payment.</p></div>
         <div className="action-demo-shell glass-card">
           <div className="action-demo-track">
-            {[['01', 'Wallet Auditor', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Funding Stress Testing', 'Apply a deterministic funding scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
+            {[['01', 'Hedge Intelligence', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Funding Stress Testing', 'Apply a deterministic funding scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
           </div>
           <Link href="/demo" className="button button-judge">Open Judge Demo <span>▶</span></Link>
         </div>
@@ -368,13 +368,13 @@ export default function Home() {
         </div>
         <div className="integration-group">
           <div className="integration-group-head">
-            <p className="kicker">Wallet Auditor</p>
+            <p className="kicker">Hedge Intelligence</p>
             <span>Pro preview</span>
           </div>
           <div className="integration-single">
             <article className="integration-card">
               <div className="integration-head">
-                <h3>Wallet Auditor</h3>
+                <h3>Hedge Intelligence</h3>
                 <span>PRO PREVIEW</span>
               </div>
               <p>Read-only wallet position discovery and portfolio risk assessment across supported integrations.</p>
