@@ -25,7 +25,7 @@ DeltaZero remains non-custodial and read-only. It does not request seed phrases,
 - Submitted strategy inputs are not stored in a server database.
 - Report history is stored locally in the user's browser.
 - Email and Telegram actions share completed snapshots; unattended alerts still require durable server storage and a scheduler.
-- SDKs are distributed as tested repository source packages and are not yet released through npm or PyPI.
+- The TypeScript and Python SDKs are publicly released as `deltazero-core` on npm and PyPI and remain available as tested repository source.
 - OKX marketplace registration/review submission does not imply marketplace approval.
 
 ## Supported assets and services

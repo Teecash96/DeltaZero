@@ -132,7 +132,7 @@ Before marketplace approval and wider production use, maintain:
 
 ## SDK Usage Examples
 
-The SDKs are source-distributed repository packages that call the live DeltaZero API. They are installable from a checkout and tested in CI. Public npm and PyPI registry releases are tracked as a separate distribution milestone.
+The SDKs call the live DeltaZero API and are published as `deltazero-core` on npm and PyPI. They remain installable from a checkout and tested in CI.
 
 ### TypeScript
 

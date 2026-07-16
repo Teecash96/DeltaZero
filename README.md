@@ -17,7 +17,7 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 [Live Application](https://delta-zero-alpha.vercel.app) ·
 [Judge Demo](https://delta-zero-alpha.vercel.app/demo) ·
 [API Documentation](https://deltazero-production.up.railway.app/docs) ·
-[Source SDKs](#source-distributed-sdks) ·
+[Published SDKs](#published-sdks) ·
 [X](https://x.com/DeltaZeroASP)
 
 </div>
@@ -116,7 +116,7 @@ DeltaZero is differentiated by:
 | x402 Payment Gate | Live · Production | The live API issues a 1 USDT X Layer challenge. The browser checkout connects OKX Wallet, signs the authorization, replays the request, and reads the settlement receipt; final settlement remains fail-closed unless the configured facilitator verifies it. |
 | Interactive Strategy Preview | Live | Provides a clearly labelled illustrative simulation on the landing page. |
 | TypeScript SDK | Published · npm | Supplies a typed client through [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). |
-| Python SDK | Source distributed | Supplies a typed repository client for every current API service. |
+| Python SDK | Published · PyPI | Supplies a typed client through [`deltazero-core`](https://pypi.org/project/deltazero-core/). |
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
 | Aave | Live with RPC | Reads supported lending and collateral data when an RPC endpoint is configured. |
 | Morpho | Live | Reads supported market and vault positions from Morpho's public API. |
@@ -313,27 +313,24 @@ The recommendation vocabulary depends on the service:
 - Auditor: `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`
 - Wallet Auditor: `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE` when an assessment is meaningful
 
-## Source-distributed SDKs
+## Published SDKs
 
 DeltaZero includes thin, type-safe clients that call the existing deployed API. They do not duplicate backend calculations.
 
-The TypeScript SDK is published on npm as [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). The Python SDK remains installable from the versioned repository source while its first PyPI release is completed through Trusted Publishing. Both packages are exercised by CI.
+The TypeScript SDK is published on npm and the Python SDK is published on PyPI under the shared package name `deltazero-core`. Both packages are also available from this repository and exercised by CI.
 
 ### TypeScript
 
-Package name: `@deltazero/core`
+Package name: [`deltazero-core`](https://www.npmjs.com/package/deltazero-core)
 
 Repository path: [`sdk/typescript`](sdk/typescript)
 
 ```bash
-cd sdk/typescript
-npm install
-npm run build
-npm test
+npm install deltazero-core
 ```
 
 ```ts
-import { DeltaZeroClient } from "@deltazero/core";
+import { DeltaZeroClient } from "deltazero-core";
 
 const client = new DeltaZeroClient({
   baseUrl: "https://deltazero-production.up.railway.app",
@@ -362,16 +359,12 @@ Available methods:
 
 ### Python
 
-Package name: `deltazero-core`
+Package name: [`deltazero-core`](https://pypi.org/project/deltazero-core/)
 
 Repository path: [`sdk/python`](sdk/python)
 
 ```bash
-cd sdk/python
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-python3 -m unittest discover -s tests -p "test_*.py"
+python -m pip install deltazero-core
 ```
 
 ```python
@@ -613,7 +606,7 @@ npm run lint
 npm run build
 ```
 
-SDK commands are documented in the [Source-distributed SDKs](#source-distributed-sdks) section.
+SDK commands are documented in the [Published SDKs](#published-sdks) section.
 
 ## Deployment
 
@@ -686,7 +679,7 @@ Yes. Agents, dashboards, and automated workflows can consume the structured API 
 
 ### How are the SDK packages distributed?
 
-The TypeScript SDK is published to npm as [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). The Python SDK is source-distributed, installable from a checkout, and tested in CI while its first PyPI release is completed through Trusted Publishing.
+The TypeScript SDK is published to [npm](https://www.npmjs.com/package/deltazero-core) and the Python SDK is published to [PyPI](https://pypi.org/project/deltazero-core/), both as `deltazero-core` version `0.1.0`.
 
 ## Roadmap
 
