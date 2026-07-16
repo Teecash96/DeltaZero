@@ -22,23 +22,6 @@ const externalLinks = [
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <div className="footer-brand">
-        <Link href="/" className="logo footer-logo" aria-label="DeltaZero home">
-          <span className="logo-mark">Δ</span>
-          DELTA<span>ZERO</span>
-        </Link>
-        <p>AI risk analyst for pseudo delta neutral DeFi strategies. Build. Measure hedge drift. Stress test.</p>
-        <div className="footer-labs">
-          <span className="footer-label">BUILT BY</span>
-          <span className="footer-labs-brand">
-            <span className="footer-labs-icon" aria-hidden="true">
-              ⚗
-            </span>
-            AKANBI LABS
-          </span>
-        </div>
-      </div>
-
       <div className="footer-columns">
         <div>
           <strong>Quick links</strong>
@@ -60,6 +43,16 @@ export function SiteFooter() {
             ))}
           </nav>
         </div>
+      </div>
+
+      <div className="footer-brand">
+        <Link href="/" className="logo footer-logo" aria-label="DeltaZero home">
+          <span className="logo-mark">Δ</span>
+          DELTA<span>ZERO</span>
+        </Link>
+        <a className="footer-license" href="https://github.com/Teecash96/DeltaZero/blob/main/LICENSE" target="_blank" rel="noreferrer">
+          MIT Licensed
+        </a>
       </div>
     </footer>
   );

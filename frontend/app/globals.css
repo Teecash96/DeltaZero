@@ -293,12 +293,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .faq-item[open] summary i { transform: rotate(45deg); }
 .faq-item p { margin: 0; padding: 0 22px 20px; color: var(--muted); font-size: 13px; line-height: 1.7; }
 .site-footer { width: min(100% - 56px, 1180px); margin: auto; padding: 32px 0 50px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 26px; border-top: 1px solid var(--line); color: #7a857c; }
-.footer-brand { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-.footer-brand p { max-width: 520px; margin: 0; color: #a5afa8; font-size: 13px; line-height: 1.7; }
-.footer-label { color: #879289; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
-.footer-labs { display: flex; flex-direction: column; gap: 4px; }
-.footer-labs-brand { display: inline-flex; align-items: center; gap: 8px; width: fit-content; font-size: 20px; font-weight: 760; letter-spacing: .09em; text-transform: uppercase; line-height: 1.1; background-color: transparent; background-image: linear-gradient(92deg, #b9f65a 0%, #6ddb78 34%, #52d5cb 66%, #b39aff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; text-shadow: 0 0 16px rgba(110, 221, 203, .08), 0 0 22px rgba(185, 246, 90, .1); }
-.footer-labs-icon { color: inherit; font-size: .9em; opacity: .92; }
+.footer-brand { min-width: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.footer-license { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; color: #a5afa8; font: 10px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
+.footer-license:hover { color: var(--green); border-color: rgba(185,246,90,.35); }
 .footer-logo { width: fit-content; }
 .footer-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .footer-columns strong { display: block; margin-bottom: 12px; color: #dbe0dc; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; }
@@ -1593,10 +1590,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .site-footer { width: calc(100% - 36px); padding-bottom: 34px; }
   .site-footer { padding-top: 24px; padding-bottom: 24px; gap: 24px; }
   .footer-columns { grid-template-columns: 1fr; gap: 20px; }
-  .footer-brand { gap: 10px; }
+  .footer-brand { padding-top: 20px; align-items: flex-start; gap: 10px; border-top: 1px solid var(--line); }
   .footer-logo { transform: scale(.92); transform-origin: left center; }
-  .footer-label { font-size: 9px; }
-  .footer-labs-brand { font-size: 18px; letter-spacing: .08em; }
   .footer-columns strong { margin-bottom: 7px; font-size: 10px; }
   .footer-columns nav { gap: 2px 14px; }
   .footer-columns > div:first-child nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
