@@ -562,8 +562,9 @@ To enable safe challenge-only x402 locally, configure the receiving address, per
 
 ```bash
 export PAYMENT_RECEIVER="0xYourReceivingAddress"
-export PAYMENT_PRICE_USDT="0.01"
+export PAYMENT_PRICE_USDT="1"
 export PAYMENT_NETWORK="eip155:196"
+export PUBLIC_API_BASE_URL="https://deltazero-production.up.railway.app"
 ```
 
 To enable paid verification and settlement, additionally configure the complete official facilitator credential group:

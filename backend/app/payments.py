@@ -33,6 +33,7 @@ from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 _EVM_ADDRESS_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 _CAIP2_EVM_NETWORK_RE = re.compile(r"^eip155:[1-9][0-9]*$")
 _ADMIN_HEADER = b"x-deltazero-admin-key"
+_DEFAULT_PUBLIC_API_BASE_URL = "https://deltazero-production.up.railway.app"
 logger = logging.getLogger(__name__)
 
 
@@ -47,6 +48,7 @@ class PaymentSettings:
     okx_secret_key: str | None = None
     okx_passphrase: str | None = None
     okx_base_url: str = "https://web3.okx.com"
+    public_api_base_url: str = _DEFAULT_PUBLIC_API_BASE_URL
     admin_key: str | None = field(default=None, repr=False)
 
     @classmethod
@@ -100,6 +102,11 @@ class PaymentSettings:
         base_url = os.getenv("OKX_BASE_URL", "https://web3.okx.com").strip()
         if not base_url.startswith("https://"):
             raise RuntimeError("OKX_BASE_URL must be an HTTPS URL")
+        public_api_base_url = os.getenv(
+            "PUBLIC_API_BASE_URL", _DEFAULT_PUBLIC_API_BASE_URL
+        ).strip()
+        if not public_api_base_url.startswith("https://"):
+            raise RuntimeError("PUBLIC_API_BASE_URL must be an HTTPS URL")
 
         return cls(
             receiver=receiver,
@@ -109,6 +116,7 @@ class PaymentSettings:
             okx_secret_key=values["OKX_SECRET_KEY"] or None,
             okx_passphrase=values["OKX_PASSPHRASE"] or None,
             okx_base_url=base_url.rstrip("/"),
+            public_api_base_url=public_api_base_url.rstrip("/"),
             admin_key=os.getenv("DELTAZERO_ADMIN_KEY") or None,
         )
 
@@ -224,7 +232,7 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
                     pay_to=settings.receiver,
                 ),
             ],
-            resource=path,
+            resource=f"{settings.public_api_base_url}{path}",
             description=description,
             mime_type="application/json",
         )
@@ -282,13 +290,13 @@ def mcp_paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
     return {
         "POST /mcp": RouteConfig(
             accepts=options,
-            resource="/mcp",
+            resource=f"{settings.public_api_base_url}/mcp",
             description="Run a premium deterministic DeltaZero MCP risk tool",
             mime_type="application/json",
         ),
         "POST /mcp/": RouteConfig(
             accepts=options,
-            resource="/mcp",
+            resource=f"{settings.public_api_base_url}/mcp",
             description="Run a premium deterministic DeltaZero MCP risk tool",
             mime_type="application/json",
         ),

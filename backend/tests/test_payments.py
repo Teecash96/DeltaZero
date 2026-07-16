@@ -162,7 +162,9 @@ def test_protected_routes_return_x402_challenge_without_payment(
     assert "PAYMENT-REQUIRED" in response.headers
     challenge = json.loads(base64.b64decode(response.headers["PAYMENT-REQUIRED"]))
     assert challenge["x402Version"] == 2
-    assert challenge["resource"]["url"] == path
+    assert challenge["resource"]["url"] == (
+        f"https://deltazero-production.up.railway.app{path}"
+    )
     assert {option["scheme"] for option in challenge["accepts"]} == {
         "exact",
         "aggr_deferred",

@@ -99,7 +99,9 @@ def test_premium_mcp_tool_returns_x402_challenge() -> None:
 
     assert response.status_code == 402
     challenge = json.loads(base64.b64decode(response.headers["PAYMENT-REQUIRED"]))
-    assert challenge["resource"]["url"] == "/mcp"
+    assert challenge["resource"]["url"] == (
+        "https://deltazero-production.up.railway.app/mcp"
+    )
     assert challenge["accepts"][0]["amount"] == "1000000"
     assert challenge["accepts"][0]["network"] == "eip155:196"
 
