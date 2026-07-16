@@ -296,6 +296,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .footer-brand { min-width: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
 .footer-license { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; color: #a5afa8; font: 10px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
 .footer-license:hover { color: var(--green); border-color: rgba(185,246,90,.35); }
+.footer-copyright { color: #7f8a82; font: 10px var(--font-geist-mono); letter-spacing: .04em; }
 .footer-logo { width: fit-content; }
 .footer-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .footer-columns strong { display: block; margin-bottom: 12px; color: #dbe0dc; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; }

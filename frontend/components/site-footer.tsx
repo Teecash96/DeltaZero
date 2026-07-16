@@ -53,6 +53,7 @@ export function SiteFooter() {
         <a className="footer-license" href="https://github.com/Teecash96/DeltaZero/blob/main/LICENSE" target="_blank" rel="noreferrer">
           MIT Licensed
         </a>
+        <small className="footer-copyright">Copyright © 2026 Akanbi Labs</small>
       </div>
     </footer>
   );
