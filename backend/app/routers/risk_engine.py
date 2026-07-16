@@ -40,7 +40,6 @@ def recover_payment(payload: PaymentRecoveryRequest, request: Request) -> Paymen
         )
         verify_payer_signature(
             payload.transaction_hash,
-            fingerprint,
             payload.payer,
             payload.signature,
         )

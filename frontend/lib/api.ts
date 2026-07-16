@@ -202,21 +202,6 @@ export async function payRiskEngineWithWallet(body: RiskEnginePassRequest, chall
   return response.json() as Promise<RiskEnginePassResponse>;
 }
 
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
-  if (value && typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-async function sha256(value: string): Promise<string> {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
 type RecoveredPayment = {
   result: RiskEnginePassResponse;
   receipt: {
@@ -251,8 +236,7 @@ export async function recoverRiskEnginePayment(transactionHash: string, analysis
   if (paymentSender !== payer) {
     throw new Error(`Switch your wallet account to ${paymentSender}. The currently connected account is ${payer}.`);
   }
-  const fingerprint = await sha256(stableStringify(analysis));
-  const message = `DeltaZero payment recovery\nTransaction: ${normalizedHash}\nRequest SHA-256: ${fingerprint}`;
+  const message = `DeltaZero payment recovery\nTransaction: ${normalizedHash}`;
   const encodedMessage = `0x${Array.from(new TextEncoder().encode(message), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
   const signature = await provider.request({ method: "personal_sign", params: [encodedMessage, payer] });
   if (typeof signature !== "string") throw new Error("Wallet did not return an ownership signature.");

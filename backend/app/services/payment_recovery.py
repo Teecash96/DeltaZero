@@ -34,21 +34,19 @@ def request_fingerprint(analysis: RiskEnginePassRequest) -> str:
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
-def recovery_message(transaction_hash: str, fingerprint: str) -> str:
+def recovery_message(transaction_hash: str) -> str:
     return (
         "DeltaZero payment recovery\n"
         f"Transaction: {transaction_hash.lower()}\n"
-        f"Request SHA-256: {fingerprint}"
     )
 
 
 def verify_payer_signature(
     transaction_hash: str,
-    fingerprint: str,
     payer: str,
     signature: str,
 ) -> None:
-    raw_message = recovery_message(transaction_hash, fingerprint)
+    raw_message = recovery_message(transaction_hash)
     encoded_hex = "0x" + raw_message.encode().hex()
     recovered_addresses: set[str] = set()
     for message in (encode_defunct(text=raw_message), encode_defunct(text=encoded_hex)):

@@ -5,13 +5,11 @@ from eth_account.messages import encode_defunct
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from app.models.risk_engine import RiskEnginePassRequest
 from app.payments import PaymentSettings
 from app.services.payment_recovery import (
     TRANSFER_TOPIC,
     USDT0_XLAYER,
     recovery_message,
-    request_fingerprint,
 )
 
 
@@ -41,10 +39,8 @@ def _settings() -> PaymentSettings:
 
 
 def _payload(account) -> dict:
-    model = RiskEnginePassRequest.model_validate(ANALYSIS)
-    fingerprint = request_fingerprint(model)
     signature = "0x" + Account.sign_message(
-        encode_defunct(text=recovery_message(TX_HASH, fingerprint)),
+        encode_defunct(text=recovery_message(TX_HASH)),
         account.key,
     ).signature.hex()
     return {
@@ -103,9 +99,8 @@ def test_recovery_rejects_transaction_reuse_for_different_inputs(monkeypatch, tm
     assert client.post("/risk-engine/recover-payment", json=first).status_code == 200
 
     changed = {**ANALYSIS, "capital_usd": 9000}
-    model = RiskEnginePassRequest.model_validate(changed)
     signature = "0x" + Account.sign_message(
-        encode_defunct(text=recovery_message(TX_HASH, request_fingerprint(model))),
+        encode_defunct(text=recovery_message(TX_HASH)),
         account.key,
     ).signature.hex()
     response = client.post("/risk-engine/recover-payment", json={
