@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { PaymentRequiredCard } from "@/components/report-polish";
 import { PaymentRequiredError, payRiskEngineWithWallet, runRiskEnginePass, type X402Challenge } from "@/lib/api";
+import { appendReportHistory } from "@/lib/report-history";
 import type { Asset, RiskEnginePassRequest, RiskEnginePassResponse, RiskTolerance, TargetStyle } from "@/lib/types";
 
 const initial: RiskEnginePassRequest = {
@@ -37,7 +38,9 @@ export function RiskEnginePass() {
     setError(null);
     setPayment(undefined);
     try {
-      setResult(await runRiskEnginePass(value));
+      const response = await runRiskEnginePass(value);
+      setResult(response);
+      appendReportHistory({ type: "risk_engine", asset: response.strategy_build.asset, generatedAt: response.generated_at, recommendation: response.monte_carlo_sensitivity.summary.recommendation, safetyBuffer: response.hedge_drift_audit.metrics.safety_buffer_score, p95Impairment: response.monte_carlo_sensitivity.summary.p95_impairment_loss_pct, payload: response });
     } catch (caught) {
       if (caught instanceof PaymentRequiredError) setPayment(caught.challenge);
       else setError(caught instanceof Error ? caught.message : "Risk Engine Pass could not be completed.");
@@ -53,6 +56,7 @@ export function RiskEnginePass() {
     try {
       const paidResult = await payRiskEngineWithWallet(value);
       setResult(paidResult);
+      appendReportHistory({ type: "risk_engine", asset: paidResult.strategy_build.asset, generatedAt: paidResult.generated_at, recommendation: paidResult.monte_carlo_sensitivity.summary.recommendation, safetyBuffer: paidResult.hedge_drift_audit.metrics.safety_buffer_score, p95Impairment: paidResult.monte_carlo_sensitivity.summary.p95_impairment_loss_pct, payload: paidResult });
       setPayment(undefined);
       setCheckoutStatus("Payment confirmed on X Layer. All four reports are unlocked.");
     } catch (caught) {

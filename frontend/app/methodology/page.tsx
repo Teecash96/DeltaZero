@@ -84,14 +84,16 @@ export default function MethodologyPage() {
 
       <section className="panel methodology-section">
         <div className="methodology-heading"><span>Sensitivity model</span><h2>Monte Carlo</h2></div>
-        <p>DeltaZero draws bounded, clipped-normal stress assumptions for market movement, funding shifts, slippage, collateral haircuts, and protocol loss. Volatility scales with the square root of the selected horizon. A supplied seed makes the simulation reproducible.</p>
+        <p>DeltaZero uses a correlated multivariate Student-t systemic layer for market movement, funding shifts, and collateral stress, then transmits collateral depeg severity into funding pressure, slippage, and collateral impairment. Non-systemic mode remains available as an independent normal baseline. Volatility scales with the square root of the selected horizon, and a supplied seed makes the simulation reproducible.</p>
         <div className="formula-grid compact">
           <article><h3>Path count</h3><strong>100–10,000</strong><p>Validated before execution.</p></article>
           <article><h3>Market bounds</h3><strong>−95% to +100%</strong><p>Both positive and negative shocks.</p></article>
           <article><h3>Reported tails</h3><strong>P95 and P99</strong><p>Alongside median and worst simulated outcome.</p></article>
           <article><h3>Repeatability</h3><strong>Seeded</strong><p>Same request and seed, same paths.</p></article>
+          <article><h3>Systemic tails</h3><strong>Student-t · 5 DoF</strong><p>Configurable heavy-tail dependence across market, funding, and collateral factors.</p></article>
+          <article><h3>Depeg transmission</h3><strong>Coupled</strong><p>Collateral depeg can amplify funding cost, exit slippage, and haircut loss in one path.</p></article>
         </div>
-        <div className="methodology-callout"><strong>Current statistical assumptions</strong><p>Factors are sampled independently. The model does not currently estimate cross-factor correlations, volatility clustering, regime changes, or path-dependent liquidations. Clipped-normal shocks improve repeatability and prevent impossible inputs, but they underrepresent the fat tails observed in crypto markets. P95 and P99 are percentiles of the submitted sensitivity model—not forecasts of real-world loss probability.</p></div>
+        <div className="methodology-callout"><strong>Current statistical assumptions</strong><p>The submitted correlation matrix must be positive semidefinite. Default correlations are explicit scenario assumptions, not empirically calibrated forecasts. The model captures static heavy-tail dependence and depeg transmission, but not time-varying correlations, volatility clustering, order-book feedback, oracle latency, contagion between venues, or path-perfect liquidations. P95 and P99 remain percentiles of the submitted sensitivity model—not forecasts of real-world loss probability.</p></div>
       </section>
 
       <section className="panel methodology-section">
@@ -143,7 +145,7 @@ export default function MethodologyPage() {
 
       <section className="panel methodology-section methodology-limitations">
         <div className="methodology-heading"><span>Use responsibly</span><h2>Limitations</h2></div>
-        <ul><li>DeltaZero does not predict prices or profitability.</li><li>Safety Buffer is a heuristic score and must not be interpreted as liquidation probability.</li><li>Independent clipped-normal factors do not reproduce crypto fat tails or changing correlations.</li><li>Partial or unavailable integrations can produce incomplete portfolio coverage.</li><li>Outputs are decision support, not financial advice or execution instructions.</li><li>Users and agents should independently verify venue rules, liquidity, oracle behaviour, latency, and transaction costs.</li></ul>
+        <ul><li>DeltaZero does not predict prices or profitability.</li><li>Safety Buffer is a heuristic score and must not be interpreted as liquidation probability.</li><li>Systemic correlations and tail parameters are scenario inputs; they are not yet calibrated to a versioned historical dataset and do not change dynamically by regime.</li><li>Partial or unavailable integrations can produce incomplete portfolio coverage.</li><li>Outputs are decision support, not financial advice or execution instructions.</li><li>Users and agents should independently verify venue rules, liquidity, oracle behaviour, latency, and transaction costs.</li></ul>
         <div className="methodology-actions"><a className="button button-secondary" href="https://deltazero-production.up.railway.app/docs" target="_blank" rel="noreferrer">Inspect API contracts</a><a className="button button-secondary" href="https://github.com/Teecash96/DeltaZero" target="_blank" rel="noreferrer">Review source code</a><Link className="button button-primary" href="/support">Get support</Link></div>
       </section>
     </div>

@@ -38,11 +38,33 @@ def test_non_finite_values_are_rejected(value: float) -> None:
 def test_distribution_and_probability_invariants() -> None:
     result = run_monte_carlo(request())
     assert result.summary.p95_impairment_loss_pct >= result.summary.median_impairment_loss_pct
-    for value in (result.summary.probability_safety_buffer_breach_pct, result.summary.probability_hedge_drift_breach_pct, result.summary.probability_negative_carry_pct, result.summary.probability_capital_impairment_pct):
+    for value in (result.summary.probability_safety_buffer_breach_pct, result.summary.probability_hedge_drift_breach_pct, result.summary.probability_negative_carry_pct, result.summary.probability_capital_impairment_pct, result.summary.probability_collateral_depeg_pct):
         assert 0 <= value <= 100
     assert len(result.sample_paths) == 50
     assert all(path.slippage_pct >= 0 and path.collateral_haircut_pct >= 0 and path.protocol_loss_pct >= 0 for path in result.sample_paths)
     assert sum(item.contribution_pct for item in result.sensitivity) == pytest.approx(100, abs=.1)
+
+
+def test_systemic_model_exposes_correlated_fat_tail_metadata() -> None:
+    result = run_monte_carlo(request(simulation_count=1000))
+    assert result.systemic_risk_model.enabled is True
+    assert result.systemic_risk_model.distribution == "student_t"
+    assert result.systemic_risk_model.degrees_of_freedom == 5
+    assert result.systemic_risk_model.observed_market_funding_correlation < 0
+    assert result.summary.expected_collateral_depeg_pct >= 0
+    assert all(path.collateral_depeg_pct >= 0 for path in result.sample_paths)
+
+
+def test_invalid_systemic_correlation_matrix_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        request(market_funding_correlation=.99, market_collateral_correlation=.99, funding_collateral_correlation=-.99)
+
+
+def test_systemic_mode_can_be_disabled_for_independent_baseline() -> None:
+    result = run_monte_carlo(request(systemic_risk_enabled=False))
+    assert result.systemic_risk_model.enabled is False
+    assert result.systemic_risk_model.distribution == "independent_normal"
+    assert result.systemic_risk_model.degrees_of_freedom is None
 
 
 @pytest.mark.parametrize(("changes", "expected"), [

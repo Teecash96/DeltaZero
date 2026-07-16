@@ -168,7 +168,11 @@ Its report includes:
 
 ### Monte Carlo Sensitivity Analysis
 
-Monte Carlo analysis runs 100 to 10,000 bounded stress paths across market movement, funding shifts, exit slippage, collateral haircuts, and protocol-loss assumptions. It reports impairment and post-stress equity distributions, breach probabilities, percentile outcomes, and ranked sensitivity drivers.
+Monte Carlo analysis runs 100 to 10,000 bounded stress paths across market movement, funding shifts, exit slippage, collateral haircuts, collateral depeg, and protocol-loss assumptions. Its systemic mode uses a configurable correlated Student-t model: collateral depeg severity can simultaneously amplify funding pressure, slippage, and collateral impairment. It reports impairment and post-stress equity distributions, depeg and breach probabilities, percentile outcomes, observed correlation, and ranked sensitivity drivers. These correlations are transparent scenario assumptions, not empirically calibrated forecasts.
+
+### Report history and notification handoff
+
+Completed Risk Engine and Monte Carlo reports are saved in the user's browser at `/history` (up to 25 reports). Users can export JSON or share a computed risk snapshot through email and Telegram. This is local report history and notification handoff—not continuous background monitoring. Unattended alerts still require a future server-side scheduler, durable storage, and opt-in notification subscriptions.
 
 The engine is deterministic when a seed is supplied and reuses DeltaZero's existing impairment, metric, and threshold logic. It is a sensitivity tool—not a price forecast—and it does not source, infer, or fabricate future market data. Builder results and supported Wallet Auditor exposures can be transferred through short-lived browser session storage for simulation.
 

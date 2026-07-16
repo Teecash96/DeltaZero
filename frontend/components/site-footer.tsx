@@ -7,6 +7,7 @@ const quickLinks = [
   { label: "Integrations", href: "/#integrations" },
   { label: "Docs", href: "/#docs" },
   { label: "Methodology", href: "/methodology" },
+  { label: "Report History", href: "/history" },
   { label: "Support", href: "/support" },
   { label: "Agents", href: "/#agents" },
   { label: "FAQs", href: "/#faqs" },
