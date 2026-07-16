@@ -204,7 +204,7 @@ def test_every_backend_post_route_is_payment_protected(
         if "post" in operations
     }
 
-    assert exposed_post_routes == set(paid_routes(payment_settings))
+    assert exposed_post_routes - {"POST /risk-engine/recover-payment"} == set(paid_routes(payment_settings))
 
 
 @pytest.mark.parametrize(("path", "payload"), PROTECTED_ROUTES)

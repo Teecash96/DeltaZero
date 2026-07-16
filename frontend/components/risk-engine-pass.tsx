@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { PaymentRequiredCard } from "@/components/report-polish";
 import { PaymentReceiptCard } from "@/components/payment-receipt-card";
-import { PaymentRequiredError, payRiskEngineWithWallet, runRiskEnginePass, type X402Challenge } from "@/lib/api";
+import { PaymentRequiredError, payRiskEngineWithWallet, recoverRiskEnginePayment, runRiskEnginePass, type X402Challenge } from "@/lib/api";
 import { appendReportHistory } from "@/lib/report-history";
 import type { Asset, RiskEnginePassRequest, RiskEnginePassResponse, RiskTolerance, TargetStyle } from "@/lib/types";
 
@@ -32,6 +32,7 @@ export function RiskEnginePass() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
+  const [recoveryHash, setRecoveryHash] = useState("");
 
   async function submit(event?: React.FormEvent) {
     event?.preventDefault();
@@ -69,6 +70,24 @@ export function RiskEnginePass() {
     }
   }
 
+  async function recoverPayment() {
+    setLoading(true);
+    setError(null);
+    setCheckoutStatus("Verifying the transfer and wallet ownership on X Layer.");
+    try {
+      const recoveredResult = await recoverRiskEnginePayment(recoveryHash, value);
+      setResult(recoveredResult);
+      appendReportHistory({ type: "risk_engine", asset: recoveredResult.strategy_build.asset, generatedAt: recoveredResult.generated_at, recommendation: recoveredResult.monte_carlo_sensitivity.summary.recommendation, safetyBuffer: recoveredResult.hedge_drift_audit.metrics.safety_buffer_score, p95Impairment: recoveredResult.monte_carlo_sensitivity.summary.p95_impairment_loss_pct, payload: recoveredResult });
+      setPayment(undefined);
+      setCheckoutStatus("Direct payment recovered. All four reports are unlocked for these inputs.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Direct payment could not be recovered.");
+      setCheckoutStatus(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const numberField = (label: string, key: keyof RiskEnginePassRequest) => (
     <div className="field"><label>{label}</label><input type="number" value={String(value[key] ?? "")} onChange={(event) => setValue({ ...value, [key]: Number(event.target.value) })} /></div>
   );
@@ -96,6 +115,14 @@ export function RiskEnginePass() {
       </form>
 
       {payment !== undefined ? <PaymentRequiredCard challenge={payment} retry={() => void submit()} payInBrowser={() => void payInBrowser()} loading={loading} /> : null}
+      {payment !== undefined ? <section className="panel payment-recovery-panel">
+        <span className="decision-eyebrow">Already transferred 1 USD₮0?</span>
+        <h3>Recover a direct X Layer payment</h3>
+        <p>Paste the transaction hash and sign a wallet-ownership message. This does not request token approval or another payment.</p>
+        <div className="field"><label htmlFor="recovery-transaction">Transaction hash</label><input id="recovery-transaction" value={recoveryHash} onChange={(event) => setRecoveryHash(event.target.value)} placeholder="0x…" autoComplete="off" /></div>
+        <button className="button" type="button" disabled={loading || !/^0x[0-9a-fA-F]{64}$/.test(recoveryHash.trim())} onClick={() => void recoverPayment()}>{loading ? "Verifying transfer…" : "Recover paid analysis →"}</button>
+        <small>Each transaction can be bound to only one exact set of analysis inputs.</small>
+      </section> : null}
       {checkoutStatus ? <div className="panel checkout-status" role="status"><span className="decision-eyebrow">OKX checkout</span><strong>{checkoutStatus}</strong></div> : null}
       {error ? <div className="error-box" role="alert"><strong>Assessment could not be completed</strong><p>{error}</p></div> : null}
       {result ? <PaymentReceiptCard /> : null}

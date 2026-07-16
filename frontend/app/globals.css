@@ -1737,3 +1737,23 @@ pre, .json-box pre, .methodology-worked-example code {
   .section-label-row { align-items: flex-start; flex-direction: column; gap: 6px; }
   .history-metrics { grid-template-columns: 1fr; }
 }
+.payment-recovery-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.payment-recovery-panel h3,
+.payment-recovery-panel p {
+  margin: 0;
+}
+
+.payment-recovery-panel .field {
+  max-width: 48rem;
+}
+
+.payment-recovery-panel input {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

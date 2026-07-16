@@ -35,6 +35,7 @@ def create_app(
         version="0.1.0",
         lifespan=lifespan,
     )
+    application.state.payment_settings = payment_settings
 
     if payment_settings is not None:
         application.add_middleware(

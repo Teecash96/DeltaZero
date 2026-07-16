@@ -452,6 +452,12 @@ Human users can complete the same purchase directly in the web app with the OKX 
 
 No private key or OKX API credential enters the frontend. The wallet shows the token, amount, network, and recipient before the user approves. Agentic clients can continue using the raw x402 challenge and paid replay directly.
 
+### Direct-transfer recovery
+
+If a user accidentally sends the quoted 1 USD₮0 as a plain ERC-20 transfer instead of completing the signed x402 replay, the Risk Engine payment screen provides a recovery form. The user pastes the X Layer transaction hash and signs a non-transactional ownership message with the same wallet. The backend independently verifies the successful receipt, official USD₮0 contract, exact amount, payer, receiver, and `Transfer` event before returning the four-report Risk Engine pass.
+
+Each recovered transaction is atomically bound to the SHA-256 fingerprint of one exact analysis request. Set `PAYMENT_REDEMPTION_DB_PATH` to a durable Railway volume path such as `/data/payment-redemptions.sqlite3`; without a persistent volume, restart-safe replay protection is not guaranteed. Recovery never requests another transfer, token approval, custody permission, or trading authority.
+
 Unpaid challenge:
 
 ```bash

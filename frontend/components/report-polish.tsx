@@ -55,7 +55,7 @@ export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser }:
       <section className="panel payment-trust-panel" aria-labelledby="payment-trust-title">
         <div><span className="decision-eyebrow">Security model</span><h2 id="payment-trust-title">Why DeltaZero is Safe</h2></div>
         <div className="payment-trust-grid">
-          {[["◉", "Read Only", "Analysis reads submitted and public data without changing positions."], ["⊘", "No Signatures", "DeltaZero never asks you to sign a wallet message."], ["◇", "No Wallet Control", "No approvals, custody, or transaction permissions are requested."], ["≡", "Deterministic Analysis", "The same inputs produce the same transparent risk output."]].map(([icon, title, copy]) => <article key={title}><i aria-hidden="true">{icon}</i><strong>{title}</strong><p>{copy}</p></article>)}
+          {[["◉", "Read Only", "Analysis reads submitted and public data without changing positions."], ["⊘", "Explicit Consent", "Payment and recovery signatures are shown in your wallet before approval."], ["◇", "No Wallet Control", "No token approvals, custody, or trading permissions are requested."], ["≡", "Deterministic Analysis", "The same inputs produce the same transparent risk output."]].map(([icon, title, copy]) => <article key={title}><i aria-hidden="true">{icon}</i><strong>{title}</strong><p>{copy}</p></article>)}
         </div>
       </section>
     </div>

@@ -14,7 +14,7 @@ import type {
   RiskEnginePassResponse,
 } from "./types";
 import { getDemoAccessKey } from "./demo-access";
-import { decodePaymentReceipt, storePaymentReceipt, verifyPaymentReceiptOnChain, type PaymentReceiptContext } from "./payment-receipt";
+import { decodePaymentReceipt, storePaymentReceipt, verifyPaymentReceiptOnChain, type PaymentReceipt, type PaymentReceiptContext } from "./payment-receipt";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -200,6 +200,80 @@ export async function payRiskEngineWithWallet(body: RiskEnginePassRequest, chall
   const paymentReceipt = decodePaymentReceipt(response.headers.get("PAYMENT-RESPONSE"), receiptContext);
   if (paymentReceipt) storePaymentReceipt(await verifyPaymentReceiptOnChain(paymentReceipt));
   return response.json() as Promise<RiskEnginePassResponse>;
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+async function sha256(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+type RecoveredPayment = {
+  result: RiskEnginePassResponse;
+  receipt: {
+    transaction: string;
+    network: string;
+    payer: string;
+    receiver: string;
+    asset: string;
+    amount_atomic: string;
+    block_number: number;
+    status: string;
+    transfer_verified: boolean;
+  };
+};
+
+export async function recoverRiskEnginePayment(transactionHash: string, analysis: RiskEnginePassRequest): Promise<RiskEnginePassResponse> {
+  if (typeof window === "undefined") throw new Error("Payment recovery is only available in the browser.");
+  const provider = window.okxwallet ?? window.ethereum;
+  if (!provider) throw new Error("Open the wallet that sent the payment, then try again.");
+  const accounts = await provider.request({ method: "eth_requestAccounts" });
+  const payer = Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0].toLowerCase() : null;
+  if (!payer) throw new Error("No wallet account was authorized.");
+  const normalizedHash = transactionHash.trim().toLowerCase();
+  const fingerprint = await sha256(stableStringify(analysis));
+  const message = `DeltaZero payment recovery\nTransaction: ${normalizedHash}\nRequest SHA-256: ${fingerprint}`;
+  const encodedMessage = `0x${Array.from(new TextEncoder().encode(message), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  const signature = await provider.request({ method: "personal_sign", params: [encodedMessage, payer] });
+  if (typeof signature !== "string") throw new Error("Wallet did not return an ownership signature.");
+
+  const response = await fetch(`${API_BASE}/risk-engine/recover-payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ transaction_hash: normalizedHash, payer, signature, analysis }),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(body?.detail ?? `Payment recovery failed with API ${response.status}.`);
+  }
+  const recovered = await response.json() as RecoveredPayment;
+  const receipt: PaymentReceipt = {
+    status: recovered.receipt.status,
+    transaction: recovered.receipt.transaction,
+    network: recovered.receipt.network,
+    amountAtomic: recovered.receipt.amount_atomic,
+    amountDisplay: "1 USD₮0",
+    asset: recovered.receipt.asset,
+    payer: recovered.receipt.payer,
+    receiver: recovered.receipt.receiver,
+    blockNumber: recovered.receipt.block_number,
+    onchainStatus: "confirmed",
+    transferVerified: recovered.receipt.transfer_verified,
+    explorerUrl: `https://www.oklink.com/xlayer/tx/${recovered.receipt.transaction}`,
+    recordedAt: new Date().toISOString(),
+    facilitatorReceipt: { recovery: true, ...recovered.receipt },
+  };
+  storePaymentReceipt(receipt);
+  return recovered.result;
 }
 
 export async function getHyperliquidMarket(asset: string, lookbackHours = 24, dex?: string): Promise<HyperliquidMarketResponse> {
