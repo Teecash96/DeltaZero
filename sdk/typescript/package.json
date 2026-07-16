@@ -1,18 +1,48 @@
 {
-  "name": "@deltazero/core",
+  "name": "deltazero-core",
   "version": "0.1.0",
-  "private": true,
+  "description": "Typed TypeScript client for the DeltaZero deterministic DeFi risk API",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     }
+  },
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": "Akanbi Labs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Teecash96/DeltaZero.git",
+    "directory": "sdk/typescript"
+  },
+  "homepage": "https://delta-zero-alpha.vercel.app",
+  "bugs": {
+    "url": "https://github.com/Teecash96/DeltaZero/issues"
+  },
+  "keywords": [
+    "defi",
+    "risk",
+    "delta-neutral",
+    "okx",
+    "x402"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "node ../../frontend/node_modules/typescript/bin/tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/test/*.js"
+    "test": "npm run build && node --test dist/test/*.js",
+    "prepack": "npm test"
   }
 }

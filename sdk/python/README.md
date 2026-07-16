@@ -1,15 +1,16 @@
 # DeltaZero Python SDK
 
-Local SDK package for the DeltaZero API.
-
-Status:
-
-- Local SDK package
-- Planned PyPI publication
+Typed SDK package for the live DeltaZero API.
 
 This package is a thin client around the deployed DeltaZero API. It does not duplicate backend logic and does not add authentication.
 
-## Installation from the repository
+## Installation
+
+```bash
+python -m pip install deltazero-core
+```
+
+## Development from the repository
 
 From the repository root:
 
@@ -44,4 +45,3 @@ Supported methods:
 - `audit_position()`
 - `stress_test()`
 - `audit_wallet()`
-

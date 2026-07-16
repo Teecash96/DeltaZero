@@ -5,12 +5,35 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "deltazero-core"
 version = "0.1.0"
-description = "Local DeltaZero Python SDK"
+description = "Typed Python client for the DeltaZero deterministic DeFi risk API"
+readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+authors = [
+  { name = "Akanbi Labs" }
+]
+keywords = ["defi", "risk", "delta-neutral", "okx", "x402"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://delta-zero-alpha.vercel.app"
+Documentation = "https://github.com/Teecash96/DeltaZero#source-distributed-sdks"
+Repository = "https://github.com/Teecash96/DeltaZero"
+Issues = "https://github.com/Teecash96/DeltaZero/issues"
 
 [tool.setuptools]
 packages = ["deltazero"]
 
+[tool.setuptools.package-data]
+deltazero = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-

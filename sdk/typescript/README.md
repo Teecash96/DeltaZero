@@ -1,15 +1,16 @@
 # DeltaZero TypeScript SDK
 
-Local SDK package for the DeltaZero API.
-
-Status:
-
-- Local SDK package
-- Planned npm publication
+Typed SDK package for the live DeltaZero API.
 
 This package is a thin client around the deployed DeltaZero API. It does not duplicate backend logic and does not add authentication.
 
-## Installation from the repository
+## Installation
+
+```bash
+npm install deltazero-core
+```
+
+## Development from the repository
 
 From the repository root:
 
@@ -23,7 +24,7 @@ To use the package in another local project, point your package manager at this 
 ## API
 
 ```ts
-import { DeltaZeroClient } from "@deltazero/core";
+import { DeltaZeroClient } from "deltazero-core";
 
 const client = new DeltaZeroClient({
   baseUrl: "https://deltazero-production.up.railway.app",
@@ -46,4 +47,3 @@ Supported methods:
 - `auditPosition()`
 - `stressTest()`
 - `auditWallet()`
-
