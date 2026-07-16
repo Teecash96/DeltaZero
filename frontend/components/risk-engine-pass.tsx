@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { PaymentRequiredCard } from "@/components/report-polish";
+import { PaymentReceiptCard } from "@/components/payment-receipt-card";
 import { PaymentRequiredError, payRiskEngineWithWallet, runRiskEnginePass, type X402Challenge } from "@/lib/api";
 import { appendReportHistory } from "@/lib/report-history";
 import type { Asset, RiskEnginePassRequest, RiskEnginePassResponse, RiskTolerance, TargetStyle } from "@/lib/types";
@@ -54,7 +55,7 @@ export function RiskEnginePass() {
     setError(null);
     setCheckoutStatus("Connect OKX Wallet and review the 1 USDT0 authorization.");
     try {
-      const paidResult = await payRiskEngineWithWallet(value);
+      const paidResult = await payRiskEngineWithWallet(value, payment);
       setResult(paidResult);
       appendReportHistory({ type: "risk_engine", asset: paidResult.strategy_build.asset, generatedAt: paidResult.generated_at, recommendation: paidResult.monte_carlo_sensitivity.summary.recommendation, safetyBuffer: paidResult.hedge_drift_audit.metrics.safety_buffer_score, p95Impairment: paidResult.monte_carlo_sensitivity.summary.p95_impairment_loss_pct, payload: paidResult });
       setPayment(undefined);
@@ -97,6 +98,7 @@ export function RiskEnginePass() {
       {payment !== undefined ? <PaymentRequiredCard challenge={payment} retry={() => void submit()} payInBrowser={() => void payInBrowser()} loading={loading} /> : null}
       {checkoutStatus ? <div className="panel checkout-status" role="status"><span className="decision-eyebrow">OKX checkout</span><strong>{checkoutStatus}</strong></div> : null}
       {error ? <div className="error-box" role="alert"><strong>Assessment could not be completed</strong><p>{error}</p></div> : null}
+      {result ? <PaymentReceiptCard /> : null}
       {result ? <div className="risk-pass-results">
         <header className="panel"><span className="decision-eyebrow">Risk Engine Pass complete</span><h2>Four reports. One strategy. One payment.</h2><p>Generated {new Date(result.generated_at).toLocaleString()} from a shared set of assumptions.</p></header>
         <div className="risk-pass-result-grid">

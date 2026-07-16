@@ -14,7 +14,7 @@ import type {
   RiskEnginePassResponse,
 } from "./types";
 import { getDemoAccessKey } from "./demo-access";
-import { decodePaymentReceipt, storePaymentReceipt } from "./payment-receipt";
+import { decodePaymentReceipt, storePaymentReceipt, verifyPaymentReceiptOnChain, type PaymentReceiptContext } from "./payment-receipt";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -98,7 +98,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   }
 
   const paymentReceipt = decodePaymentReceipt(response.headers.get("PAYMENT-RESPONSE"));
-  if (paymentReceipt) storePaymentReceipt(paymentReceipt);
+  if (paymentReceipt) storePaymentReceipt(await verifyPaymentReceiptOnChain(paymentReceipt));
 
   return response.json() as Promise<T>;
 }
@@ -142,7 +142,7 @@ declare global {
   }
 }
 
-export async function payRiskEngineWithWallet(body: RiskEnginePassRequest): Promise<RiskEnginePassResponse> {
+export async function payRiskEngineWithWallet(body: RiskEnginePassRequest, challenge?: X402Challenge | null): Promise<RiskEnginePassResponse> {
   if (typeof window === "undefined") throw new Error("Wallet payment is only available in the browser.");
   const provider = window.okxwallet ?? window.ethereum;
   if (!provider) throw new Error("OKX Wallet was not detected. Install or open the OKX Wallet extension, then try again.");
@@ -188,8 +188,17 @@ export async function payRiskEngineWithWallet(body: RiskEnginePassRequest): Prom
     } catch { /* retain status text */ }
     throw new Error(`Payment failed: ${detail}`);
   }
-  const paymentReceipt = decodePaymentReceipt(response.headers.get("PAYMENT-RESPONSE"));
-  if (paymentReceipt) storePaymentReceipt(paymentReceipt);
+  const option = challenge?.accepts?.[0];
+  const receiptContext: PaymentReceiptContext = {
+    amount: option?.amount,
+    asset: option?.asset,
+    network: option?.network,
+    receiver: option?.payTo,
+    tokenName: typeof option?.extra?.name === "string" ? option.extra.name : "USD₮0",
+    tokenDecimals: typeof option?.extra?.decimals === "number" ? option.extra.decimals : 6,
+  };
+  const paymentReceipt = decodePaymentReceipt(response.headers.get("PAYMENT-RESPONSE"), receiptContext);
+  if (paymentReceipt) storePaymentReceipt(await verifyPaymentReceiptOnChain(paymentReceipt));
   return response.json() as Promise<RiskEnginePassResponse>;
 }
 

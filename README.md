@@ -448,7 +448,7 @@ With only the three `PAYMENT_*` variables, the server operates in challenge-only
 
 ### Browser payment
 
-Human users can complete the same purchase directly in the web app with the OKX Wallet browser extension. DeltaZero uses the official `@okxweb3/x402-fetch` and `@okxweb3/x402-evm` clients to request account access, switch to X Layer, display the wallet's typed-data approval, and replay the original request with the resulting payment authorization. The backend verifies and settles it before releasing the four reports.
+Human users can complete the same purchase directly in the web app with the OKX Wallet browser extension. DeltaZero uses the official `@okxweb3/x402-fetch` and `@okxweb3/x402-evm` clients to request account access, switch to X Layer, display the wallet's typed-data approval, and replay the original request with the resulting payment authorization. The backend verifies and settles it before releasing the four reports. After settlement, the UI preserves the facilitator payload, displays the full transaction hash, links to OKLink, and independently queries X Layer to confirm the transaction and expected USD₮0 transfer event.
 
 No private key or OKX API credential enters the frontend. The wallet shows the token, amount, network, and recipient before the user approves. Agentic clients can continue using the raw x402 challenge and paid replay directly.
 
