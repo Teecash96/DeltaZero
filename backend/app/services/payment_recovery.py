@@ -48,13 +48,20 @@ def verify_payer_signature(
     payer: str,
     signature: str,
 ) -> None:
-    message = encode_defunct(text=recovery_message(transaction_hash, fingerprint))
-    try:
-        recovered = Account.recover_message(message, signature=signature)
-    except Exception as exc:
-        raise PaymentRecoveryError("Wallet ownership signature is invalid") from exc
-    if recovered.lower() != payer.lower():
-        raise PaymentRecoveryError("Signature does not match the payment sender")
+    raw_message = recovery_message(transaction_hash, fingerprint)
+    encoded_hex = "0x" + raw_message.encode().hex()
+    recovered_addresses: set[str] = set()
+    for message in (encode_defunct(text=raw_message), encode_defunct(text=encoded_hex)):
+        try:
+            recovered_addresses.add(
+                Account.recover_message(message, signature=signature).lower()
+            )
+        except Exception:
+            continue
+    if not recovered_addresses:
+        raise PaymentRecoveryError("Wallet ownership signature is invalid")
+    if payer.lower() not in recovered_addresses:
+        raise PaymentRecoveryError("Signature does not match the connected wallet")
 
 
 def _rpc(method: str, params: list[Any]) -> Any:
@@ -82,7 +89,10 @@ def verify_direct_transfer(
     if receipt.get("status") != "0x1":
         raise PaymentRecoveryError("Transaction did not settle successfully")
     if str(transaction.get("from", "")).lower() != payer.lower():
-        raise PaymentRecoveryError("Connected wallet is not the transaction sender")
+        expected = str(transaction.get("from", "")).lower()
+        raise PaymentRecoveryError(
+            f"Switch to the wallet that paid: {expected}. Connected wallet: {payer.lower()}"
+        )
     if str(transaction.get("to", "")).lower() != USDT0_XLAYER:
         raise PaymentRecoveryError("Transaction did not transfer the supported X Layer USD₮0 token")
 

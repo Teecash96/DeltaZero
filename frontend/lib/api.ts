@@ -240,6 +240,17 @@ export async function recoverRiskEnginePayment(transactionHash: string, analysis
   const payer = Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0].toLowerCase() : null;
   if (!payer) throw new Error("No wallet account was authorized.");
   const normalizedHash = transactionHash.trim().toLowerCase();
+  const transactionResponse = await fetch("https://rpc.xlayer.tech", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [normalizedHash] }),
+  });
+  const transactionPayload = await transactionResponse.json() as { result?: { from?: string } | null };
+  const paymentSender = transactionPayload.result?.from?.toLowerCase();
+  if (!paymentSender) throw new Error("The payment transaction was not found on X Layer.");
+  if (paymentSender !== payer) {
+    throw new Error(`Switch your wallet account to ${paymentSender}. The currently connected account is ${payer}.`);
+  }
   const fingerprint = await sha256(stableStringify(analysis));
   const message = `DeltaZero payment recovery\nTransaction: ${normalizedHash}\nRequest SHA-256: ${fingerprint}`;
   const encodedMessage = `0x${Array.from(new TextEncoder().encode(message), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;

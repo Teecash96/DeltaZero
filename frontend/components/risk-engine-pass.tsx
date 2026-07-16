@@ -118,7 +118,7 @@ export function RiskEnginePass() {
       {payment !== undefined ? <section className="panel payment-recovery-panel">
         <span className="decision-eyebrow">Already transferred 1 USD₮0?</span>
         <h3>Recover a direct X Layer payment</h3>
-        <p>Paste the transaction hash and sign a wallet-ownership message. This does not request token approval or another payment.</p>
+        <p>Paste the transaction hash and connect the same account that sent the payment. You will sign a wallet-ownership message; this does not request token approval or another payment.</p>
         <div className="field"><label htmlFor="recovery-transaction">Transaction hash</label><input id="recovery-transaction" value={recoveryHash} onChange={(event) => setRecoveryHash(event.target.value)} placeholder="0x…" autoComplete="off" /></div>
         <button className="button" type="button" disabled={loading || !/^0x[0-9a-fA-F]{64}$/.test(recoveryHash.trim())} onClick={() => void recoverPayment()}>{loading ? "Verifying transfer…" : "Recover paid analysis →"}</button>
         <small>Each transaction can be bound to only one exact set of analysis inputs.</small>

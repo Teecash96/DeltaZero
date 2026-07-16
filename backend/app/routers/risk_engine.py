@@ -33,16 +33,16 @@ def recover_payment(payload: PaymentRecoveryRequest, request: Request) -> Paymen
         raise HTTPException(status_code=503, detail="Payment recovery is not configured")
     fingerprint = request_fingerprint(payload.analysis)
     try:
+        receipt = verify_direct_transfer(
+            payload.transaction_hash,
+            payload.payer,
+            settings,
+        )
         verify_payer_signature(
             payload.transaction_hash,
             fingerprint,
             payload.payer,
             payload.signature,
-        )
-        receipt = verify_direct_transfer(
-            payload.transaction_hash,
-            payload.payer,
-            settings,
         )
         RedemptionStore().claim(payload.transaction_hash, fingerprint, payload.payer)
     except PaymentRecoveryError as exc:

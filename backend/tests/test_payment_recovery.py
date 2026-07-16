@@ -134,3 +134,22 @@ def test_recovery_rejects_signature_from_different_wallet(monkeypatch, tmp_path)
 
     assert response.status_code == 400
     assert "Signature does not match" in response.json()["detail"]
+
+
+def test_recovery_reports_the_required_payment_wallet(monkeypatch, tmp_path) -> None:
+    from app.services import payment_recovery
+
+    payer = Account.create()
+    connected = Account.create()
+    monkeypatch.setattr(payment_recovery, "_rpc", _rpc_result(payer))
+    monkeypatch.setenv("PAYMENT_REDEMPTION_DB_PATH", str(tmp_path / "redemptions.sqlite3"))
+
+    response = TestClient(create_app(payment_settings=_settings())).post(
+        "/risk-engine/recover-payment", json=_payload(connected)
+    )
+
+    assert response.status_code == 400
+    detail = response.json()["detail"].lower()
+    assert "switch to the wallet that paid" in detail
+    assert payer.address.lower() in detail
+    assert connected.address.lower() in detail
