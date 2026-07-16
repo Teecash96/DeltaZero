@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { RiskEnginePass } from "@/components/risk-engine-pass";
 
 export const metadata: Metadata = {
   title: "Risk Engine — DeltaZero",
@@ -48,16 +47,14 @@ export default function RiskEnginePage() {
       <header className="page-intro">
         <div>
           <p className="kicker">DeltaZero Risk Engine</p>
-          <h1>One pass. Four risk views.</h1>
+          <h1>Four risk views. One engine.</h1>
           <p>
             Four connected modules use the same deterministic methodology to build a hedge, audit its drift,
             test funding pressure, and measure sensitivity across thousands of bounded scenarios.
           </p>
         </div>
-        <span className="endpoint">1 USDT · 4 MODULES</span>
+        <span className="endpoint">4 RISK MODULES</span>
       </header>
-
-      <RiskEnginePass />
 
       <section className="tool-grid product-grid risk-engine-grid risk-engine-included" aria-label="Reports included in the Risk Engine Pass">
         {modules.map((module) => (
@@ -77,8 +74,8 @@ export default function RiskEnginePage() {
 
       <aside className="panel risk-engine-boundary">
         <div><span>Shared methodology</span><strong>One engine, four decision views</strong></div>
-        <p>Outputs are deterministic decision support. DeltaZero remains read-only and never requests custody, approvals, or trade execution.</p>
-        <Link href="/methodology" className="button button-secondary">Review methodology</Link>
+        <p>Choose a module above, or run all four reports from the same assumptions with one Risk Engine Pass. Outputs remain deterministic and read-only.</p>
+        <div className="risk-engine-boundary-actions"><Link href="/risk-engine/pass" className="button button-primary">Complete four-report pass</Link><Link href="/methodology" className="button button-secondary">Review methodology</Link></div>
       </aside>
     </main>
   );

@@ -10,7 +10,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const navItems = [
   { href: "/risk-engine", label: "Risk Engine" },
   { href: "/agent", label: "Agent Console" },
-  { href: "/hyperliquid-live", label: "Hyperliquid Live" },
   { href: "/demo", label: "Judge Demo" },
 ];
 
