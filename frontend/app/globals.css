@@ -1591,9 +1591,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .json-box pre { padding: 18px; font-size: 10px; }
   .error-box { padding: 20px; }
   .site-footer { width: calc(100% - 36px); padding-bottom: 34px; }
-  .footer-columns { grid-template-columns: 1fr; }
+  .site-footer { padding-top: 24px; padding-bottom: 24px; gap: 24px; }
+  .footer-columns { grid-template-columns: 1fr; gap: 20px; }
   .footer-brand { gap: 10px; }
+  .footer-logo { transform: scale(.92); transform-origin: left center; }
+  .footer-label { font-size: 9px; }
   .footer-labs-brand { font-size: 18px; letter-spacing: .08em; }
+  .footer-columns strong { margin-bottom: 7px; font-size: 10px; }
+  .footer-columns nav { gap: 2px 14px; }
+  .footer-columns > div:first-child nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer-columns > div:last-child nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .footer-columns a { min-width: 0; min-height: 40px; display: flex; align-items: center; font-size: 12px; overflow-wrap: anywhere; }
   .wallet-choice-grid, .wallet-position-grid { grid-template-columns: 1fr; }
   .wallet-assessment-grid, .wallet-driver-grid, .wallet-exposure-grid, .wallet-risk-grid, .wallet-stress-grid { grid-template-columns: 1fr; }
   .decision-detail-grid, .blueprint-grid, .risk-outlook-grid, .trust-grid { grid-template-columns: 1fr; }
