@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
-import { auditStrategy, buildStrategy, getHyperliquidMarket, PaymentRequiredError, stressTestStrategy, type X402Challenge } from "@/lib/api";
+import { auditStrategy, buildStrategy, PaymentRequiredError, stressTestStrategy, type X402Challenge } from "@/lib/api";
 import { MONTE_CARLO_HANDOFF_KEY, MONTE_CARLO_RESULT_KEY, readSession, STRESS_HANDOFF_KEY, WALLET_HANDOFF_KEY, type MonteCarloHandoff, type MonteCarloResultHandoff, type StressHandoff } from "@/lib/handoff";
 import { AUDIT_SAMPLE, BUILD_SAMPLE, STRESS_TEST_SAMPLE } from "@/lib/samples";
 import { RiskGauge } from "@/components/risk-gauge";
@@ -22,7 +22,6 @@ import type {
   StressTestRequest,
   StressTestResponse,
   TargetStyle,
-  HyperliquidMarketResponse,
   WalletExposureImport,
 } from "@/lib/types";
 
@@ -223,20 +222,12 @@ function StrategyForm({
   setValue,
   submit,
   loading,
-  liveMarket,
-  marketLoading,
-  marketError,
-  refreshMarket,
 }: {
   mode: Mode;
   value: FormValue;
   setValue: (value: FormValue) => void;
   submit: (event: FormEvent) => void;
   loading: boolean;
-  liveMarket: HyperliquidMarketResponse | null;
-  marketLoading: boolean;
-  marketError: string | null;
-  refreshMarket: () => void;
 }) {
   const update = (key: string, raw: string) =>
     setValue(
@@ -313,7 +304,6 @@ function StrategyForm({
           value={Number(value[key as keyof FormValue])}
           onChange={(event) => update(key, event.target.value)}
           required
-          disabled={mode === "builder" && key === "short_funding_apy" && (value as BuildRequest).market_data_mode === "hyperliquid" && !(value as BuildRequest).override_live_funding}
         />
       )}
       {key === "target_style" ? (
@@ -332,21 +322,6 @@ function StrategyForm({
 
   return (
     <form className="panel" onSubmit={submit}>
-      {mode === "builder" ? (
-        <section className="form-section live-market-controls">
-          <h2><span aria-hidden="true">◉</span>Input mode</h2>
-          <div className="mode-toggle">
-            <button type="button" className={(value as BuildRequest).market_data_mode !== "hyperliquid" ? "active" : ""} onClick={() => setValue({ ...value, market_data_mode: "manual" } as BuildRequest)}>Manual Assumptions</button>
-            <button type="button" className={(value as BuildRequest).market_data_mode === "hyperliquid" ? "active" : ""} onClick={() => setValue({ ...value, market_data_mode: "hyperliquid" } as BuildRequest)}>Live Hyperliquid Data</button>
-          </div>
-          {(value as BuildRequest).market_data_mode === "hyperliquid" ? <div className="live-market-panel">
-            <div className="field"><label htmlFor="funding-lookback">Funding lookback</label><select id="funding-lookback" value={(value as BuildRequest).funding_lookback_hours ?? 24} onChange={(event) => setValue({ ...value, funding_lookback_hours: Number(event.target.value) } as BuildRequest)}><option value="24">24 hours</option><option value="72">72 hours</option><option value="168">168 hours</option></select></div>
-            <label className="override-check"><input type="checkbox" checked={(value as BuildRequest).override_live_funding ?? false} onChange={(event) => setValue({ ...value, override_live_funding: event.target.checked } as BuildRequest)} /> Override live value</label>
-            <button type="button" className="market-refresh" onClick={refreshMarket} disabled={marketLoading}>{marketLoading ? "Refreshing…" : "Refresh market data"}</button>
-            {marketError ? <p className="market-error">{marketError}</p> : liveMarket ? <div className="market-snapshot"><span>Live data source: Hyperliquid</span><strong>{liveMarket.current_funding_apy.toFixed(2)}% current funding</strong><small>{liveMarket.funding_direction.replaceAll("_", " ")} · {liveMarket.data_quality} · Updated {new Date(liveMarket.data_timestamp).toLocaleTimeString()}</small></div> : null}
-          </div> : null}
-        </section>
-      ) : null}
       {groups.map((group) => (
         <section className="form-section" key={group.title}>
           <h2>
@@ -1062,9 +1037,6 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
   const [paymentChallenge, setPaymentChallenge] = useState<X402Challenge | null | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [walletImport, setWalletImport] = useState<WalletExposureImport | null>(null);
-  const [liveMarket, setLiveMarket] = useState<HyperliquidMarketResponse | null>(null);
-  const [marketLoading, setMarketLoading] = useState(false);
-  const [marketError, setMarketError] = useState<string | null>(null);
   const [stressImport, setStressImport] = useState<StressHandoff | null>(null);
 
   useEffect(() => {
@@ -1092,28 +1064,6 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [mode]);
-
-  async function refreshMarket() {
-    if (mode !== "builder") return;
-    const buildValue = value as BuildRequest;
-    setMarketLoading(true); setMarketError(null);
-    try {
-      const market = await getHyperliquidMarket(buildValue.asset, buildValue.funding_lookback_hours ?? 24, buildValue.market_dex ?? undefined);
-      setLiveMarket(market);
-      if (!buildValue.override_live_funding) setValue({ ...buildValue, short_funding_apy: -market.current_funding_apy });
-    } catch (caught) {
-      setLiveMarket(null); setMarketError(caught instanceof Error ? caught.message : "Live market data unavailable.");
-    } finally { setMarketLoading(false); }
-  }
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (mode === "builder" && (value as BuildRequest).market_data_mode === "hyperliquid") void refreshMarket();
-    }, 0);
-    return () => window.clearTimeout(timer);
-    // Asset/mode/lookback intentionally trigger a fresh public market snapshot.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, (value as BuildRequest).asset, (value as BuildRequest).market_data_mode, (value as BuildRequest).funding_lookback_hours]);
 
   async function submit(event?: FormEvent) {
     event?.preventDefault();
@@ -1165,7 +1115,7 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
             <p>This Builder analysis uses a snapshot imported from Hedge Intelligence. Refresh the assessment before acting if market conditions or positions have changed.</p>
             <div className="import-actions"><button type="button" onClick={() => setValue({ ...(value as BuildRequest), wallet_exposure: walletImport })}>Use Imported Exposure</button><button type="button" onClick={() => { sessionStorage.removeItem(WALLET_HANDOFF_KEY); setWalletImport(null); setValue({ ...(value as BuildRequest), wallet_exposure: null }); }}>Clear Import</button><a href="/wallet">Return to Hedge Intelligence</a></div>
           </section> : null}
-          <StrategyForm mode={mode} value={value} setValue={setValue} submit={submit} loading={loading} liveMarket={liveMarket} marketLoading={marketLoading} marketError={marketError} refreshMarket={() => void refreshMarket()} />
+          <StrategyForm mode={mode} value={value} setValue={setValue} submit={submit} loading={loading} />
         </div>
         <div className="result-region">
           {paymentChallenge !== undefined ? (
