@@ -17,12 +17,22 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 [Live Application](https://delta-zero-alpha.vercel.app) ·
 [Judge Demo](https://delta-zero-alpha.vercel.app/demo) ·
 [API Documentation](https://deltazero-production.up.railway.app/docs) ·
-[SDK Preview](#sdk-preview) ·
+[Source SDKs](#source-distributed-sdks) ·
 [X](https://x.com/DeltaZeroASP)
 
 </div>
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
+
+## Product screenshots
+
+### Live risk-intelligence interface
+
+![DeltaZero live application showing the deterministic risk dashboard](docs/assets/deltazero-home.jpg)
+
+### No-payment judge walkthrough
+
+![DeltaZero Judge Demo showing a deterministic strategy verdict](docs/assets/deltazero-judge-demo.jpg)
 
 The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Strategy Build, Hedge-Drift Auditing, Monte Carlo, and Funding Stress Testing. It does not bypass or weaken x402 protection on real analysis endpoints.
 
@@ -103,10 +113,10 @@ DeltaZero is differentiated by:
 | Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, pauses at x402, and prepares an approval-gated proposal without claiming payment or trade execution. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
-| x402 Payment Gate | Ready locally | Issues standards-compliant challenges and supports facilitator-verified per-call settlement when official credentials are configured. |
+| x402 Payment Gate | Live · Production | The live API issues a 1 USDT X Layer challenge. The browser checkout connects OKX Wallet, signs the authorization, replays the request, and reads the settlement receipt; final settlement remains fail-closed unless the configured facilitator verifies it. |
 | Interactive Strategy Preview | Live | Provides a clearly labelled illustrative simulation on the landing page. |
-| TypeScript SDK | SDK Preview | Supplies a typed local client for every current API service. |
-| Python SDK | SDK Preview | Supplies a typed local client for every current API service. |
+| TypeScript SDK | Source distributed | Supplies a typed repository client for every current API service. |
+| Python SDK | Source distributed | Supplies a typed repository client for every current API service. |
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
 | Aave | Live with RPC | Reads supported lending and collateral data when an RPC endpoint is configured. |
 | Morpho | Live | Reads supported market and vault positions from Morpho's public API. |
@@ -303,11 +313,11 @@ The recommendation vocabulary depends on the service:
 - Auditor: `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE`
 - Wallet Auditor: `HOLD`, `REBALANCE`, `REDUCE`, or `CLOSE` when an assessment is meaningful
 
-## SDK Preview
+## Source-distributed SDKs
 
 DeltaZero includes thin, type-safe clients that call the existing deployed API. They do not duplicate backend calculations.
 
-The packages are available directly from this repository for local installation and agent integration. They are not currently published to npm or PyPI.
+The supported distribution is the versioned source in this repository. Both packages are installable from a checkout and exercised by CI. npm and PyPI registry publication is a separate release milestone; the absence of a registry listing does not change the live API or SDK source contracts.
 
 ### TypeScript
 
@@ -603,7 +613,7 @@ npm run lint
 npm run build
 ```
 
-SDK commands are documented in the [SDK Preview](#sdk-preview) section.
+SDK commands are documented in the [Source-distributed SDKs](#source-distributed-sdks) section.
 
 ## Deployment
 
@@ -674,9 +684,9 @@ No. The current implementation has no database and does not retain submitted str
 
 Yes. Agents, dashboards, and automated workflows can consume the structured API directly or use the repository-local SDK packages. DeltaZero does not autonomously execute the resulting recommendation.
 
-### Are the SDK packages published?
+### How are the SDK packages distributed?
 
-No. Both SDKs are currently available as SDK Preview packages inside this repository for local installation and interface validation.
+Both SDKs are source-distributed from this repository, installable from a checkout, and tested in CI. They have not yet been released to the npm or PyPI public registries.
 
 ## Roadmap
 

@@ -1,4 +1,4 @@
-# DeltaZero OKX ASP Service Preparation
+# DeltaZero OKX ASP Service Reference
 
 ## Closed-loop agent workflow
 
@@ -26,9 +26,7 @@ DeltaZero Wallet Auditor
 
 ## Purpose
 
-This document prepares the Wallet Auditor as a callable ASP capability. It is intended to help structure the service for future review and eventual publication in the OKX ecosystem.
-
-This service is not claimed to be listed until it has passed the required review process.
+This document describes the live Wallet Auditor callable capability. DeltaZero identity `#5739` has been registered and submitted for OKX listing review. Registration and review submission are not represented as marketplace approval until OKX accepts the listing.
 
 ## Request Schema
 
@@ -122,9 +120,9 @@ The service returns a deterministic JSON report with:
 - RPC unavailable
 - protocol API timeout or partial response
 
-## Future Packaging Notes
+## Listing and Operations Notes
 
-If this service is ever submitted into an OKX-reviewed ASP catalog, the documentation should be expanded with:
+Before marketplace approval and wider production use, maintain:
 
 - service registration metadata
 - ownership and contact details
@@ -134,7 +132,7 @@ If this service is ever submitted into an OKX-reviewed ASP catalog, the document
 
 ## SDK Usage Examples
 
-The SDKs are local repository packages that call the live DeltaZero API. They are not claimed to be published.
+The SDKs are source-distributed repository packages that call the live DeltaZero API. They are installable from a checkout and tested in CI. Public npm and PyPI registry releases are tracked as a separate distribution milestone.
 
 ### TypeScript
 

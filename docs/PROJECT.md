@@ -1,43 +1,54 @@
-# DeltaZero
+# DeltaZero Current Project Scope
 
-DeltaZero is an OKX.AI Agent Service Provider for pseudo-delta-neutral DeFi risk management.
+DeltaZero is a live, read-only DeFi risk-intelligence ASP for pseudo-delta-neutral strategies. This document supersedes the original MVP constraint brief.
 
-It helps users and autonomous agents:
+## Live product capabilities
 
-1. Build a neutral carry strategy
-2. Audit an existing long and short position
-3. Stress test the strategy under price, funding, and yield changes
+1. Deterministic Strategy Build.
+2. Hedge-Drift Auditing for existing long/short structures.
+3. Funding Stress Testing with impairment breakdowns.
+4. Correlated, fat-tailed Monte Carlo Sensitivity with collateral-depeg transmission.
+5. Read-only wallet analysis for supported Hyperliquid, Morpho, and Aave positions.
+6. Live Hyperliquid market context.
+7. One coordinated Risk Engine pass returning all four premium strategy reports.
+8. Browser OKX Wallet checkout and a production x402 payment boundary on X Layer.
+9. A live Streamable HTTP MCP server for agent-native deterministic calculations.
+10. An Agent Operator Console and executable agent-in-a-box example with proposal-only safeguards.
+11. Responsive charts, liquidation-zone visualization, methodology, report export, and browser-local report history.
 
-The strategy consists of:
+## Safety boundary
 
-1. A spot or yield-generating long leg
-2. A perpetual short hedge
-3. Reserve margin supporting the hedge
+DeltaZero remains non-custodial and read-only. It does not request seed phrases, private keys, token approvals, or trading authority. Recommendations and execution payloads are decision support; they are not automatically broadcast as trades.
 
-The product returns deterministic metrics and an action such as OPEN, WAIT, HOLD, REBALANCE, REDUCE, or CLOSE.
+## Current infrastructure boundaries
 
-## MVP limitations
+- Submitted strategy inputs are not stored in a server database.
+- Report history is stored locally in the user's browser.
+- Email and Telegram actions share completed snapshots; unattended alerts still require durable server storage and a scheduler.
+- SDKs are distributed as tested repository source packages and are not yet released through npm or PyPI.
+- OKX marketplace registration/review submission does not imply marketplace approval.
 
-This is a hackathon MVP.
+## Supported assets and services
 
-Do not add:
+The strategy interfaces currently support SOL and ETH. Live public wallet coverage depends on the networks, positions, and data exposed by each supported adapter.
 
-1. Authentication
-2. Wallet connection
-3. Database
-4. Real trading
-5. Live protocol integrations
-6. Multi-chain infrastructure
-7. Charts or trading terminals
-8. Chatbot features
+Primary paid endpoint:
 
-Supported assets:
+```text
+POST /risk-engine/analyze
+```
 
-1. SOL
-2. ETH
+Agent-native endpoint:
 
-Supported services:
+```text
+POST /mcp
+```
 
-1. POST /strategy/build
-2. POST /strategy/audit
-3. POST /strategy/stress-test
+Public reference surfaces:
+
+```text
+GET /health
+GET /docs
+GET /openapi.json
+GET /market/hyperliquid
+```
