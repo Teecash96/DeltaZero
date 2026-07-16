@@ -366,6 +366,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .payment-required-copy > small { display: block; margin-top: 11px; color: var(--muted); line-height: 1.5; }
 .payment-required-missing { margin: 18px 0 !important; padding: 12px 14px; border: 1px solid rgba(224, 198, 107, .25); border-radius: 9px; color: #e0c66b !important; background: rgba(224, 198, 107, .06); }
 .payment-verify { min-width: 190px; }
+.payment-required-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.payment-recovery-toggle { min-width: 160px; }
+.payment-inline-recovery { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-top: 18px; padding: 18px; border: 1px solid #304137; border-radius: 11px; background: #13221b; }
+.payment-inline-recovery .field { min-width: 0; }
+.payment-inline-recovery input { width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.payment-inline-recovery > small { grid-column: 1 / -1; color: var(--muted); line-height: 1.5; }
+.payment-recovery-submit { min-height: 48px; white-space: nowrap; }
 .payment-trust-panel { padding: 25px 28px; border-color: #34463a; }
 .payment-trust-panel h2 { margin: 6px 0 20px; font-size: 22px; letter-spacing: -.025em; }
 .payment-trust-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
@@ -1203,7 +1210,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .payment-required-copy > p,
 [data-theme="light"] .payment-required-copy > small { color: #405247; }
 [data-theme="light"] .payment-required-details div,
-[data-theme="light"] .payment-trust-grid article { border-color: #c0cec3; background: #fff; }
+[data-theme="light"] .payment-trust-grid article,
+[data-theme="light"] .payment-inline-recovery { border-color: #c0cec3; background: #fff; }
 [data-theme="light"] .payment-required-details dd,
 [data-theme="light"] .payment-trust-grid strong { color: #17231b; }
 [data-theme="light"] .payment-trust-grid p { color: #4b5c51; }
@@ -1512,6 +1520,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .payment-trust-grid, .wallet-summary-strip { grid-template-columns: minmax(0, 1fr); }
   .payment-required-card { flex-direction: column; }
   .payment-required-copy, .payment-verify { width: 100%; }
+  .payment-required-actions { display: grid; grid-template-columns: 1fr; }
+  .payment-required-actions .button { width: 100%; }
+  .payment-inline-recovery { grid-template-columns: minmax(0, 1fr); padding: 15px; }
+  .payment-inline-recovery > small { grid-column: auto; }
+  .payment-recovery-submit { width: 100%; }
   .payment-trust-panel { padding: 21px; }
   .verdict-hero { padding: 22px; }
   .verdict-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
@@ -1738,24 +1751,4 @@ pre, .json-box pre, .methodology-worked-example code {
   .methodology-worked-example code { padding-bottom: 6px; font-size: 12px; }
   .section-label-row { align-items: flex-start; flex-direction: column; gap: 6px; }
   .history-metrics { grid-template-columns: 1fr; }
-}
-.payment-recovery-panel {
-  display: grid;
-  gap: 1rem;
-}
-
-.payment-recovery-panel h3,
-.payment-recovery-panel p {
-  margin: 0;
-}
-
-.payment-recovery-panel .field {
-  max-width: 48rem;
-}
-
-.payment-recovery-panel input {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }

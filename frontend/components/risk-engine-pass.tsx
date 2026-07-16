@@ -33,6 +33,7 @@ export function RiskEnginePass() {
   const [loading, setLoading] = useState(false);
   const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
   const [recoveryHash, setRecoveryHash] = useState("");
+  const [showRecovery, setShowRecovery] = useState(false);
 
   async function submit(event?: React.FormEvent) {
     event?.preventDefault();
@@ -114,15 +115,20 @@ export function RiskEnginePass() {
         <small className="risk-pass-note">One paid request generates all four reports. Starting another analysis requires a new pass.</small>
       </form>
 
-      {payment !== undefined ? <PaymentRequiredCard challenge={payment} retry={() => void submit()} payInBrowser={() => void payInBrowser()} loading={loading} /> : null}
-      {payment !== undefined ? <section className="panel payment-recovery-panel">
-        <span className="decision-eyebrow">Already transferred 1 USD₮0?</span>
-        <h3>Recover a direct X Layer payment</h3>
-        <p>Paste the transaction hash and connect the same account that sent the payment. You will sign a wallet-ownership message; this does not request token approval or another payment.</p>
-        <div className="field"><label htmlFor="recovery-transaction">Transaction hash</label><input id="recovery-transaction" value={recoveryHash} onChange={(event) => setRecoveryHash(event.target.value)} placeholder="0x…" autoComplete="off" /></div>
-        <button className="button" type="button" disabled={loading || !/^0x[0-9a-fA-F]{64}$/.test(recoveryHash.trim())} onClick={() => void recoverPayment()}>{loading ? "Verifying transfer…" : "Recover paid analysis →"}</button>
-        <small>Each transaction can be bound to only one exact set of analysis inputs.</small>
-      </section> : null}
+      {payment !== undefined ? <PaymentRequiredCard
+        challenge={payment}
+        retry={() => void submit()}
+        payInBrowser={() => void payInBrowser()}
+        loading={loading}
+        secondaryAction={<button className="button payment-recovery-toggle" type="button" disabled={loading} aria-expanded={showRecovery} aria-controls="payment-recovery-form" onClick={() => setShowRecovery((current) => !current)}>{showRecovery ? "Hide recovery" : "Recover transfer"}</button>}
+        actionNote={showRecovery ? "Enter the X Layer transaction hash below. Recovery will not request another payment." : "Already transferred 1 USD₮0? Recover it here without paying again."}
+      >
+        {showRecovery ? <div className="payment-inline-recovery" id="payment-recovery-form">
+          <div className="field"><label htmlFor="recovery-transaction">X Layer transaction hash</label><input id="recovery-transaction" value={recoveryHash} onChange={(event) => setRecoveryHash(event.target.value)} placeholder="0x…" autoComplete="off" spellCheck={false} /></div>
+          <button className="button payment-recovery-submit" type="button" disabled={loading || !/^0x[0-9a-fA-F]{64}$/.test(recoveryHash.trim())} onClick={() => void recoverPayment()}>{loading ? "Verifying transfer…" : "Recover paid analysis →"}</button>
+          <small>Connect the same wallet that sent the payment. Each transaction can unlock only one exact set of analysis inputs.</small>
+        </div> : null}
+      </PaymentRequiredCard> : null}
       {checkoutStatus ? <div className="panel checkout-status" role="status"><span className="decision-eyebrow">OKX checkout</span><strong>{checkoutStatus}</strong></div> : null}
       {error ? <div className="error-box" role="alert"><strong>Assessment could not be completed</strong><p>{error}</p></div> : null}
       {result ? <PaymentReceiptCard /> : null}

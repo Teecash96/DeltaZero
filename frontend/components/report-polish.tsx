@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import type { X402Challenge, X402PaymentOption } from "@/lib/api";
 
@@ -25,7 +25,7 @@ function shortAddress(address: string | undefined) {
   return address && address.length > 12 ? `${address.slice(0, 6)}...${address.slice(-5)}` : address ?? "Unavailable";
 }
 
-export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser }: { challenge: X402Challenge | null; retry: () => void; loading: boolean; payInBrowser?: () => void }) {
+export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser, secondaryAction, actionNote, children }: { challenge: X402Challenge | null; retry: () => void; loading: boolean; payInBrowser?: () => void; secondaryAction?: ReactNode; actionNote?: ReactNode; children?: ReactNode }) {
   const option = challenge?.accepts?.[0];
   const [copyFeedback, setCopyFeedback] = useState(false);
   const details = [["Cost", paymentPrice(option)], ["Network", networkName(option?.network)], ["Receiver", shortAddress(option?.payTo)], ["Verification", "Automatic"]];
@@ -48,8 +48,12 @@ export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser }:
           <h2 id="payment-required-title">Unlock Premium Strategy Analysis</h2>
           <p>This analysis is protected by the OKX x402 payment protocol. Payment unlocks one complete analysis request; a new analysis requires a new payment. DeltaZero never requests wallet signatures, approvals, or private keys.</p>
           {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}{label === "Receiver" ? <button type="button" onClick={() => void copyReceiver()} aria-label="Copy receiver address">{copyFeedback ? "Copied" : "Copy"}</button> : null}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
-          {payInBrowser ? <button className="button button-primary payment-verify" type="button" onClick={payInBrowser} disabled={loading}>{loading ? "Waiting for wallet..." : "Pay with OKX Wallet →"}</button> : <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>}
-          <small>{payInBrowser ? "Your wallet shows the exact token, amount, network, and recipient before you approve." : "Payment is verified automatically by the protected endpoint."}</small>
+          <div className="payment-required-actions">
+            {payInBrowser ? <button className="button button-primary payment-verify" type="button" onClick={payInBrowser} disabled={loading}>{loading ? "Waiting for wallet..." : "Pay with OKX Wallet →"}</button> : <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>}
+            {secondaryAction}
+          </div>
+          <small>{actionNote ?? (payInBrowser ? "Your wallet shows the exact token, amount, network, and recipient before you approve." : "Payment is verified automatically by the protected endpoint.")}</small>
+          {children}
         </div>
       </section>
       <section className="panel payment-trust-panel" aria-labelledby="payment-trust-title">
