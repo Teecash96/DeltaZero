@@ -115,7 +115,7 @@ DeltaZero is differentiated by:
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | x402 Payment Gate | Live · Production | The live API issues a 1 USDT X Layer challenge. The browser checkout connects OKX Wallet, signs the authorization, replays the request, and reads the settlement receipt; final settlement remains fail-closed unless the configured facilitator verifies it. |
 | Interactive Strategy Preview | Live | Provides a clearly labelled illustrative simulation on the landing page. |
-| TypeScript SDK | Source distributed | Supplies a typed repository client for every current API service. |
+| TypeScript SDK | Published · npm | Supplies a typed client through [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). |
 | Python SDK | Source distributed | Supplies a typed repository client for every current API service. |
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
 | Aave | Live with RPC | Reads supported lending and collateral data when an RPC endpoint is configured. |
@@ -317,7 +317,7 @@ The recommendation vocabulary depends on the service:
 
 DeltaZero includes thin, type-safe clients that call the existing deployed API. They do not duplicate backend calculations.
 
-The supported distribution is the versioned source in this repository. Both packages are installable from a checkout and exercised by CI. npm and PyPI registry publication is a separate release milestone; the absence of a registry listing does not change the live API or SDK source contracts.
+The TypeScript SDK is published on npm as [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). The Python SDK remains installable from the versioned repository source while its first PyPI release is completed through Trusted Publishing. Both packages are exercised by CI.
 
 ### TypeScript
 
@@ -686,7 +686,7 @@ Yes. Agents, dashboards, and automated workflows can consume the structured API 
 
 ### How are the SDK packages distributed?
 
-Both SDKs are source-distributed from this repository, installable from a checkout, and tested in CI. They have not yet been released to the npm or PyPI public registries.
+The TypeScript SDK is published to npm as [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). The Python SDK is source-distributed, installable from a checkout, and tested in CI while its first PyPI release is completed through Trusted Publishing.
 
 ## Roadmap
 
