@@ -120,7 +120,7 @@ export function RiskEnginePass() {
         retry={() => void submit()}
         payInBrowser={() => void payInBrowser()}
         loading={loading}
-        secondaryAction={<button className="button payment-recovery-toggle" type="button" disabled={loading} aria-expanded={showRecovery} aria-controls="payment-recovery-form" onClick={() => setShowRecovery((current) => !current)}>{showRecovery ? "Hide recovery" : "Recover transfer"}</button>}
+        secondaryAction={<button className="button payment-recovery-toggle" type="button" disabled={loading} aria-expanded={showRecovery} aria-controls="payment-recovery-form" onClick={() => setShowRecovery((current) => !current)}>{showRecovery ? "Hide recovery" : "Recover payment"}</button>}
         actionNote={showRecovery ? "Enter the X Layer transaction hash below. Recovery will not request another payment." : "Already transferred 1 USD₮0? Recover it here without paying again."}
       >
         {showRecovery ? <div className="payment-inline-recovery" id="payment-recovery-form">
