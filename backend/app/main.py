@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from x402.server import x402ResourceServer
 
+from app.models.risk_engine import RiskEnginePassRequest, RiskEnginePassResponse
 from app.payments import DeltaZeroPaymentMiddleware, PaymentSettings, create_payment_server, paid_routes
 from app.routers.market import router as market_router
 from app.routers.monte_carlo import router as monte_carlo_router
@@ -13,6 +14,7 @@ from app.routers.risk_engine import router as risk_engine_router
 from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
 from app.mcp_server import MCPToolPaymentGate, create_mcp_server
+from app.services.risk_engine import run_risk_engine_pass
 
 
 def create_app(
@@ -80,7 +82,23 @@ def create_app(
 
     @application.get("/")
     def root() -> dict[str, str]:
-        return {"service": "DeltaZero", "status": "ok"}
+        return {
+            "service": "DeltaZero Risk Engine",
+            "status": "ok",
+            "a2mcp_endpoint": f"{payment_settings.public_api_base_url if payment_settings else 'https://deltazero-production.up.railway.app'}/",
+            "mcp_endpoint": f"{payment_settings.public_api_base_url if payment_settings else 'https://deltazero-production.up.railway.app'}/mcp",
+        }
+
+    @application.post(
+        "/",
+        response_model=RiskEnginePassResponse,
+        tags=["risk-engine"],
+        summary="Run the complete DeltaZero Risk Engine pass",
+    )
+    def a2mcp_risk_engine(request: RiskEnginePassRequest) -> RiskEnginePassResponse:
+        """Callable A2MCP entrypoint registered with the OKX.AI service listing."""
+
+        return run_risk_engine_pass(request)
 
     @application.get("/health")
     def health_check() -> dict[str, str]:

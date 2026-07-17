@@ -437,6 +437,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/wallet/analyze` | Analyze supported public wallet positions. x402 payment required. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. x402 payment required. |
 | `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated paid analysis. |
+| `POST` | `/` | OKX.AI A2MCP-compatible alias for the complete coordinated Risk Engine analysis. |
 
 ### x402 payments and pricing
 

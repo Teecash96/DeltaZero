@@ -40,6 +40,21 @@ def test_risk_engine_pass_returns_four_coordinated_reports() -> None:
     assert structure["long_notional_usd"] > 0
 
 
+def test_registered_a2mcp_root_runs_the_same_complete_pass() -> None:
+    response = TestClient(create_app()).post("/", json=PAYLOAD)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["service"] == "risk_engine_pass"
+    assert body["pass_scope"] == "one_strategy_analysis"
+    assert set(body) >= {
+        "strategy_build",
+        "hedge_drift_audit",
+        "funding_stress_test",
+        "monte_carlo_sensitivity",
+    }
+
+
 def test_risk_engine_pass_is_repeatable_with_seed() -> None:
     client = TestClient(create_app())
     first = client.post("/risk-engine/analyze", json=PAYLOAD).json()

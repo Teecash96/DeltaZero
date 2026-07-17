@@ -238,6 +238,10 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
         )
 
     return {
+        "POST /": route(
+            "",
+            "Run the complete four-module DeltaZero Risk Engine pass",
+        ),
         "POST /risk-engine/analyze": route(
             "/risk-engine/analyze",
             "Run the complete four-module DeltaZero Risk Engine pass",
