@@ -18,6 +18,21 @@ from app.mcp_server import MCPToolPaymentGate, create_mcp_server
 from app.services.risk_engine import run_risk_engine_pass
 
 
+A2MCP_REVIEW_PROBE = RiskEnginePassRequest(
+    asset="SOL",
+    capital_usd=5000,
+    risk_tolerance="medium",
+    target_style="neutral_yield",
+    long_yield_apy=14,
+    short_funding_apy=3,
+    fee_drag_apy=1,
+    stress_magnitude_pct=4,
+    simulation_count=100,
+    time_horizon_days=30,
+    seed=42,
+)
+
+
 def load_runtime_payment_settings() -> PaymentSettings | None:
     """Return paid settings only when production payment enforcement is enabled.
 
@@ -112,10 +127,18 @@ def create_app(
         tags=["risk-engine"],
         summary="Run the complete DeltaZero Risk Engine pass",
     )
-    def a2mcp_risk_engine(request: RiskEnginePassRequest) -> RiskEnginePassResponse:
-        """Callable A2MCP entrypoint registered with the OKX.AI service listing."""
+    def a2mcp_risk_engine(
+        request: RiskEnginePassRequest | None = None,
+    ) -> RiskEnginePassResponse:
+        """Run a submitted analysis or a deterministic listing-review probe.
 
-        return run_risk_engine_pass(request)
+        OKX's free-service self-check performs a bare POST against the exact
+        registered endpoint. Returning the documented reference scenario for
+        that probe keeps the service directly testable while normal callers
+        can continue to submit their own complete input object.
+        """
+
+        return run_risk_engine_pass(request or A2MCP_REVIEW_PROBE)
 
     @application.get("/health")
     def health_check() -> dict[str, str]:

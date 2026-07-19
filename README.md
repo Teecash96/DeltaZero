@@ -419,7 +419,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/wallet/analyze` | Analyze supported public wallet positions. Temporarily free. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
 | `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated free-preview analysis. |
-| `POST` | `/` | OKX.AI A2MCP-compatible alias for the complete coordinated Risk Engine analysis. |
+| `POST` | `/` | OKX.AI-compatible alias for the complete coordinated Risk Engine analysis. A bare review probe returns the documented SOL reference scenario; callers can submit their own full request body. |
 
 ### Temporary free access and staged payments
 

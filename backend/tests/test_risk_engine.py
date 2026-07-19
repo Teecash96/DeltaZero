@@ -55,6 +55,17 @@ def test_registered_a2mcp_root_runs_the_same_complete_pass() -> None:
     }
 
 
+def test_registered_a2mcp_root_accepts_bare_reviewer_probe() -> None:
+    response = TestClient(create_app()).post("/")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["service"] == "risk_engine_pass"
+    assert body["strategy_build"]["asset"] == "SOL"
+    assert body["strategy_build"]["recommended_structure"]["long_notional_usd"] > 0
+    assert body["monte_carlo_sensitivity"]["simulation_count"] == 100
+
+
 def test_risk_engine_pass_is_repeatable_with_seed() -> None:
     client = TestClient(create_app())
     first = client.post("/risk-engine/analyze", json=PAYLOAD).json()
