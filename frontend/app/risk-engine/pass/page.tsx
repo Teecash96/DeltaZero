@@ -16,7 +16,7 @@ export default function RiskEnginePassPage() {
           <h1>One pass. Four coordinated reports.</h1>
           <p>Use one set of assumptions across Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity.</p>
         </div>
-        <span className="endpoint">1 USDT · 4 REPORTS</span>
+        <span className="endpoint">FREE LISTING PREVIEW · 4 REPORTS</span>
       </header>
       <RiskEnginePass />
     </main>

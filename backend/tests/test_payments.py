@@ -21,7 +21,7 @@ from x402.mechanisms.evm.deferred.server import AggrDeferredEvmScheme
 from x402.mechanisms.evm.exact.server import ExactEvmScheme
 from x402.server import x402ResourceServer
 
-from app.main import create_app
+from app.main import create_app, load_runtime_payment_settings
 from app.payments import PaymentSettings, create_payment_server, paid_routes
 
 
@@ -126,6 +126,38 @@ def fake_payment_server(
     server.register(payment_settings.network, ExactEvmScheme())
     server.register(payment_settings.network, AggrDeferredEvmScheme())
     return server, facilitator
+
+
+def test_runtime_access_mode_defaults_to_free(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("DELTAZERO_ACCESS_MODE", raising=False)
+
+    assert load_runtime_payment_settings() is None
+
+
+def test_runtime_access_mode_rejects_unknown_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DELTAZERO_ACCESS_MODE", "unknown")
+
+    with pytest.raises(RuntimeError, match="DELTAZERO_ACCESS_MODE"):
+        load_runtime_payment_settings()
+
+
+@pytest.mark.parametrize(("path", "payload"), PROTECTED_ROUTES)
+def test_free_preview_releases_every_analysis_without_payment(
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+    payload: dict,
+) -> None:
+    from app.services import wallet_analyzer
+
+    monkeypatch.setattr(wallet_analyzer, "_select_adapters", lambda networks, protocols: [])
+    client = TestClient(create_app(payment_settings=None))
+
+    response = client.post(path, json=payload)
+
+    assert response.status_code == 200
+    assert "PAYMENT-REQUIRED" not in response.headers
 
 
 @pytest.fixture

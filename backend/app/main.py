@@ -1,6 +1,7 @@
 """DeltaZero FastAPI and MCP application entry point."""
 
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,22 @@ from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
 from app.mcp_server import MCPToolPaymentGate, create_mcp_server
 from app.services.risk_engine import run_risk_engine_pass
+
+
+def load_runtime_payment_settings() -> PaymentSettings | None:
+    """Return paid settings only when production payment enforcement is enabled.
+
+    DeltaZero defaults to a temporary free preview while the OKX.AI listing and
+    demo are being completed. Setting ``DELTAZERO_ACCESS_MODE=paid`` restores
+    the existing payment middleware without a code change.
+    """
+
+    access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "free").strip().lower()
+    if access_mode == "free":
+        return None
+    if access_mode == "paid":
+        return PaymentSettings.from_environment()
+    raise RuntimeError("DELTAZERO_ACCESS_MODE must be either 'free' or 'paid'")
 
 
 def create_app(
@@ -107,4 +124,4 @@ def create_app(
     return application
 
 
-app = create_app(payment_settings=PaymentSettings.from_environment())
+app = create_app(payment_settings=load_runtime_payment_settings())

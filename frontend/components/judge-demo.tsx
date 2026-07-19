@@ -71,7 +71,7 @@ export function JudgeDemo() {
   return (
     <div className="judge-demo">
       <section className="judge-demo-banner panel">
-        <div><span>NO PAYMENT REQUIRED</span><h2>Judge-ready product walkthrough</h2><p>Explore verified reference scenarios produced from DeltaZero&apos;s documented v1 formulas. Real API calls remain protected by x402.</p></div>
+        <div><span>NO PAYMENT REQUIRED</span><h2>Judge-ready product walkthrough</h2><p>Explore verified reference scenarios produced from DeltaZero&apos;s documented v1 formulas, then run the temporarily free live API workflows.</p></div>
         <Link href="/methodology" className="button button-secondary">Verify methodology</Link>
       </section>
 
@@ -100,7 +100,7 @@ export function JudgeDemo() {
       </section>
 
       <section className="judge-demo-footer panel">
-        <div><strong>Ready to inspect the real product?</strong><p>Protected workflows issue the live OKX x402 payment boundary. API contracts and source code remain public.</p></div>
+        <div><strong>Ready to inspect the real product?</strong><p>All live analysis workflows are temporarily free during listing review. API contracts and source code remain public.</p></div>
         <div><Link href={demo.ctaHref} className="button button-primary">{demo.ctaLabel}</Link><a href="https://deltazero-production.up.railway.app/docs" className="button button-secondary" target="_blank" rel="noreferrer">Inspect API</a></div>
       </section>
     </div>

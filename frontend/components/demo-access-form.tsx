@@ -29,7 +29,7 @@ export function DemoAccessForm() {
         <div className="demo-access-heading">
           <span>Recording utility</span>
           <h1 id="demo-access-title">DeltaZero Demo Access</h1>
-          <p>Enter the temporary demo access key provided by the project owner. This unlocks protected analysis endpoints for recording and testing only.</p>
+          <p>This key is not required during the free listing preview. Keep it only for recording and testing after paid access is restored.</p>
         </div>
         <form onSubmit={enable}>
           <label htmlFor="demo-access-key">Demo access key</label>

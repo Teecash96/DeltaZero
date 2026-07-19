@@ -177,7 +177,7 @@ const faqs = [
   {
     question: "Are protocol integrations live?",
     answer:
-      "Hyperliquid, Aave, and Morpho are live read-only integrations. Pendle, Ethena, live funding inputs, and additional coverage remain planned. Hedge Intelligence is available as a PRO PREVIEW.",
+      "Hyperliquid, Aave, and Morpho are live read-only integrations. Pendle, Ethena, live funding inputs, and additional coverage remain planned. Hedge Intelligence is temporarily free during listing review.",
   },
   {
     question: "Is my data stored?",
@@ -204,7 +204,7 @@ export default function Home() {
             <Link href="/wallet" className="button button-secondary">Hedge Intelligence <span>◇</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
-            {['Read only', 'No signatures', 'Deterministic engine', 'OKX x402 boundary'].map((badge) => <span key={badge}>✓ {badge}</span>)}
+            {['Read only', 'No signatures', 'Deterministic engine', 'Agent payment ready'].map((badge) => <span key={badge}>✓ {badge}</span>)}
           </div>
         </div>
         <div className="hero-risk-dashboard glass-card" aria-label="Illustrative risk dashboard">

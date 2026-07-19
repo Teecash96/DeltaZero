@@ -80,8 +80,8 @@ export function AgentOperatorConsole() {
     }).catch((error: unknown) => {
       if (error instanceof PaymentRequiredError) {
         setLastRecommendation("Payment required");
-        append("PAYMENT REQUIRED", `Premium risk analysis required — unlock the complete four-module assessment for 1 USDT. ${challengeSummary(error)}`, "warning");
-        append("AGENT PAUSED", "Open demo access for recording, or complete payment through an Agentic Wallet client. The browser did not sign or transfer funds.", "neutral");
+        append("PAYMENT REQUIRED", `Paid access has been restored for this deployment. ${challengeSummary(error)}`, "warning");
+        append("AGENT PAUSED", "Complete payment through a compatible agent client. The browser does not sign or transfer funds.", "neutral");
       } else {
         append("HEDGE CHECK FAILED", error instanceof Error ? error.message : "The hedge-drift analysis could not be completed.", "critical");
       }
@@ -111,7 +111,7 @@ export function AgentOperatorConsole() {
   return (
     <div className="workspace agent-console">
       <header className="page-intro">
-        <div><p className="kicker">Agent Operator Console</p><h1>Set the policy. Let the guard monitor.</h1><p>Configure a transparent DeltaZero Guard that detects hedge drift, calls the paid risk API, and prepares an approval-gated response.</p></div>
+        <div><p className="kicker">Agent Operator Console</p><h1>Set the policy. Let the guard monitor.</h1><p>Configure a transparent DeltaZero Guard that detects hedge drift, calls the live risk API, and prepares an approval-gated response.</p></div>
         <span className="endpoint">SIMULATION + LIVE API</span>
       </header>
 
@@ -155,7 +155,7 @@ export function AgentOperatorConsole() {
 
       <section className="panel agent-safety-strip">
         <article><span>01</span><strong>Detect</strong><p>Monitor drift against a visible policy boundary.</p></article>
-        <article><span>02</span><strong>Pay or pause</strong><p>Never fabricate settlement or silently bypass x402.</p></article>
+        <article><span>02</span><strong>Respect access mode</strong><p>Run freely during review and never fabricate settlement when paid access returns.</p></article>
         <article><span>03</span><strong>Simulate</strong><p>Generate a proposal and measure its effect before approval.</p></article>
         <article><span>04</span><strong>Approve</strong><p>Require explicit user or policy authority before execution.</p></article>
         <article><span>05</span><strong>Verify</strong><p>Recheck hedge drift after an authorized adapter reports completion.</p></article>

@@ -56,8 +56,8 @@ export function RiskEnginePass() {
   return (
     <section className="risk-pass-stack" aria-labelledby="risk-pass-title">
       <div className="panel risk-pass-offer">
-        <div><span className="decision-eyebrow">One payment · four coordinated reports</span><h2 id="risk-pass-title">1 USDT Risk Engine Pass</h2><p>Pay once for this analysis and receive Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity from the same inputs.</p></div>
-        <strong>1 USDT <small>per new analysis</small></strong>
+        <div><span className="decision-eyebrow">Temporary listing preview</span><h2 id="risk-pass-title">Free Risk Engine Pass</h2><p>Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity from the same inputs.</p></div>
+        <strong>FREE <small>during listing review</small></strong>
       </div>
       <form className="panel risk-pass-form" onSubmit={(event) => void submit(event)}>
         <div className="form-grid">
@@ -71,8 +71,8 @@ export function RiskEnginePass() {
           {numberField("Funding stress magnitude", "stress_magnitude_pct")}
           {numberField("Monte Carlo paths", "simulation_count")}
         </div>
-        <button className="button button-primary form-submit" disabled={loading}>{loading ? "Running complete assessment…" : "Unlock complete Risk Engine →"}</button>
-        <small className="risk-pass-note">One paid request generates all four reports. Starting another analysis requires a new pass.</small>
+        <button className="button button-primary form-submit" disabled={loading}>{loading ? "Running complete assessment…" : "Run complete Risk Engine →"}</button>
+        <small className="risk-pass-note">All analysis services are temporarily free while the OKX.AI listing and demo are completed.</small>
       </form>
 
       {payment !== undefined ? <PaymentRequiredCard
@@ -81,7 +81,7 @@ export function RiskEnginePass() {
       {error ? <div className="error-box" role="alert"><strong>Assessment could not be completed</strong><p>{error}</p></div> : null}
       {result ? <PaymentReceiptCard /> : null}
       {result ? <div className="risk-pass-results">
-        <header className="panel"><span className="decision-eyebrow">Risk Engine Pass complete</span><h2>Four reports. One strategy. One payment.</h2><p>Generated {new Date(result.generated_at).toLocaleString()} from a shared set of assumptions.</p></header>
+        <header className="panel"><span className="decision-eyebrow">Risk Engine Pass complete</span><h2>Four reports. One shared input set.</h2><p>Generated {new Date(result.generated_at).toLocaleString()} from a shared set of assumptions.</p></header>
         <div className="risk-pass-result-grid">
           <article className="panel"><span>01 · Strategy Build</span><h3>{result.strategy_build.recommendation.action}</h3><strong>{pct(result.strategy_build.metrics.estimated_net_carry_apy)} net carry</strong><p>{usd(result.strategy_build.recommended_structure.long_notional_usd)} long · {usd(result.strategy_build.recommended_structure.short_notional_usd)} short</p></article>
           <article className="panel"><span>02 · Hedge-Drift Auditing</span><h3>{result.hedge_drift_audit.recommendation.action}</h3><strong>{pct(result.hedge_drift_audit.metrics.hedge_drift_pct)} hedge drift</strong><p>Safety Buffer {result.hedge_drift_audit.metrics.safety_buffer_score.toFixed(1)}</p></article>

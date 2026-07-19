@@ -34,7 +34,7 @@ DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk
 
 ![DeltaZero Judge Demo showing a deterministic strategy verdict](docs/assets/deltazero-judge-demo.jpg)
 
-The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Strategy Build, Hedge-Drift Auditing, Monte Carlo, and Funding Stress Testing. It does not bypass or weaken x402 protection on real analysis endpoints.
+The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Strategy Build, Hedge-Drift Auditing, Monte Carlo, and Funding Stress Testing. All live analysis endpoints are also temporarily free while listing review and demo production are completed.
 
 ## Methodology, provenance, and support
 
@@ -48,13 +48,15 @@ DeltaZero exposes a standards-compliant, stateless Streamable HTTP Model Context
 https://deltazero-production.up.railway.app/mcp
 ```
 
-MCP initialization, tool discovery, methodology resources, and `get_hyperliquid_market_context` are free. Premium deterministic tools preserve the existing 1 USDT **OKX Agent Payments Protocol** boundary and return a standard HTTP 402 challenge when invoked without payment:
+MCP initialization, discovery, resources, market context, and deterministic tools are temporarily free during listing review:
 
 - `build_neutral_strategy`
 - `audit_hedge_drift`
 - `run_funding_stress`
 - `run_monte_carlo`
-- `run_complete_risk_engine` — all four coordinated reports in one paid invocation
+- `run_complete_risk_engine` — all four coordinated reports in one invocation
+
+The **OKX Agent Payments Protocol** implementation remains staged. Set `DELTAZERO_ACCESS_MODE=paid` after listing and demo completion to restore the existing 1 USDT per-call boundary without changing application code.
 
 The MCP tools call the same Python service functions used by the REST API; formulas and recommendation logic are not duplicated. Tool inputs and structured outputs are generated from the same Pydantic contracts, so compatible agents do not need endpoint-specific response parsers.
 
@@ -78,7 +80,7 @@ Risk zones are deterministic interpretations of existing report metrics. They ar
 
 ## Editor Demo Access
 
-Editor Demo Access lets a trusted editor use the existing backend admin-key check during one browser session without changing normal x402 behavior:
+Editor Demo Access is retained for later paid deployments. It lets a trusted editor use the existing backend admin-key check during one browser session without changing normal payment behavior:
 
 1. Set `DELTAZERO_ADMIN_KEY` in the Railway backend variables.
 2. Share a temporary demo key privately with the editor.
@@ -89,7 +91,7 @@ Editor Demo Access lets a trusted editor use the existing backend admin-key chec
 
 Never place the key in `NEXT_PUBLIC` variables or public code.
 
-The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend includes an x402 payment boundary for per-call USDT authorization; payment credentials are separate from any trading or protocol permission.
+The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend payment boundary is staged but temporarily disabled for listing review; payment credentials remain separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -109,11 +111,11 @@ DeltaZero is differentiated by:
 | Strategy Build | Live | Constructs a deterministic pseudo delta-neutral structure from capital, risk tolerance, target style, and market assumptions. |
 | Hedge-Drift Auditing | Live | Evaluates an existing long, short, and collateral structure and recommends corrective action. |
 | Funding Stress Testing | Live | Applies deterministic funding shocks and calculates post-stress risk and scenario-based economic impairment. |
-| Wallet Auditor | Live · Pro Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
-| Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, pauses at x402, and prepares an approval-gated proposal without claiming payment or trade execution. |
+| Wallet Auditor | Live · Free Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
+| Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, and prepares an approval-gated proposal without claiming trade execution. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
-| x402 Payment Gate | Live · Production | The live API issues a 1 USDT X Layer challenge. The browser checkout connects OKX Wallet, signs the authorization, replays the request, and reads the settlement receipt; final settlement remains fail-closed unless the configured facilitator verifies it. |
+| Agent Payment Gate | Staged · Temporarily Free | The verified 1 USDT X Layer payment boundary remains in the backend and can be restored with `DELTAZERO_ACCESS_MODE=paid`. All analysis calls are currently free during listing review. |
 | Interactive Strategy Preview | Live | Provides a clearly labelled illustrative simulation on the landing page. |
 | TypeScript SDK | Published · npm | Supplies a typed client through [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). |
 | Python SDK | Published · PyPI | Supplies a typed client through [`deltazero-core`](https://pypi.org/project/deltazero-core/). |
@@ -125,13 +127,13 @@ DeltaZero is differentiated by:
 
 ### Agent Operator Console
 
-The `/agent` console turns DeltaZero's structured API into a transparent operator workflow. A user selects risk tolerance and strategy mandate, spawns a session-only guard, and watches the guard compare simulated hedge drift against the configured intervention boundary. When the boundary is breached, the console calls live Hedge-Drift Auditing. It either displays the returned recommendation or pauses at the x402 payment boundary. Execution authority remains disabled until a separately authorized and compatible venue adapter is configured.
+The `/agent` console turns DeltaZero's structured API into a transparent operator workflow. A user selects risk tolerance and strategy mandate, spawns a session-only guard, and watches the guard compare simulated hedge drift against the configured intervention boundary. When the boundary is breached, the console calls live Hedge-Drift Auditing and displays the returned recommendation. Execution authority remains disabled until a separately authorized and compatible venue adapter is configured.
 
 ### Agent-in-a-Box example
 
 The executable [`examples/agent-bot/agent-bot.mjs`](examples/agent-bot/agent-bot.mjs)
 demonstrates an autonomous monitoring loop: simulated wallet scan, hedge-drift
-trigger, live paid audit request, automatic x402 authorization through Onchain OS,
+trigger, live audit request, optional agent payment authorization when paid mode is enabled,
 and a proposal-only rebalance payload. See the
 [`example guide`](examples/agent-bot/README.md) for safeguards and run commands.
 
@@ -430,28 +432,36 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `GET` | `/health` | Check backend availability. |
 | `GET` | `/docs` | Open Swagger UI. Free. |
 | `GET` | `/openapi.json` | Read the OpenAPI contract. Free. |
-| `POST` | `/strategy/build` | Build and evaluate a proposed strategy. x402 payment required. |
+| `POST` | `/strategy/build` | Build and evaluate a proposed strategy. Temporarily free. |
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |
-| `POST` | `/strategy/stress-test` | Protected legacy alias retained for SDK compatibility. |
-| `POST` | `/wallet/analyze` | Analyze supported public wallet positions. x402 payment required. |
-| `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. x402 payment required. |
-| `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated paid analysis. |
+| `POST` | `/strategy/stress-test` | Legacy alias retained for SDK compatibility. Temporarily free. |
+| `POST` | `/wallet/analyze` | Analyze supported public wallet positions. Temporarily free. |
+| `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
+| `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated free-preview analysis. |
 | `POST` | `/` | OKX.AI A2MCP-compatible alias for the complete coordinated Risk Engine analysis. |
 
-### x402 payments and pricing
+### Temporary free access and staged payments
 
-DeltaZero uses the official OKX x402 seller middleware. An unpaid request to a protected route returns `HTTP 402 Payment Required` with a base64-encoded `PAYMENT-REQUIRED` header. The header is the authoritative payment quote and identifies the network, stablecoin contract, atomic amount, receiver, and supported payment schemes.
+DeltaZero currently defaults to `DELTAZERO_ACCESS_MODE=free`. In this mode every REST analysis route and every MCP tool is available without payment so OKX.AI reviewers and the demo editor can exercise the live product end to end.
 
-The price is configured with `PAYMENT_PRICE_USDT`. The primary product flow calls `/risk-engine/analyze`: one 1 USDT payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, Hyperliquid Live, Judge Demo, health, documentation, and OpenAPI remain free. Portfolio Audit and legacy individual analysis endpoints remain separately protected for API compatibility.
+The production payment implementation remains in the codebase. After listing and demo completion, set:
 
-With only the three `PAYMENT_*` variables, the server operates in challenge-only mode: it returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted `PAYMENT-SIGNATURE` or legacy `X-PAYMENT` credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
+```bash
+export DELTAZERO_ACCESS_MODE="paid"
+```
+
+Paid mode uses the official OKX seller middleware. An unpaid request to a protected route returns `HTTP 402 Payment Required` with a base64-encoded `PAYMENT-REQUIRED` header. The header is the authoritative payment quote and identifies the network, stablecoin contract, atomic amount, receiver, and supported payment schemes.
+
+The future price is configured with `PAYMENT_PRICE_USDT`. When paid mode is restored, the primary product flow calls `/risk-engine/analyze`: one 1 USDT payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, Hyperliquid Live, health, documentation, and OpenAPI remain free.
+
+In paid mode, only the three `PAYMENT_*` variables produce challenge-only behavior: the server returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted payment credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
 
 ### Agent-native payment
 
-DeltaZero does not collect payment or connect wallets in the website. Autonomous clients invoke the protected API through OKX.AI or another compatible agent runtime. The **OKX Agent Payments Protocol** handles the quote, authorization, paid replay, and machine-readable settlement receipt before the backend releases the requested report.
+DeltaZero does not collect payment or connect wallets in the website. During the temporary free preview, autonomous clients can invoke the API without payment. When paid mode is restored, the **OKX Agent Payments Protocol** handles the quote, authorization, paid replay, and machine-readable settlement receipt before the backend releases the requested report.
 
-The website remains a read-only product, methodology, and API-discovery surface. Agent clients can inspect the OpenAPI and MCP contracts, receive the standardized payment challenge, and complete a paid request without a human browser checkout.
+The website remains a read-only product, methodology, and API-discovery surface. Agent clients can inspect the OpenAPI and MCP contracts and run the live analysis tools freely during review.
 
 Unpaid challenge:
 
@@ -559,7 +569,13 @@ export ARBITRUM_RPC_URL="your-arbitrum-rpc-url"
 
 Do not commit RPC URLs containing provider credentials.
 
-To enable safe challenge-only x402 locally, configure the receiving address, per-call price, and X Layer network identifier:
+The application defaults to the temporary free preview. Set this explicitly in deployment environments for clarity:
+
+```bash
+export DELTAZERO_ACCESS_MODE="free"
+```
+
+To restore paid mode later, set `DELTAZERO_ACCESS_MODE="paid"` and configure the receiving address, per-call price, and X Layer network identifier:
 
 ```bash
 export PAYMENT_RECEIVER="0xYourReceivingAddress"
@@ -576,7 +592,7 @@ export OKX_SECRET_KEY="your-okx-developer-secret"
 export OKX_PASSPHRASE="your-okx-developer-passphrase"
 ```
 
-If none of the three `PAYMENT_*` variables is configured, the local development app starts without the payment middleware. If any payment variable is present, all three payment variables are required. Facilitator credentials are optional only as a complete group: none enables challenge-only mode, all three enable settlement, and a partial credential group stops startup. Protected resources are never released in challenge-only mode.
+In free mode, payment configuration is not loaded and every analysis route is released without a challenge. In paid mode, all three `PAYMENT_*` variables are required. Facilitator credentials are optional only as a complete group: none enables challenge-only mode, all three enable settlement, and a partial credential group stops startup. Protected resources are never released in challenge-only mode.
 
 ### Start the frontend
 
@@ -624,7 +640,8 @@ Production CORS permits the deployed frontend plus local Next.js development ori
 
 - DeltaZero never asks for a seed phrase or private key.
 - Wallet analysis does not request trading signatures, approvals, or transaction permissions.
-- Challenge-only x402 mode never releases a protected resource; settlement mode requires facilitator-verified payment credentials before protected business logic runs.
+- Free-preview mode releases analysis without payment; setting `DELTAZERO_ACCESS_MODE=paid` restores the fail-closed payment boundary.
+- In paid mode, challenge-only operation never releases a protected resource; settlement requires facilitator-verified payment credentials before protected business logic runs.
 - Facilitator API credentials and payment configuration belong in deployment environment variables and must never be committed.
 - Hyperliquid access uses read-only public information endpoints.
 - Aave access uses configured read-only RPC calls.

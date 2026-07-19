@@ -123,13 +123,13 @@ export default function MethodologyPage() {
         <div className="methodology-worked-example">
           <div><span>Streamable HTTP endpoint</span><h3>Production MCP</h3></div>
           <code>https://deltazero-production.up.railway.app/mcp</code>
-          <p>Initialization, discovery, methodology resources, and Hyperliquid market context are free. Premium calculation calls preserve the 1 USDT OKX Agent Payments Protocol boundary.</p>
+          <p>Initialization, discovery, methodology resources, market context, and all calculation calls are temporarily free during listing review. The OKX Agent Payments Protocol implementation remains staged for later activation.</p>
         </div>
         <div className="source-list">
           <article><strong>Native schemas</strong><p>Tool inputs and structured outputs are generated from the same validated Pydantic contracts as the API.</p></article>
           <article><strong>One calculation engine</strong><p>MCP tools call the existing deterministic services directly; formulas and verdict logic are not duplicated.</p></article>
           <article><strong>Six discoverable tools</strong><p>Live market context plus Strategy Build, Hedge-Drift, Funding Stress, Monte Carlo, and the complete Risk Engine.</p></article>
-          <article><strong>Payment-aware</strong><p>Agents can inspect capabilities before invoking a premium tool and receiving the standardized payment challenge.</p></article>
+          <article><strong>Payment-ready</strong><p>Agents can inspect capabilities and invoke tools freely during review; standardized payment enforcement can be restored with one deployment setting.</p></article>
         </div>
       </section>
 
