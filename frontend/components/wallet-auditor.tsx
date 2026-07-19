@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendationLabel, ReportActions, StepProgress } from "@/components/report-polish";
 import { RiskZonePanel } from "@/components/risk-zone-panel";
@@ -565,6 +565,21 @@ export function WalletPortfolioWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [paymentChallenge, setPaymentChallenge] = useState<X402Challenge | null | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const requestedProtocol = new URLSearchParams(window.location.search).get("protocol");
+    if (requestedProtocol !== "hyperliquid" && requestedProtocol !== "aave" && requestedProtocol !== "morpho") return;
+
+    const timer = window.setTimeout(() => {
+      setValue((current) => ({
+        ...current,
+        networks: requestedProtocol === "hyperliquid" ? ["hyperliquid"] : ["ethereum", "arbitrum"],
+        protocols: [requestedProtocol],
+      }));
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function runAnalysis() {
     setLoading(true);
