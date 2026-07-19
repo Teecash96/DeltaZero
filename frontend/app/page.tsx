@@ -198,7 +198,6 @@ export default function Home() {
           <h1>Know your hedge.<br /><span>Protect your capital.</span></h1>
           <p className="hero-copy">DeltaZero helps agents and users build strategies, analyze hedge drift, and test funding stress for pseudo delta neutral DeFi positions using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
           <div className="hero-actions">
-            <Link href="/demo" className="button button-judge">Try Judge Demo <span>▶</span></Link>
             <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/agent" className="button button-secondary">Agent Console <span>◎</span></Link>
             <Link href="/wallet" className="button button-secondary">Hedge Intelligence <span>◇</span></Link>
@@ -247,12 +246,12 @@ export default function Home() {
       </section>
 
       <section className="section-wrap action-demo-section anchor-section" aria-labelledby="action-demo-title">
-        <div className="section-heading"><div><p className="kicker">Product walkthrough</p><h2 id="action-demo-title">See DeltaZero in action</h2></div><p>Experience the complete decision workflow with verified reference scenarios and no payment.</p></div>
+        <div className="section-heading"><div><p className="kicker">Live product workflow</p><h2 id="action-demo-title">Run DeltaZero end to end.</h2></div><p>Use the real free analysis services across one connected risk workflow.</p></div>
         <div className="action-demo-shell glass-card">
           <div className="action-demo-track">
             {[['01', 'Hedge Intelligence', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Funding Stress Testing', 'Apply a deterministic funding scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
           </div>
-          <Link href="/demo" className="button button-judge">Open Judge Demo <span>▶</span></Link>
+          <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
         </div>
       </section>
 

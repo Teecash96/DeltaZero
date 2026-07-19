@@ -100,7 +100,7 @@ export default function MethodologyPage() {
         <div className="methodology-heading"><span>Evidence status</span><h2>Validation record</h2></div>
         <div className="validation-grid">
           <article><span>Implemented</span><strong>Formula regression tests</strong><p>Automated tests cover deterministic repeatability, percentile ordering, input bounds, recommendation states, and payment protection.</p></article>
-          <article><span>Implemented</span><strong>Reproducible scenarios</strong><p>The Judge Demo uses frozen reference inputs produced by the same documented formulas. These demonstrate behavior, but are not historical performance claims.</p></article>
+          <article><span>Implemented</span><strong>Reproducible scenarios</strong><p>Versioned regression fixtures use frozen reference inputs produced by the documented formulas. These demonstrate behavior, but are not historical performance claims.</p></article>
           <article><span>Not complete</span><strong>Historical replay</strong><p>DeltaZero has not yet published a time-aligned historical replay with funding, liquidity, and margin rules frozen at each observation.</p></article>
           <article><span>Not complete</span><strong>Empirical calibration</strong><p>Thresholds have not been optimized against realized liquidations or portfolio losses. They remain transparent engineering policies.</p></article>
         </div>

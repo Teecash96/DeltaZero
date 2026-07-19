@@ -15,7 +15,6 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 [![OKX AI Hackathon](https://img.shields.io/badge/OKX_AI-Hackathon-000000)](https://www.okx.com/)
 
 [Live Application](https://delta-zero-alpha.vercel.app) ·
-[Judge Demo](https://delta-zero-alpha.vercel.app/demo) ·
 [API Documentation](https://deltazero-production.up.railway.app/docs) ·
 [Published SDKs](#published-sdks) ·
 [X](https://x.com/DeltaZeroASP)
@@ -29,12 +28,6 @@ DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk
 ### Live risk-intelligence interface
 
 ![DeltaZero live application showing the deterministic risk dashboard](docs/assets/deltazero-home.jpg)
-
-### No-payment judge walkthrough
-
-![DeltaZero Judge Demo showing a deterministic strategy verdict](docs/assets/deltazero-judge-demo.jpg)
-
-The public Judge Demo provides a no-payment walkthrough of verified reference scenarios across Strategy Build, Hedge-Drift Auditing, Monte Carlo, and Funding Stress Testing. All live analysis endpoints are also temporarily free while listing review and demo production are completed.
 
 ## Methodology, provenance, and support
 
@@ -56,7 +49,7 @@ MCP initialization, discovery, resources, market context, and deterministic tool
 - `run_monte_carlo`
 - `run_complete_risk_engine` — all four coordinated reports in one invocation
 
-The **OKX Agent Payments Protocol** implementation remains staged. Set `DELTAZERO_ACCESS_MODE=paid` after listing and demo completion to restore the existing 1 USDT per-call boundary without changing application code.
+The **OKX Agent Payments Protocol** implementation remains staged. Set `DELTAZERO_ACCESS_MODE=paid` after the temporary free-access period to restore the existing 1 USDT per-call boundary without changing application code.
 
 The MCP tools call the same Python service functions used by the REST API; formulas and recommendation logic are not duplicated. Tool inputs and structured outputs are generated from the same Pydantic contracts, so compatible agents do not need endpoint-specific response parsers.
 
@@ -77,19 +70,6 @@ GitHub Actions runs backend tests, frontend lint and production build, and both 
 DeltaZero classifies completed Strategy Build, Wallet Auditor, Funding Stress Testing, and Monte Carlo reports into five operator-friendly zones: **Optimal**, **Healthy**, **Watch**, **Defensive**, and **Critical**.
 
 Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
-
-## Editor Demo Access
-
-Editor Demo Access is retained for later paid deployments. It lets a trusted editor use the existing backend admin-key check during one browser session without changing normal payment behavior:
-
-1. Set `DELTAZERO_ADMIN_KEY` in the Railway backend variables.
-2. Share a temporary demo key privately with the editor.
-3. The editor opens `/demo-access`.
-4. The editor enters the key.
-5. The frontend sends `X-DeltaZero-Admin-Key` for protected API calls during that browser session.
-6. Rotate the key after recording.
-
-Never place the key in `NEXT_PUBLIC` variables or public code.
 
 The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend payment boundary is staged but temporarily disabled for listing review; payment credentials remain separate from any trading or protocol permission.
 

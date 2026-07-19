@@ -2,15 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
 
-import { hasDemoAccess, subscribeToDemoAccess } from "@/lib/demo-access";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { href: "/risk-engine", label: "Risk Engine" },
   { href: "/agent", label: "Agent Console" },
-  { href: "/demo", label: "Judge Demo" },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -22,7 +19,6 @@ function isActive(pathname: string, href: string) {
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const demoAccessActive = useSyncExternalStore(subscribeToDemoAccess, hasDemoAccess, () => false);
 
   return (
     <header className="site-header">
@@ -30,7 +26,6 @@ export function SiteHeader() {
         <Link href="/" className="logo" aria-label="DeltaZero home">
           <span className="logo-mark">Δ</span>DELTA<span>ZERO</span>
         </Link>
-        {demoAccessActive ? <span className="demo-access-indicator">Demo access active</span> : null}
       </div>
       <nav aria-label="Primary navigation">
         {navItems.map((item) => {

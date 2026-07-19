@@ -21,9 +21,9 @@ from app.services.risk_engine import run_risk_engine_pass
 def load_runtime_payment_settings() -> PaymentSettings | None:
     """Return paid settings only when production payment enforcement is enabled.
 
-    DeltaZero defaults to a temporary free preview while the OKX.AI listing and
-    demo are being completed. Setting ``DELTAZERO_ACCESS_MODE=paid`` restores
-    the existing payment middleware without a code change.
+    DeltaZero defaults to temporary free access during the OKX.AI listing
+    process. Setting ``DELTAZERO_ACCESS_MODE=paid`` restores the existing
+    payment middleware without a code change.
     """
 
     access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "free").strip().lower()

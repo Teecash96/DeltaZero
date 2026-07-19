@@ -13,7 +13,6 @@ import type {
   RiskEnginePassRequest,
   RiskEnginePassResponse,
 } from "./types";
-import { getDemoAccessKey } from "./demo-access";
 import { decodePaymentReceipt, storePaymentReceipt, verifyPaymentReceiptOnChain } from "./payment-receipt";
 
 export const API_BASE =
@@ -55,27 +54,10 @@ export class PaymentRequiredError extends Error {
   }
 }
 
-const DEMO_ACCESS_PATHS = new Set([
-  "/strategy/build",
-  "/strategy/audit",
-  "/strategy/stress-test",
-  "/stress-test/run",
-  "/wallet/analyze",
-  "/monte-carlo/run",
-  "/risk-engine/analyze",
-]);
-
-function protectedRequestHeaders(path: string): HeadersInit {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const demoAccessKey = DEMO_ACCESS_PATHS.has(path) ? getDemoAccessKey() : null;
-  if (demoAccessKey) headers["X-DeltaZero-Admin-Key"] = demoAccessKey;
-  return headers;
-}
-
 async function post<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: protectedRequestHeaders(path),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
