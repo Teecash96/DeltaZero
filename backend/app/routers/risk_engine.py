@@ -24,7 +24,11 @@ def risk_engine_analyze(request: RiskEnginePassRequest) -> RiskEnginePassRespons
     return run_risk_engine_pass(request)
 
 
-@router.post("/recover-payment", response_model=PaymentRecoveryResponse)
+@router.post(
+    "/recover-payment",
+    response_model=PaymentRecoveryResponse,
+    include_in_schema=False,
+)
 def recover_payment(payload: PaymentRecoveryRequest, request: Request) -> PaymentRecoveryResponse:
     """Recover one accidental direct transfer and bind it to one analysis."""
 

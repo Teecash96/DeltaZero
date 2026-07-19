@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { PaymentRequiredCard } from "@/components/report-polish";
 import { PaymentReceiptCard } from "@/components/payment-receipt-card";
-import { PaymentRequiredError, payRiskEngineWithWallet, recoverRiskEnginePayment, runRiskEnginePass, type X402Challenge } from "@/lib/api";
+import { PaymentRequiredError, runRiskEnginePass, type X402Challenge } from "@/lib/api";
 import { appendReportHistory } from "@/lib/report-history";
 import type { Asset, RiskEnginePassRequest, RiskEnginePassResponse, RiskTolerance, TargetStyle } from "@/lib/types";
 
@@ -31,9 +31,6 @@ export function RiskEnginePass() {
   const [payment, setPayment] = useState<X402Challenge | null | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
-  const [recoveryHash, setRecoveryHash] = useState("");
-  const [showRecovery, setShowRecovery] = useState(false);
 
   async function submit(event?: React.FormEvent) {
     event?.preventDefault();
@@ -47,43 +44,6 @@ export function RiskEnginePass() {
     } catch (caught) {
       if (caught instanceof PaymentRequiredError) setPayment(caught.challenge);
       else setError(caught instanceof Error ? caught.message : "Risk Engine Pass could not be completed.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function payInBrowser() {
-    setLoading(true);
-    setError(null);
-    setCheckoutStatus("Connect OKX Wallet and review the 1 USDT0 authorization.");
-    try {
-      const paidResult = await payRiskEngineWithWallet(value, payment);
-      setResult(paidResult);
-      appendReportHistory({ type: "risk_engine", asset: paidResult.strategy_build.asset, generatedAt: paidResult.generated_at, recommendation: paidResult.monte_carlo_sensitivity.summary.recommendation, safetyBuffer: paidResult.hedge_drift_audit.metrics.safety_buffer_score, p95Impairment: paidResult.monte_carlo_sensitivity.summary.p95_impairment_loss_pct, payload: paidResult });
-      setPayment(undefined);
-      setCheckoutStatus("Payment confirmed on X Layer. All four reports are unlocked.");
-    } catch (caught) {
-      const message = caught instanceof Error ? caught.message : "Wallet payment could not be completed.";
-      setError(message.includes("User rejected") || message.includes("4001") ? "Payment was cancelled in the wallet." : message);
-      setCheckoutStatus(null);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function recoverPayment() {
-    setLoading(true);
-    setError(null);
-    setCheckoutStatus("Verifying the transfer and wallet ownership on X Layer.");
-    try {
-      const recoveredResult = await recoverRiskEnginePayment(recoveryHash, value);
-      setResult(recoveredResult);
-      appendReportHistory({ type: "risk_engine", asset: recoveredResult.strategy_build.asset, generatedAt: recoveredResult.generated_at, recommendation: recoveredResult.monte_carlo_sensitivity.summary.recommendation, safetyBuffer: recoveredResult.hedge_drift_audit.metrics.safety_buffer_score, p95Impairment: recoveredResult.monte_carlo_sensitivity.summary.p95_impairment_loss_pct, payload: recoveredResult });
-      setPayment(undefined);
-      setCheckoutStatus("Direct payment recovered. All four reports are unlocked for these inputs.");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Direct payment could not be recovered.");
-      setCheckoutStatus(null);
     } finally {
       setLoading(false);
     }
@@ -117,19 +77,7 @@ export function RiskEnginePass() {
 
       {payment !== undefined ? <PaymentRequiredCard
         challenge={payment}
-        retry={() => void submit()}
-        payInBrowser={() => void payInBrowser()}
-        loading={loading}
-        secondaryAction={<button className="button payment-recovery-toggle" type="button" disabled={loading} aria-expanded={showRecovery} aria-controls="payment-recovery-form" onClick={() => setShowRecovery((current) => !current)}>{showRecovery ? "Hide recovery" : "Recover payment"}</button>}
-        actionNote={showRecovery ? "Enter the X Layer transaction hash below. Recovery will not request another payment." : "Already transferred 1 USD₮0? Recover it here without paying again."}
-      >
-        {showRecovery ? <div className="payment-inline-recovery" id="payment-recovery-form">
-          <div className="field"><label htmlFor="recovery-transaction">X Layer transaction hash</label><input id="recovery-transaction" value={recoveryHash} onChange={(event) => setRecoveryHash(event.target.value)} placeholder="0x…" autoComplete="off" spellCheck={false} /></div>
-          <button className="button payment-recovery-submit" type="button" disabled={loading || !/^0x[0-9a-fA-F]{64}$/.test(recoveryHash.trim())} onClick={() => void recoverPayment()}>{loading ? "Verifying transfer…" : "Recover paid analysis →"}</button>
-          <small>Connect the same wallet that sent the payment. Each transaction can unlock only one exact set of analysis inputs.</small>
-        </div> : null}
-      </PaymentRequiredCard> : null}
-      {checkoutStatus ? <div className="panel checkout-status" role="status"><span className="decision-eyebrow">OKX checkout</span><strong>{checkoutStatus}</strong></div> : null}
+      /> : null}
       {error ? <div className="error-box" role="alert"><strong>Assessment could not be completed</strong><p>{error}</p></div> : null}
       {result ? <PaymentReceiptCard /> : null}
       {result ? <div className="risk-pass-results">

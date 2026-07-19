@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { X402Challenge, X402PaymentOption } from "@/lib/api";
 
@@ -25,7 +25,11 @@ function shortAddress(address: string | undefined) {
   return address && address.length > 12 ? `${address.slice(0, 6)}...${address.slice(-5)}` : address ?? "Unavailable";
 }
 
-export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser, secondaryAction, actionNote, children }: { challenge: X402Challenge | null; retry: () => void; loading: boolean; payInBrowser?: () => void; secondaryAction?: ReactNode; actionNote?: ReactNode; children?: ReactNode }) {
+type PaymentRequiredCardProps = {
+  challenge: X402Challenge | null;
+};
+
+export function PaymentRequiredCard({ challenge }: PaymentRequiredCardProps) {
   const option = challenge?.accepts?.[0];
   const [copyFeedback, setCopyFeedback] = useState(false);
   const details = [["Cost", paymentPrice(option)], ["Network", networkName(option?.network)], ["Receiver", shortAddress(option?.payTo)], ["Verification", "Automatic"]];
@@ -44,22 +48,21 @@ export function PaymentRequiredCard({ challenge, retry, loading, payInBrowser, s
       <section className="panel payment-required-card" role="alert" aria-labelledby="payment-required-title">
         <span className="payment-required-icon" aria-hidden="true">◇</span>
         <div className="payment-required-copy">
-          <span className="decision-eyebrow">Premium analysis</span>
-          <h2 id="payment-required-title">Unlock Premium Strategy Analysis</h2>
-          <p>This analysis is protected by the OKX x402 payment protocol. Payment unlocks one complete analysis request; a new analysis requires a new payment. DeltaZero never requests wallet signatures, approvals, or private keys.</p>
+          <span className="decision-eyebrow">Agent-native access</span>
+          <h2 id="payment-required-title">Invoke DeltaZero through OKX.AI</h2>
+          <p>DeltaZero is a paid API service for autonomous agents. The <strong>OKX Agent Payments Protocol</strong> handles authorization, payment, and request replay without a browser checkout.</p>
           {challenge ? <dl className="payment-required-details">{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}{label === "Receiver" ? <button type="button" onClick={() => void copyReceiver()} aria-label="Copy receiver address">{copyFeedback ? "Copied" : "Copy"}</button> : null}</dd></div>)}</dl> : <p className="payment-required-missing">Protected endpoint returned HTTP 402.</p>}
           <div className="payment-required-actions">
-            {payInBrowser ? <button className="button button-primary payment-verify" type="button" onClick={payInBrowser} disabled={loading}>{loading ? "Waiting for wallet..." : "Pay with OKX Wallet →"}</button> : <button className="button button-primary payment-verify" type="button" onClick={retry} disabled={loading}>{loading ? "Verifying..." : "Verify Payment"}</button>}
-            {secondaryAction}
+            <a className="button button-primary payment-verify" href="https://www.okx.ai" target="_blank" rel="noreferrer">Open OKX.AI →</a>
+            <a className="button button-secondary" href="https://deltazero-production.up.railway.app/docs" target="_blank" rel="noreferrer">Inspect API</a>
           </div>
-          <small>{actionNote ?? (payInBrowser ? "Your wallet shows the exact token, amount, network, and recipient before you approve." : "Payment is verified automatically by the protected endpoint.")}</small>
-          {children}
+          <small>Use agent #5739 or call the protected API endpoint from a compatible agent client. This website does not collect payment or connect a wallet.</small>
         </div>
       </section>
       <section className="panel payment-trust-panel" aria-labelledby="payment-trust-title">
         <div><span className="decision-eyebrow">Security model</span><h2 id="payment-trust-title">Why DeltaZero is Safe</h2></div>
         <div className="payment-trust-grid">
-          {[["◉", "Read Only", "Analysis reads submitted and public data without changing positions."], ["⊘", "Explicit Consent", "Payment and recovery signatures are shown in your wallet before approval."], ["◇", "No Wallet Control", "No token approvals, custody, or trading permissions are requested."], ["≡", "Deterministic Analysis", "The same inputs produce the same transparent risk output."]].map(([icon, title, copy]) => <article key={title}><i aria-hidden="true">{icon}</i><strong>{title}</strong><p>{copy}</p></article>)}
+          {[["◉", "Read Only", "Analysis reads submitted and public data without changing positions."], ["⊘", "Agent-Native Payment", "OKX.AI agents handle the paid request and receive the machine-readable response."], ["◇", "No Wallet Control", "No token approvals, custody, or trading permissions are requested."], ["≡", "Deterministic Analysis", "The same inputs produce the same transparent risk output."]].map(([icon, title, copy]) => <article key={title}><i aria-hidden="true">{icon}</i><strong>{title}</strong><p>{copy}</p></article>)}
         </div>
       </section>
     </div>

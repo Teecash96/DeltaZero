@@ -447,17 +447,11 @@ The price is configured with `PAYMENT_PRICE_USDT`. The primary product flow call
 
 With only the three `PAYMENT_*` variables, the server operates in challenge-only mode: it returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted `PAYMENT-SIGNATURE` or legacy `X-PAYMENT` credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
 
-### Browser payment
+### Agent-native payment
 
-Human users can complete the same purchase directly in the web app with the OKX Wallet browser extension. DeltaZero uses the official `@okxweb3/x402-fetch` and `@okxweb3/x402-evm` clients to request account access, switch to X Layer, display the wallet's typed-data approval, and replay the original request with the resulting payment authorization. The backend verifies and settles it before releasing the four reports. After settlement, the UI preserves the facilitator payload, displays the full transaction hash, links to OKLink, and independently queries X Layer to confirm the transaction and expected USD₮0 transfer event.
+DeltaZero does not collect payment or connect wallets in the website. Autonomous clients invoke the protected API through OKX.AI or another compatible agent runtime. The **OKX Agent Payments Protocol** handles the quote, authorization, paid replay, and machine-readable settlement receipt before the backend releases the requested report.
 
-No private key or OKX API credential enters the frontend. The wallet shows the token, amount, network, and recipient before the user approves. Agentic clients can continue using the raw x402 challenge and paid replay directly.
-
-### Direct-transfer recovery
-
-If a user accidentally sends the quoted 1 USD₮0 as a plain ERC-20 transfer instead of completing the signed x402 replay, the Risk Engine payment screen provides a recovery form. The user pastes the X Layer transaction hash and signs a non-transactional ownership message with the same wallet. The backend independently verifies the successful receipt, official USD₮0 contract, exact amount, payer, receiver, and `Transfer` event before returning the four-report Risk Engine pass.
-
-Each recovered transaction is atomically bound to the SHA-256 fingerprint of one exact analysis request. Set `PAYMENT_REDEMPTION_DB_PATH` to a durable Railway volume path such as `/data/payment-redemptions.sqlite3`; without a persistent volume, restart-safe replay protection is not guaranteed. Recovery never requests another transfer, token approval, custody permission, or trading authority.
+The website remains a read-only product, methodology, and API-discovery surface. Agent clients can inspect the OpenAPI and MCP contracts, receive the standardized payment challenge, and complete a paid request without a human browser checkout.
 
 Unpaid challenge:
 

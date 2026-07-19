@@ -1119,7 +1119,7 @@ export function StrategyWorkspace({ mode }: { mode: Mode }) {
         </div>
         <div className="result-region">
           {paymentChallenge !== undefined ? (
-            <PaymentRequiredCard challenge={paymentChallenge} retry={() => void submit()} loading={loading} />
+            <PaymentRequiredCard challenge={paymentChallenge} />
           ) : error ? (
             <div className="error-box" role="alert">
               <span className="state-icon">!</span>

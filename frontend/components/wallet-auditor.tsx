@@ -599,7 +599,7 @@ export function WalletPortfolioWorkspace() {
         <WalletRequestForm value={value} setValue={setValue} submit={submit} loading={loading} loadDemo={() => { setValue(structuredClone(DEMO_WALLET_REQUEST)); setResult(null); setError(null); }} />
         <div className="result-region">
           {paymentChallenge !== undefined ? (
-            <PaymentRequiredCard challenge={paymentChallenge} retry={() => void runAnalysis()} loading={loading} />
+            <PaymentRequiredCard challenge={paymentChallenge} />
           ) : error ? (
             <div className="error-box" role="alert"><span className="state-icon">!</span><div><strong>Analysis could not be completed</strong><p>{error}</p><small>Check the wallet address and selected protocol coverage, then try again.</small></div></div>
           ) : loading ? (
