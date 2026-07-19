@@ -38,6 +38,13 @@ def _settings() -> PaymentSettings:
     )
 
 
+def test_recovery_message_matches_the_browser_signing_contract() -> None:
+    assert recovery_message(TX_HASH) == (
+        "DeltaZero payment recovery\n"
+        f"Transaction: {TX_HASH}"
+    )
+
+
 def _payload(account) -> dict:
     signature = "0x" + Account.sign_message(
         encode_defunct(text=recovery_message(TX_HASH)),
@@ -129,6 +136,30 @@ def test_recovery_rejects_signature_from_different_wallet(monkeypatch, tmp_path)
 
     assert response.status_code == 400
     assert "Signature does not match" in response.json()["detail"]
+
+
+def test_recovery_accepts_the_previous_trailing_newline_signature(monkeypatch, tmp_path) -> None:
+    from app.services import payment_recovery
+
+    account = Account.create()
+    monkeypatch.setattr(payment_recovery, "_rpc", _rpc_result(account))
+    monkeypatch.setenv("PAYMENT_REDEMPTION_DB_PATH", str(tmp_path / "redemptions.sqlite3"))
+    legacy_message = recovery_message(TX_HASH) + "\n"
+    signature = "0x" + Account.sign_message(
+        encode_defunct(text=legacy_message),
+        account.key,
+    ).signature.hex()
+    payload = {
+        **_payload(account),
+        "signature": signature,
+    }
+
+    response = TestClient(create_app(payment_settings=_settings())).post(
+        "/risk-engine/recover-payment", json=payload
+    )
+
+    assert response.status_code == 200
+    assert response.json()["receipt"]["transfer_verified"] is True
 
 
 def test_recovery_reports_the_required_payment_wallet(monkeypatch, tmp_path) -> None:

@@ -37,7 +37,7 @@ def request_fingerprint(analysis: RiskEnginePassRequest) -> str:
 def recovery_message(transaction_hash: str) -> str:
     return (
         "DeltaZero payment recovery\n"
-        f"Transaction: {transaction_hash.lower()}\n"
+        f"Transaction: {transaction_hash.lower()}"
     )
 
 
@@ -47,15 +47,24 @@ def verify_payer_signature(
     signature: str,
 ) -> None:
     raw_message = recovery_message(transaction_hash)
-    encoded_hex = "0x" + raw_message.encode().hex()
+    # The first browser release included a final newline in the backend-only
+    # verifier while the wallet signed the same text without it. Accept both
+    # fixed, transaction-bound messages so existing payment attempts can be
+    # recovered without accepting any free-form ownership claim.
+    messages = (raw_message, raw_message + "\n")
     recovered_addresses: set[str] = set()
-    for message in (encode_defunct(text=raw_message), encode_defunct(text=encoded_hex)):
-        try:
-            recovered_addresses.add(
-                Account.recover_message(message, signature=signature).lower()
-            )
-        except Exception:
-            continue
+    for message_text in messages:
+        encoded_hex = "0x" + message_text.encode().hex()
+        for message in (
+            encode_defunct(text=message_text),
+            encode_defunct(text=encoded_hex),
+        ):
+            try:
+                recovered_addresses.add(
+                    Account.recover_message(message, signature=signature).lower()
+                )
+            except Exception:
+                continue
     if not recovered_addresses:
         raise PaymentRecoveryError("Wallet ownership signature is invalid")
     if payer.lower() not in recovered_addresses:
