@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const navItems = [
   { href: "/risk-engine", label: "Risk Engine" },
   { href: "/agent", label: "Agent Console" },
+  { href: "/registry", label: "Strategy Registry" },
 ];
 
 function isActive(pathname: string, href: string) {

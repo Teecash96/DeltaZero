@@ -8,6 +8,7 @@ const quickLinks = [
   { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
   { label: "Docs", href: "#docs", note: "Repository and API references" },
   { label: "Why Agents", href: "#why-agents", note: "Measured latency and repeatability" },
+  { label: "Strategy Registry", href: "#strategy-registry", note: "Opt-in recommendation and outcome memory" },
   { label: "Agents", href: "#agents", note: "SDKs and automated workflows" },
   { label: "FAQs", href: "#faqs", note: "Common questions and constraints" },
 ];
@@ -605,6 +606,40 @@ export default function Home() {
           Reference-policy agreement verifies DeltaZero&apos;s configured decision rules. It is not a profitability
           forecast or a measured real-world loss rate.
         </p>
+      </section>
+
+      <section id="strategy-registry" className="section-wrap registry-home-section anchor-section">
+        <div className="section-heading">
+          <div>
+            <p className="kicker">Agent ecosystem moat</p>
+            <h2>Recommendations become evidence—not disposable API responses.</h2>
+          </div>
+          <p>
+            Strategy Registry is an opt-in memory layer that connects each DeltaZero decision with the outcome an
+            operator later observes, creating a portable evidence trail for safer policy refinement.
+          </p>
+        </div>
+        <div className="registry-home-grid">
+          <div className="registry-home-flow">
+            {[
+              ["01", "Decide", "Save the recommendation, risk zone, Safety Buffer, and impairment context."],
+              ["02", "Observe", "Record whether risk stayed within tolerance, exceeded expectations, or avoided loss."],
+              ["03", "Refine", "Surface recurring exceptions before an agent owner changes a risk policy."],
+            ].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
+          </div>
+          <article className="registry-home-contract glass-card">
+            <span>Memory contract</span>
+            <h3>Private by default. Portable by design.</h3>
+            <ul>
+              <li>Explicit user opt-in</li>
+              <li>Browser-local storage</li>
+              <li>Observed outcomes stay distinct from predictions</li>
+              <li>JSON export and import for agent portability</li>
+              <li>No silent threshold retraining</li>
+            </ul>
+            <Link href="/registry" className="button button-primary">Open Strategy Registry <span>→</span></Link>
+          </article>
+        </div>
       </section>
 
       <AgentSdkSection />

@@ -71,7 +71,7 @@ DeltaZero classifies completed Strategy Build, Wallet Auditor, Funding Stress Te
 
 Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
 
-The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, and Agent Operator Console. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend payment boundary is staged but temporarily disabled for listing review; payment credentials remain separate from any trading or protocol permission.
+The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, Agent Operator Console, and an opt-in Strategy Registry. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend payment boundary is staged but temporarily disabled for listing review; payment credentials remain separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -134,6 +134,7 @@ Hyperliquid accounts.
 | Funding Stress Testing | Live | Applies deterministic funding shocks and calculates post-stress risk and scenario-based economic impairment. |
 | Wallet Auditor | Live · Free Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
 | Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, and prepares an approval-gated proposal without claiming trade execution. |
+| Strategy Registry | Live · Opt-in | Stores up to 25 decisions locally, lets operators attach observed outcomes, exports portable JSON, and exposes a stateless agent-native evaluation contract without silently retraining thresholds. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | Agent Payment Gate | Staged · Temporarily Free | The verified 1 USDT X Layer payment boundary remains in the backend and can be restored with `DELTAZERO_ACCESS_MODE=paid`. All analysis calls are currently free during listing review. |
@@ -149,6 +150,19 @@ Hyperliquid accounts.
 ### Agent Operator Console
 
 The `/agent` console turns DeltaZero's structured API into a transparent operator workflow. A user selects risk tolerance and strategy mandate, spawns a session-only guard, and watches the guard compare simulated hedge drift against the configured intervention boundary. When the boundary is breached, the console calls live Hedge-Drift Auditing and displays the returned recommendation. Execution authority remains disabled until a separately authorized and compatible venue adapter is configured.
+
+### Strategy Registry
+
+The `/registry` experience is an explicit opt-in memory layer. Once enabled,
+completed Risk Engine and Monte Carlo decisions are retained in that browser.
+Operators can attach observed outcomes, realized return, maximum drawdown, final
+Safety Buffer, and notes before exporting or importing the registry as JSON.
+
+Autonomous clients can call `POST /strategy-registry/evaluate` or the free MCP
+tool `evaluate_strategy_memory` with their client-owned history. DeltaZero
+returns deterministic coverage, exception, outcome, and refinement signals but
+does not persist the request or alter decision thresholds. Observations remain
+user-supplied evidence—not verified training labels or profitability proof.
 
 ### Agent-in-a-Box example
 
@@ -298,7 +312,7 @@ flowchart LR
 
 ### Frontend
 
-The web interface uses Next.js App Router, React, TypeScript, and Tailwind CSS. It connects to the backend through `NEXT_PUBLIC_API_BASE` and contains no authentication, wallet connection, transaction flow, database, or client-side calculation engine.
+The web interface uses Next.js App Router, React, TypeScript, and Tailwind CSS. It connects to the backend through `NEXT_PUBLIC_API_BASE` and contains no authentication, wallet connection, transaction flow, server database, or client-side calculation engine. The optional Strategy Registry uses browser-local storage only after explicit consent.
 
 ### Backend
 
@@ -458,6 +472,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |
 | `POST` | `/strategy/stress-test` | Legacy alias retained for SDK compatibility. Temporarily free. |
 | `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, and Morpho positions and generate a read-only hedge-intelligence report. Permanently free. |
+| `POST` | `/strategy-registry/evaluate` | Evaluate a client-owned recommendation and observed-outcome registry without server persistence or silent retraining. Free. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
 | `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated free-preview analysis. |
 | `POST` | `/` | OKX.AI-compatible alias for the complete coordinated Risk Engine analysis. A bare review probe returns the documented SOL reference scenario; callers can submit their own full request body. |
@@ -668,7 +683,7 @@ Production CORS permits the deployed frontend plus local Next.js development ori
 - Aave access uses configured read-only RPC calls.
 - Morpho access uses its supported public API.
 - External-protocol failures are isolated and returned to the caller.
-- Short-lived in-memory caching is used; the current MVP has no database.
+- Short-lived in-memory caching is used; the current MVP has no server database. The opt-in Strategy Registry remains browser-local unless an agent exports and stores its JSON elsewhere.
 - Recommendations are analytical outputs, not trade instructions or execution.
 
 ## FAQ
@@ -711,7 +726,7 @@ With no retrieved positions, the report is marked `insufficient_data`. If positi
 
 ### Is submitted data stored?
 
-No. The current implementation has no database and does not retain submitted strategy or wallet inputs.
+Submitted strategy and wallet inputs are not retained by the backend. If a user explicitly enables Strategy Registry, completed decision records and any user-entered outcome observations are stored in that browser until cleared or exported.
 
 ### Can agents use DeltaZero?
 

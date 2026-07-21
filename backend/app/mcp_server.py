@@ -11,6 +11,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.models.monte_carlo import MonteCarloRequest
 from app.models.risk_engine import RiskEnginePassRequest
+from app.models.registry import RegistryEvaluationRequest
 from app.models.schemas import AuditRequest, BuildRequest, StressTestRequest
 from app.payments import (
     DeltaZeroPaymentMiddleware,
@@ -23,6 +24,7 @@ from app.services.builder import build_strategy
 from app.services.market_data import get_hyperliquid_market
 from app.services.monte_carlo import run_monte_carlo
 from app.services.risk_engine import run_risk_engine_pass
+from app.services.strategy_registry import evaluate_strategy_registry
 from app.services.stress_test import stress_test_strategy
 
 
@@ -107,6 +109,12 @@ def create_mcp_server() -> FastMCP:
         """Return Strategy Build, Hedge-Drift, Funding Stress, and Monte Carlo in one pass."""
 
         return run_risk_engine_pass(request).model_dump(mode="json", exclude_none=True)
+
+    @server.tool(structured_output=True)
+    def evaluate_strategy_memory(request: RegistryEvaluationRequest) -> dict[str, Any]:
+        """Evaluate client-owned recommendation outcomes without persisting or retraining."""
+
+        return evaluate_strategy_registry(request).model_dump(mode="json", exclude_none=True)
 
     @server.resource(
         "deltazero://methodology",

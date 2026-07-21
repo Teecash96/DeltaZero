@@ -62,6 +62,7 @@ def test_mcp_initialize_and_discovery_are_free() -> None:
         "run_funding_stress",
         "run_monte_carlo",
         "run_complete_risk_engine",
+        "evaluate_strategy_memory",
     }
     uris = {resource["uri"] for resource in resources.json()["result"]["resources"]}
     assert uris == {"deltazero://methodology", "deltazero://supported-protocols"}
@@ -77,6 +78,32 @@ def test_free_mcp_tool_is_not_payment_gated() -> None:
 
     assert response.status_code == 200
     assert "PAYMENT-REQUIRED" not in response.headers
+
+
+def test_strategy_memory_evaluation_is_free_and_agent_native() -> None:
+    call = _tool_call(
+        "evaluate_strategy_memory",
+        {
+            "request": {
+                "decisions": [
+                    {
+                        "decision_id": "memory-1",
+                        "asset": "SOL",
+                        "recommendation": "REBALANCE",
+                        "generated_at": "2026-07-20T10:00:00Z",
+                        "outcome_status": "within_tolerance",
+                        "observed_at": "2026-07-21T10:00:00Z",
+                    }
+                ]
+            }
+        },
+    )
+    with TestClient(create_app(payment_settings=SETTINGS)) as client:
+        response = client.post("/mcp", headers=HEADERS, json=call)
+
+    assert response.status_code == 200
+    assert "PAYMENT-REQUIRED" not in response.headers
+    assert response.json()["result"]["structuredContent"]["observed_count"] == 1
 
 
 def test_premium_mcp_tool_returns_x402_challenge() -> None:
