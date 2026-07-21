@@ -62,6 +62,12 @@ export default function MethodologyPage() {
           <div><span>Worked example</span><h3>Why is the Safety Buffer 76?</h3></div>
           <code>min(100, $1,500 ÷ $3,950 × 200) = 75.95 ≈ 76</code>
           <p>The score expresses collateral coverage relative to short notional. The 200 multiplier maps 50% collateral coverage to the top of the 0–100 display range. It is a deliberately simple product heuristic—not a probability of safety, liquidation distance, or venue health factor.</p>
+          <div className="methodology-percentile-context">
+            <strong>80th percentile in the DeltaZero reference cohort</strong>
+            <p>The illustrative score exceeds 80% of 1,001 evenly spaced reference configurations spanning 10%–45% collateral-to-short coverage. It is also 16 points above the medium-risk warning threshold of 60.</p>
+            <small>This is a bounded policy benchmark, not a sample or ranking of active Hyperliquid accounts.</small>
+            <a href="https://github.com/Teecash96/DeltaZero/blob/main/backend/benchmarks/safety_buffer_reference.json" target="_blank" rel="noreferrer">Inspect reference data ↗</a>
+          </div>
         </div>
       </section>
 

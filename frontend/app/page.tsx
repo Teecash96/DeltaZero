@@ -262,13 +262,26 @@ export default function Home() {
         <div className="hero-risk-dashboard glass-card" aria-label="Illustrative risk dashboard">
           <div className="hero-dashboard-head"><div><span>Illustrative risk dashboard</span><strong>SOL neutral carry</strong></div><i>ΔZ / 01</i></div>
           <div className="hero-dashboard-grid">
-            <article className="hero-safety-gauge"><div className="hero-gauge" role="img" aria-label="Illustrative Safety Buffer 76 percent"><strong>76</strong><span>%</span></div><div><span>Safety Buffer</span><b>Healthy</b><small>Illustrative resilience score</small></div></article>
+            <article className="hero-safety-gauge">
+              <div className="hero-gauge" role="img" aria-label="Illustrative Safety Buffer score 76 out of 100"><strong>76</strong><span>/100</span></div>
+              <div>
+                <span>Safety Buffer</span>
+                <b>Healthy · 80th percentile</b>
+                <small>Better than 80% of 1,001 bounded DeltaZero SOL reference configurations.</small>
+                <em>+16 points above the medium-risk warning threshold.</em>
+              </div>
+            </article>
             <article className="hero-mini-metric"><span>Hedge Drift</span><strong>4.2%</strong><small>Inside illustrative tolerance</small></article>
             <article className="hero-mini-metric"><span>Net Carry APY</span><strong>9.8%</strong><small>Illustrative annual estimate</small></article>
           </div>
           <div className="hero-dashboard-lower">
             <article className="hero-histogram"><div><span>Monte Carlo Distribution</span><small>Illustrative stress paths</small></div><div className="hero-histogram-bars" aria-hidden="true">{[18, 30, 48, 70, 92, 78, 55, 36, 22].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div></article>
             <article className="hero-position-card"><span>Delta neutral position</span><div><b>↑ Long SOL</b><b>↓ Short SOL Perp</b></div><strong>Near Neutral</strong></article>
+          </div>
+          <div className="hero-benchmark-note">
+            <span>Reference context</span>
+            <p>Illustrative policy cohort—not a ranking of live Hyperliquid accounts.</p>
+            <a href="https://github.com/Teecash96/DeltaZero/blob/main/backend/benchmarks/safety_buffer_reference.json" target="_blank" rel="noreferrer">Inspect cohort ↗</a>
           </div>
         </div>
       </section>

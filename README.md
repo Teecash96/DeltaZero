@@ -117,6 +117,14 @@ Reproduce the results from `backend/`:
 PYTHONPATH=. .venv-new/bin/python benchmarks/agent_risk_benchmark.py
 ```
 
+The illustrative homepage Safety Buffer also has a reproducible reference
+cohort. A score of 75.95 (displayed as 76) ranks at the 80th percentile across
+1,001 evenly spaced DeltaZero SOL reference configurations spanning 10%–45%
+collateral-to-short coverage. It is 15.95 points above the medium-risk warning
+threshold of 60. Run `benchmarks/safety_buffer_reference.py` to reproduce it.
+This is a bounded product-policy cohort—not a sample or ranking of active
+Hyperliquid accounts.
+
 ## Feature Overview
 
 | Capability | Status | Description |

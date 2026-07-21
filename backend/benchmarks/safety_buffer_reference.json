@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-07-21T21:17:39.630614+00:00",
+  "benchmark_type": "bounded_product_reference_cohort",
+  "asset_label": "SOL neutral-carry reference configurations",
+  "configuration_count": 1001,
+  "cohort_bounds": {
+    "collateral_to_short_ratio_min_pct": 10.0,
+    "collateral_to_short_ratio_max_pct": 45.0,
+    "sampling": "evenly_spaced"
+  },
+  "illustrative_position": {
+    "short_notional_usd": 3950.0,
+    "collateral_usd": 1500.0,
+    "safety_buffer_exact": 75.95,
+    "safety_buffer_display": 76,
+    "percentile_rank": 80,
+    "points_above_medium_warning": 15.95,
+    "points_above_medium_critical": 35.95
+  },
+  "method": "percent of reference scores less than or equal to the illustrative score",
+  "limitations": [
+    "This is a transparent DeltaZero policy reference cohort, not a sample of active Hyperliquid accounts.",
+    "The cohort does not estimate the real-world distribution of trader collateralization.",
+    "Safety Buffer is a collateral-coverage heuristic, not liquidation probability or expected profitability."
+  ]
+}

@@ -109,6 +109,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-safety-gauge > div:last-child span { color: #8c988f; font-size: 11px; }
 .hero-safety-gauge b { color: var(--green); font-size: 14px; }
 .hero-safety-gauge small, .hero-mini-metric small { color: #6f7b72; font-size: 10px; line-height: 1.5; }
+.hero-safety-gauge em { color: var(--muted); font: normal 9px/1.45 var(--font-geist-mono); }
 .hero-mini-metric { display: grid; gap: 8px; }
 .hero-mini-metric strong { font: 25px var(--font-geist-mono); }
 .hero-dashboard-lower { margin-top: 12px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 12px; }
@@ -120,6 +121,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-position-card { display: grid; gap: 14px; }
 .hero-position-card div { display: grid; gap: 8px; color: #bac4bc; font-size: 11px; }
 .hero-position-card strong { align-self: end; width: fit-content; padding: 6px 8px; border: 1px solid rgba(185,246,90,.24); border-radius: 999px; color: var(--green); font-size: 10px; text-transform: uppercase; }
+.hero-benchmark-note { margin-top: 12px; padding: 12px 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; border: 1px solid rgba(174,194,177,.14); border-radius: 10px; background: rgba(7,12,8,.4); }
+.hero-benchmark-note span { color: var(--green); font: 700 8px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
+.hero-benchmark-note p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.hero-benchmark-note a { color: var(--ink); font-size: 9px; font-weight: 700; white-space: nowrap; }
+.hero-benchmark-note a:hover { color: var(--green); }
+[data-theme="light"] .hero-benchmark-note { background: rgba(79,125,18,.035); }
 .action-demo-section { padding-top: 76px; }
 .action-demo-shell { padding: 20px; }
 .action-demo-track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
@@ -1275,6 +1282,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .methodology-worked-example h3 { margin: 7px 0 0; color: var(--text); font-size: 19px; }
 .methodology-worked-example code { overflow-x: auto; color: var(--accent); font: 600 14px var(--font-mono), monospace; white-space: nowrap; }
 .methodology-worked-example p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.75; }
+.methodology-percentile-context { padding: 16px; display: grid; gap: 7px; border: 1px solid var(--border); border-radius: 10px; background: var(--green-soft); }
+.methodology-percentile-context strong { color: var(--text); font-size: 13px; }
+.methodology-percentile-context p { font-size: 11px; line-height: 1.65; }
+.methodology-percentile-context small { color: var(--subtle); font-size: 9px; line-height: 1.55; }
+.methodology-percentile-context a { width: fit-content; color: var(--green); font-size: 10px; font-weight: 750; }
+.methodology-percentile-context a:hover { color: var(--ink); }
 .methodology-callout, .support-safety { margin-top: 22px; padding: 18px; border-left: 3px solid var(--accent); background: rgba(154,224,69,.055); }
 .methodology-callout p, .support-safety p { margin: 7px 0 0; color: var(--muted); line-height: 1.65; }
 .source-list { display: grid; gap: 0; }
@@ -1538,6 +1551,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .hero-trust-badges span { text-align: center; }
   .hero-risk-dashboard { padding: 16px; }
   .hero-dashboard-grid, .hero-dashboard-lower { grid-template-columns: 1fr; }
+  .hero-benchmark-note { grid-template-columns: 1fr; align-items: start; }
+  .hero-benchmark-note a { min-height: 40px; display: inline-flex; align-items: center; white-space: normal; }
   .hero-safety-gauge { grid-row: auto; }
   .hero-gauge { width: 98px; height: 98px; }
   .action-demo-track, .builder-mc-grid { grid-template-columns: 1fr; }
