@@ -63,6 +63,7 @@ def test_mcp_initialize_and_discovery_are_free() -> None:
         "run_monte_carlo",
         "run_complete_risk_engine",
         "evaluate_risk_envelope",
+        "explain_risk_recommendation",
         "evaluate_strategy_memory",
     }
     uris = {resource["uri"] for resource in resources.json()["result"]["resources"]}

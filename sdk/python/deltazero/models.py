@@ -183,6 +183,19 @@ class RiskEnvelopeV1(TypedDict):
     compatible_transports: list[Literal["REST", "MCP", "JSON"]]
 
 
+class RiskExplanation(TypedDict):
+    headline: str
+    explanation: str
+    key_drivers: list[str]
+    recommended_next_step: str
+    time_horizon_hours: float | None
+    source: Literal["openai", "deterministic_fallback"]
+    model: str | None
+    analysis_id: str
+    facts_used: list[str]
+    limitations: list[str]
+
+
 class NormalizedPosition(TypedDict, total=False):
     protocol: WalletProtocol
     network: WalletNetwork

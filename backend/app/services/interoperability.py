@@ -29,7 +29,11 @@ def build_risk_envelope(request: RiskEnginePassRequest, build: BuildResponse, au
     action = max((ACTION_PRIORITY[item] for item in module_actions), key=lambda item: item[0])[1]
     p95 = monte_carlo.summary.p95_impairment_loss_pct
     zone = _risk_zone(build.metrics.safety_buffer_score, audit.metrics.hedge_drift_pct, p95, action)
-    canonical = json.dumps(request.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    canonical = json.dumps(
+        request.model_dump(mode="json", exclude={"include_ai_explanation"}),
+        sort_keys=True,
+        separators=(",", ":"),
+    )
     return RiskEnvelopeV1(
         analysis_id=f"dz_{hashlib.sha256(canonical.encode()).hexdigest()[:24]}",
         subject=RiskEnvelopeSubject(asset=request.asset, strategy_style=request.target_style, capital_usd=request.capital_usd),

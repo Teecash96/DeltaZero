@@ -21,7 +21,7 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 
 </div>
 
-DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets.
+DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets. An optional grounded LLM layer explains those computed results in plain language; it cannot change the underlying numbers or recommendation.
 
 ## Product screenshots
 
@@ -49,6 +49,7 @@ MCP initialization, discovery, resources, market context, and deterministic tool
 - `run_monte_carlo`
 - `run_complete_risk_engine` — all four coordinated reports in one invocation
 - `evaluate_risk_envelope` — portable Risk Envelope v1 decision contract
+- `explain_risk_recommendation` — grounded natural-language brief over verified Risk Envelope evidence
 
 Agents can also discover `deltazero://schemas/risk-envelope-v1` as an MCP resource. It exposes the same JSON Schema available over REST.
 
@@ -143,6 +144,7 @@ Hyperliquid accounts.
 | Risk Envelope v1 | Live | Normalizes action, risk zone, measures, evidence, constraints, and approval requirements into a versioned REST/MCP/JSON contract. |
 | Protocol Adapter Registry | Live | Lets additional read-only protocol adapters register behind the common wallet-position interface without rewriting the analysis engine. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
+| Grounded Risk Explanation | Live · Optional | Uses OpenAI Structured Outputs to explain verified Risk Envelope evidence without recalculating metrics, inventing market causes, or changing the deterministic action. Falls back safely when unavailable. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | Agent Payment Gate | Staged · Temporarily Free | The verified 1 USDT X Layer payment boundary remains in the backend and can be restored with `DELTAZERO_ACCESS_MODE=paid`. All analysis calls are currently free during listing review. |
 | Interactive Strategy Preview | Live · Permanently Free | Compares Conservative Income and Aggressive Carry through the production deterministic builder without a wallet or payment. |
@@ -533,6 +535,37 @@ In paid mode, only the three `PAYMENT_*` variables produce challenge-only behavi
 DeltaZero does not collect payment or connect wallets in the website. During the temporary free preview, autonomous clients can invoke the API without payment. When paid mode is restored, the **OKX Agent Payments Protocol** handles the quote, authorization, paid replay, and machine-readable settlement receipt before the backend releases the requested report.
 
 The website remains a read-only product, methodology, and API-discovery surface. Agent clients can inspect the OpenAPI and MCP contracts and run the live analysis tools freely during review.
+
+### Grounded natural-language explanations
+
+Set `include_ai_explanation` to `true` on `POST /risk-engine/analyze` to receive `narrative_explanation` in the same response. This keeps the product to one coordinated call: the deterministic Risk Engine computes the metrics and action first, then the language model explains only the resulting Risk Envelope evidence.
+
+```json
+{
+  "asset": "SOL",
+  "capital_usd": 5000,
+  "risk_tolerance": "medium",
+  "target_style": "neutral_yield",
+  "long_yield_apy": 14,
+  "short_funding_apy": 3,
+  "fee_drag_apy": 1,
+  "simulation_count": 1000,
+  "seed": 42,
+  "include_ai_explanation": true
+}
+```
+
+The provider receives the normalized analysis subject, decision, measures, evidence, constraints, and an allowlist of supplied facts—not wallet credentials or private keys. Structured output is validated before display. Any invented number, unsupported time estimate, altered fact, provider error, or missing API key fails closed to a deterministic explanation that explicitly states the evidence limitations.
+
+Configure the backend only; never expose these values through `NEXT_PUBLIC_*` variables:
+
+```bash
+export OPENAI_API_KEY="your-server-side-key"
+export OPENAI_EXPLANATION_MODEL="gpt-5.6"
+export OPENAI_EXPLANATION_TIMEOUT_SECONDS="15"
+```
+
+The model is configurable. If `OPENAI_API_KEY` is absent, the API remains fully operational and returns `source: "deterministic_fallback"` instead of failing the risk analysis. Agents can request the same bounded output through the `explain_risk_recommendation` MCP tool.
 
 Unpaid challenge:
 

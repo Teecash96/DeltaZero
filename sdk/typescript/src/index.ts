@@ -15,6 +15,7 @@ export type {
   Recommendation,
   RiskEnvelopeRequest,
   RiskEnvelopeV1,
+  RiskExplanation,
   RiskTolerance,
   Scenario,
   ScenarioResult,

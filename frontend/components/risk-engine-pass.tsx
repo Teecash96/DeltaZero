@@ -20,6 +20,7 @@ const initial: RiskEnginePassRequest = {
   simulation_count: 1000,
   time_horizon_days: 30,
   seed: 42,
+  include_ai_explanation: true,
 };
 
 const pct = (value: number) => `${value.toFixed(2)}%`;
@@ -100,6 +101,25 @@ export function RiskEnginePass() {
             <div><dt>Approval</dt><dd>{result.risk_envelope.decision.human_approval_required ? "Human required" : "Not required"}</dd></div>
           </dl>
         </article>
+        {result.narrative_explanation ? <article className="panel ai-risk-brief">
+          <header>
+            <div>
+              <span className="decision-eyebrow">Natural-language risk brief</span>
+              <h3>{result.narrative_explanation.headline}</h3>
+            </div>
+            <small>{result.narrative_explanation.source === "openai" ? `OpenAI · ${result.narrative_explanation.model}` : "Deterministic fallback"}</small>
+          </header>
+          <p>{result.narrative_explanation.explanation}</p>
+          <div className="ai-risk-brief-grid">
+            <div><span>Verified drivers</span><ul>{result.narrative_explanation.key_drivers.map((driver) => <li key={driver}>{driver}</li>)}</ul></div>
+            <div><span>Recommended next step</span><strong>{result.narrative_explanation.recommended_next_step}</strong></div>
+          </div>
+          <footer>
+            <span>Uses calculated evidence only</span>
+            <span>No price prediction</span>
+            <span>{result.narrative_explanation.time_horizon_hours === null ? "No unsupported time estimate" : `${result.narrative_explanation.time_horizon_hours}h computed horizon`}</span>
+          </footer>
+        </article> : null}
       </div> : null}
     </section>
   );

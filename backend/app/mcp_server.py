@@ -23,7 +23,7 @@ from app.payments import (
 from app.services.auditor import audit_strategy
 from app.services.builder import build_strategy
 from app.services.market_data import get_hyperliquid_market
-from app.services.monte_carlo import run_monte_carlo
+from app.services.monte_carlo import run_monte_carlo as run_monte_carlo_analysis
 from app.services.risk_engine import run_risk_engine_pass
 from app.services.strategy_registry import evaluate_strategy_registry
 from app.services.stress_test import stress_test_strategy
@@ -37,6 +37,7 @@ PREMIUM_MCP_TOOLS = frozenset(
         "run_monte_carlo",
         "run_complete_risk_engine",
         "evaluate_risk_envelope",
+        "explain_risk_recommendation",
     }
 )
 
@@ -104,7 +105,7 @@ def create_mcp_server() -> FastMCP:
     def run_monte_carlo(request: MonteCarloRequest) -> dict[str, Any]:
         """Run seeded sensitivity paths and return impairment and breach distributions."""
 
-        return run_monte_carlo(request).model_dump(mode="json", exclude_none=True)
+        return run_monte_carlo_analysis(request).model_dump(mode="json", exclude_none=True)
 
     @server.tool(structured_output=True)
     def run_complete_risk_engine(request: RiskEnginePassRequest) -> dict[str, Any]:
@@ -117,6 +118,15 @@ def create_mcp_server() -> FastMCP:
         """Return the portable Risk Envelope v1 without endpoint-specific parsing."""
 
         return run_risk_engine_pass(request).risk_envelope.model_dump(mode="json", exclude_none=True)
+
+    @server.tool(structured_output=True)
+    def explain_risk_recommendation(request: RiskEnginePassRequest) -> dict[str, Any]:
+        """Explain verified risk metrics without changing the deterministic recommendation."""
+        explained_request = request.model_copy(update={"include_ai_explanation": True})
+        explanation = run_risk_engine_pass(explained_request).narrative_explanation
+        if explanation is None:  # pragma: no cover - defensive contract guard
+            raise RuntimeError("Risk explanation was not generated.")
+        return explanation.model_dump(mode="json", exclude_none=True)
 
     @server.tool(structured_output=True)
     def evaluate_strategy_memory(request: RegistryEvaluationRequest) -> dict[str, Any]:

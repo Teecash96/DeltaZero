@@ -203,6 +203,19 @@ export interface RiskEnvelopeRequest extends BuildRequest {
   seed?: number | null;
 }
 
+export interface RiskExplanation {
+  headline: string;
+  explanation: string;
+  key_drivers: string[];
+  recommended_next_step: string;
+  time_horizon_hours: number | null;
+  source: "openai" | "deterministic_fallback";
+  model: string | null;
+  analysis_id: string;
+  facts_used: string[];
+  limitations: string[];
+}
+
 export interface RiskEnvelopeV1 {
   schema_id: "https://deltazero.dev/schemas/risk-envelope/v1";
   schema_version: "1.0.0";

@@ -1850,9 +1850,23 @@ pre, .json-box pre, .methodology-worked-example code {
 .risk-envelope-result dl div { min-width: 0; padding: 11px; border: 1px solid var(--border); border-radius: 9px; }
 .risk-envelope-result dt { color: var(--subtle); font: 700 8px var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
 .risk-envelope-result dd { margin: 6px 0 0; color: var(--text); font: 650 10px var(--font-geist-mono); overflow-wrap: anywhere; }
+.ai-risk-brief { border-color: color-mix(in srgb, var(--accent) 32%, var(--border)); }
+.ai-risk-brief header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.ai-risk-brief h3 { margin: 10px 0 0; color: var(--text); font-size: 24px; }
+.ai-risk-brief header > small { flex: 0 0 auto; padding: 7px 9px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font: 700 8px var(--font-geist-mono); text-transform: uppercase; }
+.ai-risk-brief > p { max-width: 940px; margin: 22px 0; color: var(--text); font-size: 15px; line-height: 1.8; }
+.ai-risk-brief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ai-risk-brief-grid > div { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-soft); }
+.ai-risk-brief-grid span { color: var(--subtle); font: 700 8px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
+.ai-risk-brief-grid ul { margin: 12px 0 0; padding-left: 16px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+.ai-risk-brief-grid strong { display: block; margin-top: 12px; color: var(--text); font-size: 12px; line-height: 1.7; }
+.ai-risk-brief footer { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.ai-risk-brief footer span { padding: 6px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font: 650 8px var(--font-geist-mono); text-transform: uppercase; }
 
 @media (max-width: 760px) {
-  .mc-systemic-grid, .history-card, .registry-home-grid, .composability-grid, .composability-contract, .risk-envelope-result { grid-template-columns: 1fr; }
+  .mc-systemic-grid, .history-card, .registry-home-grid, .composability-grid, .composability-contract, .risk-envelope-result, .ai-risk-brief-grid { grid-template-columns: 1fr; }
+  .ai-risk-brief header { display: grid; }
+  .ai-risk-brief header > small { width: fit-content; }
   .composability-contract div { border-right: 0; border-bottom: 1px solid var(--border); }
   .composability-contract div:last-child { border-bottom: 0; }
   .registry-home-contract .button { margin-top: 26px; }

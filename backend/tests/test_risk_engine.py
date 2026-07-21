@@ -88,3 +88,16 @@ def test_risk_envelope_json_schema_is_public() -> None:
     schema = response.json()
     assert schema["title"] == "RiskEnvelopeV1"
     assert "decision" in schema["properties"]
+
+
+def test_risk_engine_can_include_grounded_narrative(monkeypatch) -> None:
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    response = TestClient(create_app()).post(
+        "/risk-engine/analyze",
+        json={**PAYLOAD, "include_ai_explanation": True},
+    )
+    assert response.status_code == 200
+    explanation = response.json()["narrative_explanation"]
+    assert explanation["source"] == "deterministic_fallback"
+    assert explanation["analysis_id"] == response.json()["risk_envelope"]["analysis_id"]
+    assert explanation["time_horizon_hours"] is None

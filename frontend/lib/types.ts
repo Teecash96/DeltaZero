@@ -298,6 +298,20 @@ export interface RiskEnginePassRequest {
   simulation_count?: number;
   time_horizon_days?: number;
   seed?: number | null;
+  include_ai_explanation?: boolean;
+}
+
+export interface RiskExplanation {
+  headline: string;
+  explanation: string;
+  key_drivers: string[];
+  recommended_next_step: string;
+  time_horizon_hours: number | null;
+  source: "openai" | "deterministic_fallback";
+  model: string | null;
+  analysis_id: string;
+  facts_used: string[];
+  limitations: string[];
 }
 
 export interface RiskEnvelopeV1 {
@@ -338,6 +352,7 @@ export interface RiskEnginePassResponse {
   funding_stress_test: StressTestResponse;
   monte_carlo_sensitivity: MonteCarloResponse;
   risk_envelope: RiskEnvelopeV1;
+  narrative_explanation: RiskExplanation | null;
   generated_at: string;
 }
 

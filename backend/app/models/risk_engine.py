@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.models.monte_carlo import MonteCarloResponse
 from app.models.interoperability import RiskEnvelopeV1
+from app.models.risk_explanation import RiskExplanation
 from app.models.schemas import (
     Asset,
     AuditResponse,
@@ -32,6 +33,7 @@ class RiskEnginePassRequest(BaseModel):
     simulation_count: int = Field(default=1000, ge=100, le=10000)
     time_horizon_days: int = Field(default=30, ge=1, le=365)
     seed: int | None = 42
+    include_ai_explanation: bool = False
 
 
 class RiskEnginePassResponse(BaseModel):
@@ -42,4 +44,5 @@ class RiskEnginePassResponse(BaseModel):
     funding_stress_test: StressTestResponse
     monte_carlo_sensitivity: MonteCarloResponse
     risk_envelope: RiskEnvelopeV1
+    narrative_explanation: RiskExplanation | None = None
     generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
