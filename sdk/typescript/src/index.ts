@@ -13,6 +13,8 @@ export type {
   ProtocolError,
   RecommendedStructure,
   Recommendation,
+  RiskEnvelopeRequest,
+  RiskEnvelopeV1,
   RiskTolerance,
   Scenario,
   ScenarioResult,
@@ -35,4 +37,3 @@ export type {
   WalletStressProfile,
   WalletStrategyHealth,
 } from "./types.js";
-

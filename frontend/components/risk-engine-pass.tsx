@@ -88,6 +88,18 @@ export function RiskEnginePass() {
           <article className="panel"><span>03 · Funding Stress Testing</span><h3>{result.funding_stress_test.recommendation.action}</h3><strong>{pct(result.funding_stress_test.estimated_impairment_loss_pct)} impairment</strong><p>{usd(result.funding_stress_test.post_impairment_equity_usd)} post-stress equity</p></article>
           <article className="panel"><span>04 · Monte Carlo Sensitivity</span><h3>{result.monte_carlo_sensitivity.summary.recommendation}</h3><strong>{pct(result.monte_carlo_sensitivity.summary.p95_impairment_loss_pct)} P95 impairment</strong><p>{pct(result.monte_carlo_sensitivity.summary.probability_hedge_drift_breach_pct)} drift-breach probability</p></article>
         </div>
+        <article className="panel risk-envelope-result">
+          <div>
+            <span className="decision-eyebrow">Portable Risk Envelope · v{result.risk_envelope.schema_version}</span>
+            <h3>{result.risk_envelope.decision.action} · {result.risk_envelope.decision.risk_zone}</h3>
+            <p>{result.risk_envelope.decision.summary}</p>
+          </div>
+          <dl>
+            <div><dt>Analysis ID</dt><dd>{result.risk_envelope.analysis_id}</dd></div>
+            <div><dt>Transports</dt><dd>{result.risk_envelope.compatible_transports.join(" · ")}</dd></div>
+            <div><dt>Approval</dt><dd>{result.risk_envelope.decision.human_approval_required ? "Human required" : "Not required"}</dd></div>
+          </dl>
+        </article>
       </div> : null}
     </section>
   );

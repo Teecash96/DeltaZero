@@ -246,6 +246,10 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
             "/risk-engine/analyze",
             "Run the complete four-module DeltaZero Risk Engine pass",
         ),
+        "POST /risk-envelope/evaluate": route(
+            "/risk-envelope/evaluate",
+            "Return a versioned portable DeltaZero Risk Envelope",
+        ),
         "POST /strategy/build": route(
             "/strategy/build",
             "Build and evaluate a deterministic pseudo-delta-neutral strategy",

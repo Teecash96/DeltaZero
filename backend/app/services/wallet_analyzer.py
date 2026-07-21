@@ -8,10 +8,8 @@ from threading import Lock
 from time import time
 
 from app.config import DecisionProfile, WalletRiskProfile, WALLET_RISK_PROFILES
-from app.integrations.aave import AaveAdapter
 from app.integrations.base import WalletAdapter
-from app.integrations.hyperliquid import HyperliquidAdapter
-from app.integrations.morpho import MorphoAdapter
+from app.integrations.registry import DEFAULT_ADAPTER_REGISTRY
 from app.models.impairment import ImpairmentBreakdown, ImpairmentResult
 from app.models.schemas import Metrics
 from app.models.wallet import (
@@ -84,16 +82,7 @@ def _wallet_profile(stress_profile: str) -> WalletRiskProfile:
 
 
 def _select_adapters(networks: list[str], protocols: list[str]) -> list[WalletAdapter]:
-    adapters: list[WalletAdapter] = []
-    for network in networks:
-        for protocol in protocols:
-            if protocol == "hyperliquid" and network == "hyperliquid":
-                adapters.append(HyperliquidAdapter())
-            elif protocol == "aave" and network in {"ethereum", "arbitrum"}:
-                adapters.append(AaveAdapter(network))
-            elif protocol == "morpho" and network in {"ethereum", "arbitrum"}:
-                adapters.append(MorphoAdapter())
-    return adapters
+    return DEFAULT_ADAPTER_REGISTRY.resolve(networks, protocols)
 
 
 def _positions_by_asset(positions: list[NormalizedPosition]) -> dict[str, list[NormalizedPosition]]:

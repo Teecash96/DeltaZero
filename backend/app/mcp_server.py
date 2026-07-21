@@ -10,6 +10,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.models.monte_carlo import MonteCarloRequest
+from app.models.interoperability import RiskEnvelopeV1
 from app.models.risk_engine import RiskEnginePassRequest
 from app.models.registry import RegistryEvaluationRequest
 from app.models.schemas import AuditRequest, BuildRequest, StressTestRequest
@@ -35,6 +36,7 @@ PREMIUM_MCP_TOOLS = frozenset(
         "run_funding_stress",
         "run_monte_carlo",
         "run_complete_risk_engine",
+        "evaluate_risk_envelope",
     }
 )
 
@@ -111,6 +113,12 @@ def create_mcp_server() -> FastMCP:
         return run_risk_engine_pass(request).model_dump(mode="json", exclude_none=True)
 
     @server.tool(structured_output=True)
+    def evaluate_risk_envelope(request: RiskEnginePassRequest) -> dict[str, Any]:
+        """Return the portable Risk Envelope v1 without endpoint-specific parsing."""
+
+        return run_risk_engine_pass(request).risk_envelope.model_dump(mode="json", exclude_none=True)
+
+    @server.tool(structured_output=True)
     def evaluate_strategy_memory(request: RegistryEvaluationRequest) -> dict[str, Any]:
         """Evaluate client-owned recommendation outcomes without persisting or retraining."""
 
@@ -160,6 +168,16 @@ def create_mcp_server() -> FastMCP:
                 "trade_execution": False,
             }
         )
+
+    @server.resource(
+        "deltazero://schemas/risk-envelope-v1",
+        title="DeltaZero Risk Envelope v1 JSON Schema",
+        mime_type="application/schema+json",
+    )
+    def risk_envelope_schema() -> str:
+        """Return the portable output contract embedded in complete risk passes."""
+
+        return json.dumps(RiskEnvelopeV1.model_json_schema())
 
     return server
 

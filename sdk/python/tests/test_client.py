@@ -41,6 +41,28 @@ class DeltaZeroClientTests(unittest.TestCase):
             )
         self.assertEqual(report["recommendation"]["action"], "OPEN")
 
+    def test_successful_risk_envelope_request(self) -> None:
+        client = DeltaZeroClient("https://example.com")
+        envelope = {
+            "schema_id": "https://deltazero.dev/schemas/risk-envelope/v1",
+            "schema_version": "1.0.0",
+            "decision": {"action": "OPEN", "human_approval_required": True},
+        }
+        with patch("deltazero.client.request.urlopen", return_value=response(envelope)):
+            report = client.evaluate_risk_envelope(
+                {
+                    "asset": "SOL",
+                    "capital_usd": 5000,
+                    "risk_tolerance": "medium",
+                    "target_style": "neutral_yield",
+                    "long_yield_apy": 14,
+                    "short_funding_apy": 3,
+                    "fee_drag_apy": 1,
+                }
+            )
+        self.assertEqual(report["schema_version"], "1.0.0")
+        self.assertTrue(report["decision"]["human_approval_required"])
+
     def test_successful_auditor_request(self) -> None:
         client = DeltaZeroClient("https://example.com")
         with patch("deltazero.client.request.urlopen", return_value=response({"actions": ["HOLD"]})):

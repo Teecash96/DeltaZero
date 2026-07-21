@@ -13,6 +13,8 @@ from .models import (
     BuildResponse,
     StressTestRequest,
     StressTestResponse,
+    RiskEnvelopeRequest,
+    RiskEnvelopeV1,
     WalletAnalyzeRequest,
     WalletPortfolioResponse,
 )
@@ -127,3 +129,6 @@ class DeltaZeroClient:
 
     def audit_wallet(self, request_body: WalletAnalyzeRequest) -> WalletPortfolioResponse:
         return self._request("/wallet/analyze", request_body)  # type: ignore[return-value]
+
+    def evaluate_risk_envelope(self, request_body: RiskEnvelopeRequest) -> RiskEnvelopeV1:
+        return self._request("/risk-envelope/evaluate", request_body)  # type: ignore[return-value]

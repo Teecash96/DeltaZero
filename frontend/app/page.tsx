@@ -10,6 +10,7 @@ const quickLinks = [
   { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
   { label: "Docs", href: "#docs", note: "Repository and API references" },
   { label: "Why Agents", href: "#why-agents", note: "Measured latency and repeatability" },
+  { label: "Composability", href: "#composability", note: "REST, MCP, JSON, and adapter contracts" },
   { label: "Strategy Registry", href: "#strategy-registry", note: "Opt-in recommendation and outcome memory" },
   { label: "Agents", href: "#agents", note: "SDKs and automated workflows" },
   { label: "FAQs", href: "#faqs", note: "Common questions and constraints" },
@@ -609,6 +610,48 @@ export default function Home() {
         <p className="agent-benchmark-disclaimer">
           Reference-policy agreement verifies DeltaZero&apos;s configured decision rules. It is not a profitability
           forecast or a measured real-world loss rate.
+        </p>
+      </section>
+
+      <section id="composability" className="section-wrap composability-section anchor-section">
+        <div className="section-heading">
+          <div>
+            <p className="kicker">Agent composability</p>
+            <h2>One risk contract. Any agent stack.</h2>
+          </div>
+          <p>
+            DeltaZero returns a versioned Risk Envelope that agents can consume through REST, MCP, or portable JSON,
+            while protocol integrations plug into a shared read-only adapter registry.
+          </p>
+        </div>
+        <div className="composability-grid">
+          <article className="composability-card">
+            <span>01 · Standard contract</span>
+            <h3>Risk Envelope v1</h3>
+            <p>A stable decision artifact containing action, risk zone, evidence, measures, constraints, and an analysis ID.</p>
+            <a href="https://deltazero-production.up.railway.app/standards/risk-envelope/v1" target="_blank" rel="noreferrer">Inspect JSON Schema ↗</a>
+          </article>
+          <article className="composability-card">
+            <span>02 · Extensible ingestion</span>
+            <h3>Protocol Adapter Registry</h3>
+            <p>Hyperliquid, Aave, and Morpho implement the same adapter contract. New read-only integrations register without rewriting the analysis engine.</p>
+            <a href="https://github.com/Teecash96/DeltaZero/blob/main/backend/app/integrations/registry.py" target="_blank" rel="noreferrer">Review adapter interface ↗</a>
+          </article>
+          <article className="composability-card">
+            <span>03 · Native agent access</span>
+            <h3>MCP + published SDKs</h3>
+            <p>Agents can invoke the complete engine or the Risk Envelope tool directly, with typed npm and PyPI clients for application workflows.</p>
+            <a href="https://deltazero-production.up.railway.app/mcp" target="_blank" rel="noreferrer">Open production MCP ↗</a>
+          </article>
+        </div>
+        <div className="composability-contract">
+          <div><span>schema</span><strong>risk-envelope/v1</strong></div>
+          <div><span>action</span><strong>OPEN · WAIT · HOLD · REBALANCE · REDUCE · CLOSE</strong></div>
+          <div><span>boundary</span><strong>Read-only · human approval required</strong></div>
+        </div>
+        <p className="composability-note">
+          DeltaZero deliberately does not publish scores on-chain, mint attestations, approve tokens, or execute trades.
+          Composability ends at an inspectable recommendation so another system cannot mistake analysis for authorization.
         </p>
       </section>
 

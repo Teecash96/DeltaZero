@@ -62,10 +62,15 @@ def test_mcp_initialize_and_discovery_are_free() -> None:
         "run_funding_stress",
         "run_monte_carlo",
         "run_complete_risk_engine",
+        "evaluate_risk_envelope",
         "evaluate_strategy_memory",
     }
     uris = {resource["uri"] for resource in resources.json()["result"]["resources"]}
-    assert uris == {"deltazero://methodology", "deltazero://supported-protocols"}
+    assert uris == {
+        "deltazero://methodology",
+        "deltazero://supported-protocols",
+        "deltazero://schemas/risk-envelope-v1",
+    }
 
 
 def test_free_mcp_tool_is_not_payment_gated() -> None:

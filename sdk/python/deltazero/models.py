@@ -163,6 +163,26 @@ class StressTestResponse(StrategyResponseBase):
     impairment_breakdown: ImpairmentBreakdown
 
 
+class RiskEnvelopeRequest(BuildRequest, total=False):
+    stress_magnitude_pct: float
+    simulation_count: int
+    time_horizon_days: int
+    seed: int | None
+
+
+class RiskEnvelopeV1(TypedDict):
+    schema_id: Literal["https://deltazero.dev/schemas/risk-envelope/v1"]
+    schema_version: Literal["1.0.0"]
+    methodology_version: Literal["deltazero-v1"]
+    analysis_id: str
+    subject: dict[str, object]
+    decision: dict[str, object]
+    measures: dict[str, float | int]
+    evidence: dict[str, object]
+    constraints: list[str]
+    compatible_transports: list[Literal["REST", "MCP", "JSON"]]
+
+
 class NormalizedPosition(TypedDict, total=False):
     protocol: WalletProtocol
     network: WalletNetwork

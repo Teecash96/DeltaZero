@@ -67,6 +67,24 @@ test("successful builder request", async () => {
   restore();
 });
 
+test("successful risk-envelope request", async () => {
+  const envelope = {
+    schema_id: "https://deltazero.dev/schemas/risk-envelope/v1",
+    schema_version: "1.0.0",
+    methodology_version: "deltazero-v1",
+    analysis_id: "dz_fixture",
+    subject: { kind: "pseudo_delta_neutral_strategy", asset: "SOL", strategy_style: "neutral_yield", capital_usd: 5000 },
+    decision: { action: "OPEN", risk_zone: "healthy", summary: "Healthy.", human_approval_required: true },
+    measures: {}, evidence: {}, constraints: [], compatible_transports: ["REST", "MCP", "JSON"],
+  };
+  const restore = installFetch(async () => mockResponse(JSON.stringify(envelope)));
+  const client = new DeltaZeroClient({ baseUrl: "https://example.com" });
+  const report = await client.evaluateRiskEnvelope(builderRequest);
+  assert.equal(report.schema_version, "1.0.0");
+  assert.equal(report.decision.human_approval_required, true);
+  restore();
+});
+
 test("successful auditor request", async () => {
   const restore = installFetch(async () => mockResponse(JSON.stringify({ ...builderResponse, actions: ["HOLD"] })));
   const client = new DeltaZeroClient({ baseUrl: "https://example.com" });

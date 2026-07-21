@@ -14,6 +14,7 @@ from app.routers.monte_carlo import router as monte_carlo_router
 from app.routers.risk_engine import router as risk_engine_router
 from app.routers.registry import router as registry_router
 from app.routers.preview import router as preview_router
+from app.routers.standards import evaluation_router as envelope_router, router as standards_router
 from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
 from app.mcp_server import MCPToolPaymentGate, create_mcp_server
@@ -113,6 +114,8 @@ def create_app(
     application.include_router(risk_engine_router)
     application.include_router(registry_router)
     application.include_router(preview_router)
+    application.include_router(standards_router)
+    application.include_router(envelope_router)
     # Reuse the SDK's exact /mcp route without Starlette's mount redirect.
     application.router.routes.extend(mcp_application.routes)
 

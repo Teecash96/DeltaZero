@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, Field
 
 from app.models.monte_carlo import MonteCarloResponse
+from app.models.interoperability import RiskEnvelopeV1
 from app.models.schemas import (
     Asset,
     AuditResponse,
@@ -40,4 +41,5 @@ class RiskEnginePassResponse(BaseModel):
     hedge_drift_audit: AuditResponse
     funding_stress_test: StressTestResponse
     monte_carlo_sensitivity: MonteCarloResponse
+    risk_envelope: RiskEnvelopeV1
     generated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())

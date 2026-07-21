@@ -32,7 +32,13 @@ def test_risk_engine_pass_returns_four_coordinated_reports() -> None:
         "hedge_drift_audit",
         "funding_stress_test",
         "monte_carlo_sensitivity",
+        "risk_envelope",
     }
+    envelope = body["risk_envelope"]
+    assert envelope["schema_version"] == "1.0.0"
+    assert envelope["analysis_id"].startswith("dz_")
+    assert envelope["decision"]["human_approval_required"] is True
+    assert envelope["compatible_transports"] == ["REST", "MCP", "JSON"]
     structure = body["strategy_build"]["recommended_structure"]
     assert body["hedge_drift_audit"]["metrics"]["hedge_ratio"] == body["strategy_build"]["metrics"]["hedge_ratio"]
     assert body["funding_stress_test"]["pre_stress_equity_usd"] >= 0
@@ -73,3 +79,12 @@ def test_risk_engine_pass_is_repeatable_with_seed() -> None:
 
     assert first["monte_carlo_sensitivity"]["summary"] == second["monte_carlo_sensitivity"]["summary"]
     assert first["monte_carlo_sensitivity"]["sample_paths"] == second["monte_carlo_sensitivity"]["sample_paths"]
+    assert first["risk_envelope"] == second["risk_envelope"]
+
+
+def test_risk_envelope_json_schema_is_public() -> None:
+    response = TestClient(create_app()).get("/standards/risk-envelope/v1")
+    assert response.status_code == 200
+    schema = response.json()
+    assert schema["title"] == "RiskEnvelopeV1"
+    assert "decision" in schema["properties"]

@@ -48,6 +48,9 @@ MCP initialization, discovery, resources, market context, and deterministic tool
 - `run_funding_stress`
 - `run_monte_carlo`
 - `run_complete_risk_engine` — all four coordinated reports in one invocation
+- `evaluate_risk_envelope` — portable Risk Envelope v1 decision contract
+
+Agents can also discover `deltazero://schemas/risk-envelope-v1` as an MCP resource. It exposes the same JSON Schema available over REST.
 
 The **OKX Agent Payments Protocol** implementation remains staged. Set `DELTAZERO_ACCESS_MODE=paid` after the temporary free-access period to restore the existing 1 USDT per-call boundary without changing application code.
 
@@ -83,6 +86,8 @@ DeltaZero is differentiated by:
 - **One risk language** — Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Wallet Auditor consistently report health, action, Safety Buffer, risk notes, and Decision Confidence.
 - **Read-only portfolio analysis** — supported public protocol data is analyzed without custody or wallet permissions.
 - **Agent-ready contracts** — FastAPI schemas and local TypeScript and Python SDK packages expose structured responses for dashboards and automated workflows.
+- **Portable Risk Envelope** — every complete analysis includes a versioned decision artifact that is identical across REST, MCP, and JSON export.
+- **Extensible protocol adapters** — Hyperliquid, Aave, and Morpho are resolved through a registry so additional read-only sources can be added without changing the decision engine.
 
 ## Why Agents Integrate DeltaZero
 
@@ -135,6 +140,8 @@ Hyperliquid accounts.
 | Wallet Auditor | Live · Free Preview | Analyzes supported public wallet positions through read-only protocol adapters. |
 | Agent Operator Console | Live · Simulation | Runs a session-only guard loop that detects simulated hedge drift, calls the live audit API, and prepares an approval-gated proposal without claiming trade execution. |
 | Strategy Registry | Live · Opt-in | Stores up to 25 decisions locally, lets operators attach observed outcomes, exports portable JSON, and exposes a stateless agent-native evaluation contract without silently retraining thresholds. |
+| Risk Envelope v1 | Live | Normalizes action, risk zone, measures, evidence, constraints, and approval requirements into a versioned REST/MCP/JSON contract. |
+| Protocol Adapter Registry | Live | Lets additional read-only protocol adapters register behind the common wallet-position interface without rewriting the analysis engine. |
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | Agent Payment Gate | Staged · Temporarily Free | The verified 1 USDT X Layer payment boundary remains in the backend and can be restored with `DELTAZERO_ACCESS_MODE=paid`. All analysis calls are currently free during listing review. |
@@ -146,6 +153,29 @@ Hyperliquid accounts.
 | Morpho | Live | Reads supported market and vault positions from Morpho's public API. |
 
 ## Products
+
+### Composability contracts
+
+DeltaZero is composable at the decision boundary while remaining deliberately read-only. A complete Risk Engine call embeds `risk_envelope`, and clients can request the same portable artifact directly through:
+
+- `POST /risk-envelope/evaluate` over REST;
+- `evaluate_risk_envelope` over MCP;
+- `GET /standards/risk-envelope/v1` for the public JSON Schema; and
+- `deltazero://schemas/risk-envelope-v1` for MCP schema discovery.
+
+Risk Envelope v1 includes a deterministic analysis ID, normalized action, risk zone, core measures, evidence from all four analysis modules, known constraints, and `human_approval_required: true`. It is available in the published TypeScript and Python SDKs.
+
+Protocol ingestion is independently extensible through `ProtocolAdapterRegistry`:
+
+```python
+from app.integrations.registry import ProtocolAdapterRegistry
+
+registry = ProtocolAdapterRegistry()
+registry.register("example", lambda network: ExampleReadOnlyAdapter(network))
+adapters = registry.resolve(["ethereum"], ["example"])
+```
+
+DeltaZero does not publish scores on-chain, mint risk attestations, approve tokens, or execute trades. That boundary is intentional: a recommendation remains inspectable decision support and cannot be mistaken for transaction authorization.
 
 ### Agent Operator Console
 
@@ -393,6 +423,7 @@ Available methods:
 - `auditPosition()`
 - `stressTest()`
 - `auditWallet()`
+- `evaluateRiskEnvelope()`
 
 ### Python
 
@@ -431,6 +462,7 @@ Available methods:
 - `audit_position()`
 - `stress_test()`
 - `audit_wallet()`
+- `evaluate_risk_envelope()`
 
 Agent and dashboard use cases include deterministic pre-trade checks, portfolio review workflows, scenario-risk gates, report generation, and structured inputs to broader orchestration systems. DeltaZero does not execute the resulting action.
 
@@ -467,6 +499,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `GET` | `/health` | Check backend availability. |
 | `GET` | `/docs` | Open Swagger UI. Free. |
 | `GET` | `/openapi.json` | Read the OpenAPI contract. Free. |
+| `GET` | `/standards/risk-envelope/v1` | Discover the public Risk Envelope v1 JSON Schema. Free. |
 | `POST` | `/strategy/build` | Build and evaluate a proposed strategy. Temporarily free. |
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |
@@ -476,6 +509,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/preview/compare` | Compare Conservative Income and Aggressive Carry through the production strategy engine. Permanently free. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
 | `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated free-preview analysis. |
+| `POST` | `/risk-envelope/evaluate` | Return the portable Risk Envelope v1 decision artifact for one coordinated analysis. Temporarily free. |
 | `POST` | `/` | OKX.AI-compatible alias for the complete coordinated Risk Engine analysis. A bare review probe returns the documented SOL reference scenario; callers can submit their own full request body. |
 
 ### Temporary free access and staged payments

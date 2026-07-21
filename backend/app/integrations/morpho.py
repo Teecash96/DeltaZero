@@ -17,6 +17,9 @@ class MorphoAdapter(WalletAdapter):
     protocol = "morpho"
     network = "ethereum"
 
+    def __init__(self, network: str = "ethereum"):
+        self.network = network
+
     def supports(self, network: str, protocol: str) -> bool:
         return protocol == self.protocol and network in {"ethereum", "arbitrum"}
 

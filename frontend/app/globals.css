@@ -1831,9 +1831,30 @@ pre, .json-box pre, .methodology-worked-example code {
 .registry-outcome-fields input, .registry-outcome-fields select, .registry-outcome-fields textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-raised); color: var(--text); }
 .registry-outcome-fields textarea { min-height: 88px; resize: vertical; }
 .registry-notes { grid-column: 1 / -1; }
+.composability-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.composability-card { min-width: 0; padding: 26px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+.composability-card > span { color: var(--accent); font: 700 9px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
+.composability-card h3 { margin: 20px 0 10px; color: var(--text); font-size: 22px; }
+.composability-card p { min-height: 86px; color: var(--muted); line-height: 1.65; }
+.composability-card a { color: var(--accent); font-size: 11px; font-weight: 750; }
+.composability-contract { margin-top: 14px; display: grid; grid-template-columns: .8fr 1.6fr 1fr; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--panel-soft); }
+.composability-contract div { min-width: 0; padding: 18px; border-right: 1px solid var(--border); }
+.composability-contract div:last-child { border-right: 0; }
+.composability-contract span { display: block; margin-bottom: 8px; color: var(--subtle); font: 700 8px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
+.composability-contract strong { color: var(--text); font: 650 11px var(--font-geist-mono); overflow-wrap: anywhere; }
+.composability-note { max-width: 900px; margin: 18px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.risk-envelope-result { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr); gap: 24px; align-items: center; }
+.risk-envelope-result h3 { margin: 10px 0; text-transform: capitalize; }
+.risk-envelope-result p { color: var(--muted); line-height: 1.6; }
+.risk-envelope-result dl { margin: 0; display: grid; gap: 8px; }
+.risk-envelope-result dl div { min-width: 0; padding: 11px; border: 1px solid var(--border); border-radius: 9px; }
+.risk-envelope-result dt { color: var(--subtle); font: 700 8px var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
+.risk-envelope-result dd { margin: 6px 0 0; color: var(--text); font: 650 10px var(--font-geist-mono); overflow-wrap: anywhere; }
 
 @media (max-width: 760px) {
-  .mc-systemic-grid, .history-card, .registry-home-grid { grid-template-columns: 1fr; }
+  .mc-systemic-grid, .history-card, .registry-home-grid, .composability-grid, .composability-contract, .risk-envelope-result { grid-template-columns: 1fr; }
+  .composability-contract div { border-right: 0; border-bottom: 1px solid var(--border); }
+  .composability-contract div:last-child { border-bottom: 0; }
   .registry-home-contract .button { margin-top: 26px; }
   .history-metrics { display: grid; grid-template-columns: 1fr 1fr; }
   .history-actions { display: grid; grid-template-columns: 1fr; }

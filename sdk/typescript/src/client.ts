@@ -6,6 +6,8 @@ import type {
   DeltaZeroClientOptions,
   StressTestRequest,
   StressTestResponse,
+  RiskEnvelopeRequest,
+  RiskEnvelopeV1,
   WalletAnalyzeRequest,
   WalletPortfolioResponse,
 } from "./types.js";
@@ -134,5 +136,8 @@ export class DeltaZeroClient {
   auditWallet(body: WalletAnalyzeRequest): Promise<WalletPortfolioResponse> {
     return this.request<WalletPortfolioResponse>("/wallet/analyze", body);
   }
-}
 
+  evaluateRiskEnvelope(body: RiskEnvelopeRequest): Promise<RiskEnvelopeV1> {
+    return this.request<RiskEnvelopeV1>("/risk-envelope/evaluate", body);
+  }
+}

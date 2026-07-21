@@ -196,6 +196,26 @@ export interface StressTestResponse extends StrategyResponseBase {
   impairment_breakdown: ImpairmentBreakdown;
 }
 
+export interface RiskEnvelopeRequest extends BuildRequest {
+  stress_magnitude_pct?: number;
+  simulation_count?: number;
+  time_horizon_days?: number;
+  seed?: number | null;
+}
+
+export interface RiskEnvelopeV1 {
+  schema_id: "https://deltazero.dev/schemas/risk-envelope/v1";
+  schema_version: "1.0.0";
+  methodology_version: "deltazero-v1";
+  analysis_id: string;
+  subject: { kind: "pseudo_delta_neutral_strategy"; asset: string; strategy_style: string; capital_usd: number };
+  decision: { action: StrategyAction; risk_zone: "optimal" | "healthy" | "watch" | "defensive" | "critical"; summary: string; human_approval_required: true };
+  measures: { safety_buffer_score: number; hedge_drift_pct: number; net_carry_apy: number; p95_impairment_pct: number; probability_capital_impairment_pct: number; decision_confidence: number };
+  evidence: { strategy_build_action: string; hedge_audit_action: string; funding_stress_action: string; monte_carlo_action: string; simulation_count: number; seed: number | null };
+  constraints: string[];
+  compatible_transports: Array<"REST" | "MCP" | "JSON">;
+}
+
 export interface NormalizedPosition {
   protocol: WalletProtocol;
   network: WalletNetwork;

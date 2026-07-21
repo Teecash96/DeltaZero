@@ -300,6 +300,36 @@ export interface RiskEnginePassRequest {
   seed?: number | null;
 }
 
+export interface RiskEnvelopeV1 {
+  schema_id: "https://deltazero.dev/schemas/risk-envelope/v1";
+  schema_version: "1.0.0";
+  methodology_version: "deltazero-v1";
+  analysis_id: string;
+  subject: {
+    kind: "pseudo_delta_neutral_strategy";
+    asset: string;
+    strategy_style: string;
+    capital_usd: number;
+  };
+  decision: {
+    action: StrategyAction;
+    risk_zone: "optimal" | "healthy" | "watch" | "defensive" | "critical";
+    summary: string;
+    human_approval_required: boolean;
+  };
+  measures: {
+    safety_buffer_score: number;
+    hedge_drift_pct: number;
+    net_carry_apy: number;
+    p95_impairment_pct: number;
+    probability_capital_impairment_pct: number;
+    decision_confidence: number;
+  };
+  evidence: Record<string, string | number | null>;
+  constraints: string[];
+  compatible_transports: Array<"REST" | "MCP" | "JSON">;
+}
+
 export interface RiskEnginePassResponse {
   service: "risk_engine_pass";
   pass_scope: "one_strategy_analysis";
@@ -307,6 +337,7 @@ export interface RiskEnginePassResponse {
   hedge_drift_audit: AuditResponse;
   funding_stress_test: StressTestResponse;
   monte_carlo_sensitivity: MonteCarloResponse;
+  risk_envelope: RiskEnvelopeV1;
   generated_at: string;
 }
 

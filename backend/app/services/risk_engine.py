@@ -7,6 +7,7 @@ from app.services.auditor import audit_strategy
 from app.services.builder import build_strategy
 from app.services.monte_carlo import run_monte_carlo
 from app.services.stress_test import stress_test_strategy
+from app.services.interoperability import build_risk_envelope
 
 
 def run_risk_engine_pass(request: RiskEnginePassRequest) -> RiskEnginePassResponse:
@@ -53,9 +54,11 @@ def run_risk_engine_pass(request: RiskEnginePassRequest) -> RiskEnginePassRespon
             seed=request.seed,
         )
     )
+    envelope = build_risk_envelope(request, build, audit, stress, monte_carlo)
     return RiskEnginePassResponse(
         strategy_build=build,
         hedge_drift_audit=audit,
         funding_stress_test=stress,
         monte_carlo_sensitivity=monte_carlo,
+        risk_envelope=envelope,
     )
