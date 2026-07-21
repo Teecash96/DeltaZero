@@ -15,6 +15,12 @@ class RiskExplanation(BaseModel):
     time_horizon_hours: float | None = Field(default=None, gt=0)
     source: Literal["openai", "deterministic_fallback"]
     model: str | None = None
+    fallback_reason: Literal[
+        "missing_api_key",
+        "provider_error",
+        "invalid_structured_output",
+        "grounding_validation_failed",
+    ] | None = None
     analysis_id: str
     facts_used: list[str] = Field(min_length=1, max_length=10)
     limitations: list[str] = Field(min_length=1, max_length=5)

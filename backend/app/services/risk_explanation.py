@@ -40,7 +40,12 @@ def _facts(envelope: RiskEnvelopeV1) -> list[str]:
     ]
 
 
-def deterministic_explanation(envelope: RiskEnvelopeV1) -> RiskExplanation:
+def deterministic_explanation(
+    envelope: RiskEnvelopeV1,
+    *,
+    reason: str = "missing_api_key",
+    model: str | None = None,
+) -> RiskExplanation:
     """Return a truthful explanation when the provider is unavailable or unsafe."""
     m = envelope.measures
     action = envelope.decision.action
@@ -71,6 +76,8 @@ def deterministic_explanation(envelope: RiskEnvelopeV1) -> RiskExplanation:
         recommended_next_step=next_step,
         time_horizon_hours=None,
         source="deterministic_fallback",
+        model=model,
+        fallback_reason=reason,
         analysis_id=envelope.analysis_id,
         facts_used=_facts(envelope),
         limitations=[
@@ -121,16 +128,18 @@ def _contains_unsupported_numeric_claim(value: RiskExplanation, envelope: RiskEn
     combined = " ".join([value.headline, value.explanation, value.recommended_next_step, *value.key_drivers])
     combined = re.sub(r"\bP(?:50|95|99)\b", "", combined, flags=re.I)
     claims = [float(item) for item in re.findall(r"(?<![A-Za-z])\d+(?:\.\d+)?", combined)]
-    measures = envelope.measures
-    evidence_values = {
-        100.0,
-        measures.safety_buffer_score,
-        measures.hedge_drift_pct,
-        measures.net_carry_apy,
-        measures.p95_impairment_pct,
-        measures.probability_capital_impairment_pct,
-        float(measures.decision_confidence),
-    }
+    def numeric_evidence(item: Any) -> set[float]:
+        if isinstance(item, bool):
+            return set()
+        if isinstance(item, (int, float)):
+            return {float(item)}
+        if isinstance(item, dict):
+            return set().union(*(numeric_evidence(entry) for entry in item.values()))
+        if isinstance(item, list):
+            return set().union(*(numeric_evidence(entry) for entry in item))
+        return set()
+
+    evidence_values = {100.0, *numeric_evidence(envelope.model_dump(mode="json"))}
     return any(not any(abs(claim - evidence) <= 0.011 for evidence in evidence_values) for claim in claims)
 
 
@@ -184,11 +193,21 @@ def generate_risk_explanation(envelope: RiskEnvelopeV1) -> RiskExplanation:
             or _contains_unsupported_numeric_claim(result, envelope)
             or not set(result.facts_used).issubset(set(_facts(envelope)))
         ):
-            return deterministic_explanation(envelope)
+            return deterministic_explanation(
+                envelope,
+                reason="grounding_validation_failed",
+                model=model,
+            )
         with _CACHE_LOCK:
             if len(_CACHE) >= 128:
                 _CACHE.pop(next(iter(_CACHE)))
             _CACHE[envelope.analysis_id] = result
         return result
-    except (httpx.HTTPError, ValueError, TypeError):
-        return deterministic_explanation(envelope)
+    except httpx.HTTPError:
+        return deterministic_explanation(envelope, reason="provider_error", model=model)
+    except (ValueError, TypeError):
+        return deterministic_explanation(
+            envelope,
+            reason="invalid_structured_output",
+            model=model,
+        )

@@ -191,6 +191,12 @@ class RiskExplanation(TypedDict):
     time_horizon_hours: float | None
     source: Literal["openai", "deterministic_fallback"]
     model: str | None
+    fallback_reason: Literal[
+        "missing_api_key",
+        "provider_error",
+        "invalid_structured_output",
+        "grounding_validation_failed",
+    ] | None
     analysis_id: str
     facts_used: list[str]
     limitations: list[str]

@@ -26,6 +26,7 @@ def test_missing_key_returns_truthful_deterministic_explanation(monkeypatch) -> 
     explanation = report.narrative_explanation
     assert explanation is not None
     assert explanation.source == "deterministic_fallback"
+    assert explanation.fallback_reason == "missing_api_key"
     assert explanation.time_horizon_hours is None
     assert "does not contain enough evidence" in explanation.explanation
 
@@ -58,6 +59,7 @@ def test_llm_structured_output_is_accepted_when_grounded(monkeypatch) -> None:
     monkeypatch.setattr("httpx.Client.post", lambda *args, **kwargs: Response())
     explanation = generate_risk_explanation(envelope)
     assert explanation.source == "openai"
+    assert explanation.fallback_reason is None
     assert explanation.model == "gpt-5.6"
 
 
@@ -84,4 +86,5 @@ def test_unsupported_time_claim_fails_closed(monkeypatch) -> None:
     monkeypatch.setattr("httpx.Client.post", lambda *args, **kwargs: Response())
     explanation = generate_risk_explanation(envelope)
     assert explanation.source == "deterministic_fallback"
+    assert explanation.fallback_reason == "grounding_validation_failed"
     assert explanation.time_horizon_hours is None

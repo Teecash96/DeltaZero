@@ -309,6 +309,7 @@ export interface RiskExplanation {
   time_horizon_hours: number | null;
   source: "openai" | "deterministic_fallback";
   model: string | null;
+  fallback_reason: "missing_api_key" | "provider_error" | "invalid_structured_output" | "grounding_validation_failed" | null;
   analysis_id: string;
   facts_used: string[];
   limitations: string[];

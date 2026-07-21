@@ -107,7 +107,9 @@ export function RiskEnginePass() {
               <span className="decision-eyebrow">Natural-language risk brief</span>
               <h3>{result.narrative_explanation.headline}</h3>
             </div>
-            <small>{result.narrative_explanation.source === "openai" ? `OpenAI · ${result.narrative_explanation.model}` : "Deterministic fallback"}</small>
+            <small>{result.narrative_explanation.source === "openai"
+              ? `OpenAI · ${result.narrative_explanation.model}`
+              : `Deterministic fallback · ${(result.narrative_explanation.fallback_reason ?? "safe fallback").replaceAll("_", " ")}`}</small>
           </header>
           <p>{result.narrative_explanation.explanation}</p>
           <div className="ai-risk-brief-grid">
