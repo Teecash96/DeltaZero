@@ -84,6 +84,39 @@ DeltaZero is differentiated by:
 - **Read-only portfolio analysis** — supported public protocol data is analyzed without custody or wallet permissions.
 - **Agent-ready contracts** — FastAPI schemas and local TypeScript and Python SDK packages expose structured responses for dashboards and automated workflows.
 
+## Why Agents Integrate DeltaZero
+
+Agents are buying a maintained decision contract rather than starting another
+risk-engine project. One typed API or MCP request returns four coordinated
+views—Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte
+Carlo Sensitivity—with validated structured output and shared policy rules.
+
+The reproducible local benchmark in [`backend/benchmarks`](backend/benchmarks)
+measured the complete four-report FastAPI pass with 1,000 seeded Monte Carlo
+paths after five warmups:
+
+| Evidence | Result |
+| --- | ---: |
+| Median local decision latency | 18.09 ms |
+| P95 local decision latency | 19.48 ms |
+| Identical normalized outputs | 50 / 50 |
+| Schema-valid responses | 50 / 50 |
+| Reference-policy fixture agreement | 12 / 12 |
+
+These numbers measure local in-process execution only. They exclude network
+transit, cold starts, public-protocol fetches, and payment settlement. Timestamp
+fields are removed only for repeatability hashing. Reference-policy agreement
+verifies the configured decision rules; it is not a profitability forecast or
+a measured real-world loss rate. DeltaZero does not assign invented latency or
+error-rate figures to ad-hoc scripts or spreadsheets when no canonical baseline
+has been tested.
+
+Reproduce the results from `backend/`:
+
+```bash
+PYTHONPATH=. .venv-new/bin/python benchmarks/agent_risk_benchmark.py
+```
+
 ## Feature Overview
 
 | Capability | Status | Description |
@@ -416,7 +449,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |
 | `POST` | `/strategy/stress-test` | Legacy alias retained for SDK compatibility. Temporarily free. |
-| `POST` | `/wallet/analyze` | Analyze supported public wallet positions. Temporarily free. |
+| `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, and Morpho positions and generate a read-only hedge-intelligence report. Permanently free. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
 | `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated free-preview analysis. |
 | `POST` | `/` | OKX.AI-compatible alias for the complete coordinated Risk Engine analysis. A bare review probe returns the documented SOL reference scenario; callers can submit their own full request body. |
@@ -433,7 +466,7 @@ export DELTAZERO_ACCESS_MODE="paid"
 
 Paid mode uses the official OKX seller middleware. An unpaid request to a protected route returns `HTTP 402 Payment Required` with a base64-encoded `PAYMENT-REQUIRED` header. The header is the authoritative payment quote and identifies the network, stablecoin contract, atomic amount, receiver, and supported payment schemes.
 
-The future price is configured with `PAYMENT_PRICE_USDT`. When paid mode is restored, the primary product flow calls `/risk-engine/analyze`: one 1 USDT payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, Hyperliquid Live, health, documentation, and OpenAPI remain free.
+The future price is configured with `PAYMENT_PRICE_USDT`. When paid mode is restored, the primary product flow calls `/risk-engine/analyze`: one 1 USDT payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
 
 In paid mode, only the three `PAYMENT_*` variables produce challenge-only behavior: the server returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted payment credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
 

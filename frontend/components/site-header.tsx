@@ -50,15 +50,15 @@ export function SiteHeader() {
           <div className="site-nav-menu-panel">
             <Link href="/hyperliquid-live">
               <strong>Hyperliquid</strong>
-              <small>Live market and funding</small>
+              <small>Free live market and funding</small>
             </Link>
             <Link href="/wallet?protocol=aave">
               <strong>Aave</strong>
-              <small>Read-only lending positions</small>
+              <small>Free read-only lending positions</small>
             </Link>
             <Link href="/wallet?protocol=morpho">
               <strong>Morpho</strong>
-              <small>Read-only market and vault positions</small>
+              <small>Free read-only market and vault positions</small>
             </Link>
           </div>
         </details>

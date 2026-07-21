@@ -7,6 +7,7 @@ const quickLinks = [
   { label: "Products", href: "#products", note: "Five connected risk services" },
   { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
   { label: "Docs", href: "#docs", note: "Repository and API references" },
+  { label: "Why Agents", href: "#why-agents", note: "Measured latency and repeatability" },
   { label: "Agents", href: "#agents", note: "SDKs and automated workflows" },
   { label: "FAQs", href: "#faqs", note: "Common questions and constraints" },
 ];
@@ -187,6 +188,58 @@ const faqs = [
     question: "Can autonomous agents use DeltaZero?",
     answer:
       "Yes. The services expose structured API responses that can be consumed by agents, dashboards, or trading workflows.",
+  },
+];
+
+const agentBenchmarks = [
+  { value: "18.09 ms", label: "Median local decision latency", note: "Four reports · 1,000 paths" },
+  { value: "19.48 ms", label: "P95 local decision latency", note: "50 measured runs" },
+  { value: "50 / 50", label: "Identical normalized outputs", note: "Fixed inputs and seed" },
+  { value: "12 / 12", label: "Reference-policy agreement", note: "Expected action fixtures" },
+];
+
+const agentComparison = [
+  {
+    measure: "Agent integration",
+    deltazero: "One typed API or MCP call",
+    script: "Custom code, parser, and deployment",
+    spreadsheet: "Human-operated workflow",
+  },
+  {
+    measure: "Decision coverage",
+    deltazero: "Four coordinated risk reports",
+    script: "Depends on the implementation",
+    spreadsheet: "Depends on workbook design",
+  },
+  {
+    measure: "Measured decision latency",
+    deltazero: "18.09 ms p50 · 19.48 ms p95",
+    script: "Not benchmarked—no canonical script",
+    spreadsheet: "Not benchmarked—human dependent",
+  },
+  {
+    measure: "Repeatability evidence",
+    deltazero: "50/50 identical normalized outputs",
+    script: "Depends on seed, code, and tests",
+    spreadsheet: "Depends on formula and version control",
+  },
+  {
+    measure: "Policy-case evidence",
+    deltazero: "12/12 reference fixtures passed",
+    script: "No shared fixture set by default",
+    spreadsheet: "Manual review required",
+  },
+  {
+    measure: "Machine-readable contract",
+    deltazero: "Validated structured JSON",
+    script: "Must be designed and maintained",
+    spreadsheet: "Export or wrapper required",
+  },
+  {
+    measure: "Operational burden",
+    deltazero: "Maintained thresholds and schemas",
+    script: "Agent owner maintains the full stack",
+    spreadsheet: "Formula, input, and handoff risk",
   },
 ];
 
@@ -447,6 +500,98 @@ export default function Home() {
             <span>See the backend service when it is running locally or in deployment.</span>
           </article>
         </div>
+      </section>
+
+      <section id="why-agents" className="section-wrap why-agents-section anchor-section">
+        <div className="section-heading">
+          <div>
+            <p className="kicker">Why agents choose DeltaZero</p>
+            <h2>Buy the maintained decision contract—not another risk-engine project.</h2>
+          </div>
+          <p>
+            One typed request returns Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo
+            Sensitivity without custom parsers, duplicated thresholds, or spreadsheet orchestration.
+          </p>
+        </div>
+
+        <div className="agent-benchmark-summary" aria-label="Measured DeltaZero benchmark results">
+          {agentBenchmarks.map((benchmark) => (
+            <article key={benchmark.label}>
+              <strong>{benchmark.value}</strong>
+              <span>{benchmark.label}</span>
+              <small>{benchmark.note}</small>
+            </article>
+          ))}
+        </div>
+
+        <div className="agent-comparison-shell">
+          <div className="agent-comparison-heading">
+            <div>
+              <p className="kicker">Build versus integrate</p>
+              <h3>DeltaZero compared with common alternatives</h3>
+            </div>
+            <span>Measured values are shown only where a reproducible benchmark exists.</span>
+          </div>
+          <div className="agent-comparison-table-wrap">
+            <table className="agent-comparison-table">
+              <thead>
+                <tr>
+                  <th scope="col">Measure</th>
+                  <th scope="col">DeltaZero</th>
+                  <th scope="col">Ad-hoc Python script</th>
+                  <th scope="col">Manual spreadsheet</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agentComparison.map((row) => (
+                  <tr key={row.measure}>
+                    <th scope="row">{row.measure}</th>
+                    <td data-label="DeltaZero">{row.deltazero}</td>
+                    <td data-label="Ad-hoc Python script">{row.script}</td>
+                    <td data-label="Manual spreadsheet">{row.spreadsheet}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="agent-benchmark-method">
+          <div>
+            <strong>What was measured</strong>
+            <p>
+              Local in-process FastAPI execution on 21 July 2026: 5 warmups, 50 measured runs, four reports per call,
+              and 1,000 seeded Monte Carlo paths. Timestamp fields were removed only for repeatability hashing.
+            </p>
+          </div>
+          <div>
+            <strong>What was not measured</strong>
+            <p>
+              Network transit, deployment cold starts, public-protocol fetches, and payment settlement. No synthetic
+              latency or error-rate figures are assigned to scripts or spreadsheets without a canonical baseline.
+            </p>
+          </div>
+          <div className="agent-benchmark-links">
+            <a
+              href="https://github.com/Teecash96/DeltaZero/blob/main/backend/benchmarks/agent_risk_benchmark.py"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Reproduce benchmark ↗
+            </a>
+            <a
+              href="https://github.com/Teecash96/DeltaZero/blob/main/backend/benchmarks/results.json"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Inspect raw results ↗
+            </a>
+          </div>
+        </div>
+        <p className="agent-benchmark-disclaimer">
+          Reference-policy agreement verifies DeltaZero&apos;s configured decision rules. It is not a profitability
+          forecast or a measured real-world loss rate.
+        </p>
       </section>
 
       <AgentSdkSection />

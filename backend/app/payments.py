@@ -262,10 +262,6 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
             "/stress-test/run",
             "Run deterministic stress analysis",
         ),
-        "POST /wallet/analyze": route(
-            "/wallet/analyze",
-            "Analyze supported public wallet positions and portfolio risk",
-        ),
         "POST /monte-carlo/run": route(
             "/monte-carlo/run",
             "Run deterministic Monte Carlo sensitivity analysis",

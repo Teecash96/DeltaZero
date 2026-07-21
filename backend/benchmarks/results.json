@@ -1,0 +1,141 @@
+{
+  "generated_at": "2026-07-21T20:42:49.468193+00:00",
+  "scope": "Local in-process FastAPI TestClient benchmark",
+  "environment": {
+    "python": "3.14.3",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O"
+  },
+  "workload": {
+    "endpoint": "POST /risk-engine/analyze",
+    "reports_per_call": 4,
+    "monte_carlo_paths": 1000,
+    "seed": 42,
+    "warmups": 5,
+    "measured_runs": 50
+  },
+  "latency_ms": {
+    "minimum": 17.63,
+    "p50": 18.09,
+    "p95": 19.48,
+    "maximum": 21.42
+  },
+  "repeatability": {
+    "identical_normalized_outputs": 50,
+    "total_runs": 50
+  },
+  "schema_validity": {
+    "valid_responses": 50,
+    "total_runs": 50
+  },
+  "reference_policy_fixtures": {
+    "passed": 12,
+    "total": 12,
+    "cases": [
+      {
+        "name": "build_open",
+        "actual": "OPEN",
+        "allowed": [
+          "OPEN"
+        ],
+        "passed": true
+      },
+      {
+        "name": "build_negative_carry_wait",
+        "actual": "WAIT",
+        "allowed": [
+          "WAIT"
+        ],
+        "passed": true
+      },
+      {
+        "name": "build_aggressive_negative_wait",
+        "actual": "WAIT",
+        "allowed": [
+          "WAIT"
+        ],
+        "passed": true
+      },
+      {
+        "name": "build_borderline_wait",
+        "actual": "WAIT",
+        "allowed": [
+          "WAIT"
+        ],
+        "passed": true
+      },
+      {
+        "name": "audit_drift_rebalance",
+        "actual": "REBALANCE",
+        "allowed": [
+          "REBALANCE"
+        ],
+        "passed": true
+      },
+      {
+        "name": "audit_healthy_hold",
+        "actual": "HOLD",
+        "allowed": [
+          "HOLD"
+        ],
+        "passed": true
+      },
+      {
+        "name": "audit_severe_reduce_or_close",
+        "actual": "CLOSE",
+        "allowed": [
+          "REDUCE",
+          "CLOSE"
+        ],
+        "passed": true
+      },
+      {
+        "name": "audit_weak_buffer_reduce",
+        "actual": "REDUCE",
+        "allowed": [
+          "REDUCE"
+        ],
+        "passed": true
+      },
+      {
+        "name": "stress_negative_carry_de_risk",
+        "actual": "REDUCE",
+        "allowed": [
+          "WAIT",
+          "REDUCE",
+          "CLOSE"
+        ],
+        "passed": true
+      },
+      {
+        "name": "monte_carlo_low_risk_proceed",
+        "actual": "PROCEED",
+        "allowed": [
+          "PROCEED"
+        ],
+        "passed": true
+      },
+      {
+        "name": "monte_carlo_baseline_adjust",
+        "actual": "ADJUST",
+        "allowed": [
+          "ADJUST"
+        ],
+        "passed": true
+      },
+      {
+        "name": "monte_carlo_severe_avoid",
+        "actual": "AVOID",
+        "allowed": [
+          "AVOID"
+        ],
+        "passed": true
+      }
+    ]
+  },
+  "limitations": [
+    "Latency excludes network transit, cold starts, public-protocol adapters, and x402 settlement.",
+    "Timestamp fields are removed before repeatability hashes are compared.",
+    "Reference-policy agreement verifies expected product rules; it is not a profitability or real-world loss forecast.",
+    "No synthetic latency or error-rate numbers are assigned to ad-hoc scripts or spreadsheets because no canonical implementation was tested."
+  ]
+}

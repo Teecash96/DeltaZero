@@ -607,7 +607,7 @@ export function WalletPortfolioWorkspace() {
   return (
     <div className="workspace">
       <header className="page-intro wallet-page-intro">
-        <div><p className="kicker">Hedge Intelligence</p><h1>Read-Only Hedge Intelligence</h1><div className="wallet-pro-badge">PRO PREVIEW</div><p>Analyze supported public positions for hedge drift, exposure integrity, and corrective action.</p></div>
+        <div><p className="kicker">Hedge Intelligence</p><h1>Read-Only Hedge Intelligence</h1><div className="wallet-pro-badge">FREE PUBLIC PROTOCOL DATA</div><p>Analyze supported public positions for hedge drift, exposure integrity, and corrective action.</p></div>
         <div className="wallet-page-side"><span className="endpoint">POST /wallet/analyze</span><p className="wallet-readonly-note">DeltaZero only reads public wallet and protocol data. It never requests signatures, private keys, or transaction permissions.</p></div>
       </header>
       <div className="workspace-grid wallet-workspace-grid">

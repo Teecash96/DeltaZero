@@ -74,7 +74,6 @@ PROTECTED_ROUTES = [
     ("/risk-engine/analyze", BUILD_PAYLOAD),
     ("/strategy/build", BUILD_PAYLOAD),
     ("/strategy/audit", AUDIT_PAYLOAD),
-    ("/wallet/analyze", WALLET_PAYLOAD),
     ("/monte-carlo/run", MONTE_CARLO_PAYLOAD),
     ("/stress-test/run", STRESS_PAYLOAD),
     ("/strategy/stress-test", STRESS_PAYLOAD),
@@ -228,6 +227,25 @@ def test_required_public_routes_remain_free(
     assert facilitator.settle_calls == 0
 
 
+def test_public_protocol_positions_remain_free_in_paid_mode(
+    paid_client: tuple[TestClient, FakeFacilitator],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Public Hyperliquid, Aave, and Morpho position discovery is never paywalled."""
+
+    from app.services import wallet_analyzer
+
+    client, facilitator = paid_client
+    monkeypatch.setattr(wallet_analyzer, "_select_adapters", lambda networks, protocols: [])
+
+    response = client.post("/wallet/analyze", json=WALLET_PAYLOAD)
+
+    assert response.status_code == 200
+    assert "PAYMENT-REQUIRED" not in response.headers
+    assert facilitator.verify_calls == 0
+    assert facilitator.settle_calls == 0
+
+
 def test_every_backend_post_route_is_payment_protected(
     payment_settings: PaymentSettings,
 ) -> None:
@@ -238,7 +256,11 @@ def test_every_backend_post_route_is_payment_protected(
         if "post" in operations
     }
 
-    assert exposed_post_routes - {"POST /risk-engine/recover-payment"} == set(paid_routes(payment_settings))
+    permanently_free_post_routes = {
+        "POST /risk-engine/recover-payment",
+        "POST /wallet/analyze",
+    }
+    assert exposed_post_routes - permanently_free_post_routes == set(paid_routes(payment_settings))
 
 
 @pytest.mark.parametrize(("path", "payload"), PROTECTED_ROUTES)
