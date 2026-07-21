@@ -197,6 +197,8 @@ class RiskExplanation(TypedDict):
         "invalid_structured_output",
         "grounding_validation_failed",
     ] | None
+    provider_status_code: int | None
+    provider_error_code: str | None
     analysis_id: str
     facts_used: list[str]
     limitations: list[str]

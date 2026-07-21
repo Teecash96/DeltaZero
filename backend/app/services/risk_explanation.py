@@ -45,6 +45,8 @@ def deterministic_explanation(
     *,
     reason: str = "missing_api_key",
     model: str | None = None,
+    provider_status_code: int | None = None,
+    provider_error_code: str | None = None,
 ) -> RiskExplanation:
     """Return a truthful explanation when the provider is unavailable or unsafe."""
     m = envelope.measures
@@ -78,6 +80,8 @@ def deterministic_explanation(
         source="deterministic_fallback",
         model=model,
         fallback_reason=reason,
+        provider_status_code=provider_status_code,
+        provider_error_code=provider_error_code,
         analysis_id=envelope.analysis_id,
         facts_used=_facts(envelope),
         limitations=[
@@ -145,16 +149,17 @@ def _contains_unsupported_numeric_claim(value: RiskExplanation, envelope: RiskEn
 
 def generate_risk_explanation(envelope: RiskEnvelopeV1) -> RiskExplanation:
     """Generate a structured explanation, failing safely to deterministic copy."""
-    with _CACHE_LOCK:
-        cached = _CACHE.get(envelope.analysis_id)
-    if cached is not None:
-        return cached
-
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         return deterministic_explanation(envelope)
 
     model = os.getenv("OPENAI_EXPLANATION_MODEL", DEFAULT_EXPLANATION_MODEL).strip() or DEFAULT_EXPLANATION_MODEL
+    cache_key = f"{model}:{envelope.analysis_id}"
+    with _CACHE_LOCK:
+        cached = _CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
     evidence = {
         "analysis_id": envelope.analysis_id,
         "subject": envelope.subject.model_dump(mode="json"),
@@ -201,9 +206,22 @@ def generate_risk_explanation(envelope: RiskEnvelopeV1) -> RiskExplanation:
         with _CACHE_LOCK:
             if len(_CACHE) >= 128:
                 _CACHE.pop(next(iter(_CACHE)))
-            _CACHE[envelope.analysis_id] = result
+            _CACHE[cache_key] = result
         return result
-    except httpx.HTTPError:
+    except httpx.HTTPStatusError as exc:
+        try:
+            raw_code = exc.response.json().get("error", {}).get("code")
+        except (ValueError, TypeError, AttributeError):
+            raw_code = None
+        error_code = raw_code if isinstance(raw_code, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", raw_code) else None
+        return deterministic_explanation(
+            envelope,
+            reason="provider_error",
+            model=model,
+            provider_status_code=exc.response.status_code,
+            provider_error_code=error_code,
+        )
+    except httpx.RequestError:
         return deterministic_explanation(envelope, reason="provider_error", model=model)
     except (ValueError, TypeError):
         return deterministic_explanation(

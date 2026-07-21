@@ -212,6 +212,8 @@ export interface RiskExplanation {
   source: "openai" | "deterministic_fallback";
   model: string | null;
   fallback_reason: "missing_api_key" | "provider_error" | "invalid_structured_output" | "grounding_validation_failed" | null;
+  provider_status_code: number | null;
+  provider_error_code: string | null;
   analysis_id: string;
   facts_used: string[];
   limitations: string[];
