@@ -215,6 +215,23 @@ export interface BuildResponse extends StrategyResponseBase {
   hedge_adjustment?: HedgeAdjustment;
 }
 
+export interface StrategyPreviewRequest {
+  asset: Asset;
+  capital_usd: number;
+  risk_tolerance: RiskTolerance;
+  long_yield_apy: number;
+  short_funding_apy: number;
+  fee_drag_apy: number;
+}
+
+export interface StrategyPreviewResponse {
+  mode: "public_preview";
+  methodology: "deltazero_v1";
+  conservative: BuildResponse;
+  aggressive: BuildResponse;
+  limitation: string;
+}
+
 export interface AuditResponse extends StrategyResponseBase {
   actions: StrategyAction[];
 }

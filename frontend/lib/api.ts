@@ -12,6 +12,8 @@ import type {
   MonteCarloResponse,
   RiskEnginePassRequest,
   RiskEnginePassResponse,
+  StrategyPreviewRequest,
+  StrategyPreviewResponse,
 } from "./types";
 import { decodePaymentReceipt, storePaymentReceipt, verifyPaymentReceiptOnChain } from "./payment-receipt";
 
@@ -111,6 +113,10 @@ export function runMonteCarlo(body: MonteCarloRequest): Promise<MonteCarloRespon
 
 export function runRiskEnginePass(body: RiskEnginePassRequest): Promise<RiskEnginePassResponse> {
   return post<RiskEnginePassResponse>("/risk-engine/analyze", body);
+}
+
+export function compareStrategyPreview(body: StrategyPreviewRequest): Promise<StrategyPreviewResponse> {
+  return post<StrategyPreviewResponse>("/preview/compare", body);
 }
 
 export async function getHyperliquidMarket(asset: string, lookbackHours = 24, dex?: string): Promise<HyperliquidMarketResponse> {

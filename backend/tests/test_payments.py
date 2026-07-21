@@ -260,6 +260,7 @@ def test_every_backend_post_route_is_payment_protected(
         "POST /risk-engine/recover-payment",
         "POST /wallet/analyze",
         "POST /strategy-registry/evaluate",
+        "POST /preview/compare",
     }
     assert exposed_post_routes - permanently_free_post_routes == set(paid_routes(payment_settings))
 

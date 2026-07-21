@@ -71,7 +71,7 @@ DeltaZero classifies completed Strategy Build, Wallet Auditor, Funding Stress Te
 
 Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
 
-The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, Agent Operator Console, and an opt-in Strategy Registry. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend payment boundary is staged but temporarily disabled for listing review; payment credentials remain separate from any trading or protocol permission.
+The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, Agent Operator Console, an opt-in Strategy Registry, and a no-wallet live strategy comparison. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend payment boundary is staged but temporarily disabled for listing review; payment credentials remain separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -138,7 +138,7 @@ Hyperliquid accounts.
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | Agent Payment Gate | Staged · Temporarily Free | The verified 1 USDT X Layer payment boundary remains in the backend and can be restored with `DELTAZERO_ACCESS_MODE=paid`. All analysis calls are currently free during listing review. |
-| Interactive Strategy Preview | Live | Provides a clearly labelled illustrative simulation on the landing page. |
+| Interactive Strategy Preview | Live · Permanently Free | Compares Conservative Income and Aggressive Carry through the production deterministic builder without a wallet or payment. |
 | TypeScript SDK | Published · npm | Supplies a typed client through [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). |
 | Python SDK | Published · PyPI | Supplies a typed client through [`deltazero-core`](https://pypi.org/project/deltazero-core/). |
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
@@ -473,6 +473,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/strategy/stress-test` | Legacy alias retained for SDK compatibility. Temporarily free. |
 | `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, and Morpho positions and generate a read-only hedge-intelligence report. Permanently free. |
 | `POST` | `/strategy-registry/evaluate` | Evaluate a client-owned recommendation and observed-outcome registry without server persistence or silent retraining. Free. |
+| `POST` | `/preview/compare` | Compare Conservative Income and Aggressive Carry through the production strategy engine. Permanently free. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
 | `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated free-preview analysis. |
 | `POST` | `/` | OKX.AI-compatible alias for the complete coordinated Risk Engine analysis. A bare review probe returns the documented SOL reference scenario; callers can submit their own full request body. |

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { AgentSdkSection } from "@/components/agent-sdk-section";
+import { InteractiveStrategyPreview } from "@/components/interactive-strategy-preview";
 
 const quickLinks = [
   { label: "Home", href: "#home", note: "Hero and product summary" },
+  { label: "Live Preview", href: "#interactive-preview", note: "No-wallet strategy comparison" },
   { label: "How It Works", href: "#how-it-works", note: "The five-step workflow" },
   { label: "Products", href: "#products", note: "Five connected risk services" },
   { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
@@ -60,7 +62,7 @@ const products = [
     description:
       "Builds a pseudo delta neutral strategy from capital, market assumptions, risk tolerance, and target style.",
     bullets: ["Recommended long notional", "Short notional", "Collateral allocation", "Hedge ratio", "Carry metrics", "Safety Buffer", "Action"],
-    action: "Open Strategy Build",
+    action: "Run Strategy Build",
   },
   {
     href: "/auditor",
@@ -286,6 +288,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <InteractiveStrategyPreview />
 
       <section className="section-wrap risk-zones-home anchor-section" aria-labelledby="risk-zones-home-title">
         <div className="section-heading">
