@@ -239,7 +239,19 @@ class MCPToolPaymentGate:
         )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope.get("type") != "http" or scope.get("method") != "POST":
+        if scope.get("type") != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+        method = scope.get("method", "")
+
+        # Non-POST requests to MCP paths (e.g. GET probes from x402-check)
+        # go straight to the payment gate so they receive 402, not 405/406.
+        if method != "POST":
+            if path in ("/mcp", "/mcp/", "/mcp/call", "/mcp/call/"):
+                await self.payment_app(scope, receive, send)
+                return
             await self.app(scope, receive, send)
             return
 

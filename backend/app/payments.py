@@ -293,25 +293,25 @@ def mcp_paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
     ]
     description = "Run a premium deterministic DeltaZero MCP risk tool"
     resource = f"{settings.public_api_base_url}/mcp"
+    mcp_route = RouteConfig(
+        accepts=options,
+        resource=resource,
+        description=description,
+        mime_type="application/json",
+    )
+    call_route = RouteConfig(
+        accepts=options,
+        resource=f"{settings.public_api_base_url}/mcp/call",
+        description="Call a DeltaZero MCP tool directly via A2MCP",
+        mime_type="application/json",
+    )
     return {
-        "POST /mcp": RouteConfig(
-            accepts=options,
-            resource=resource,
-            description=description,
-            mime_type="application/json",
-        ),
-        "POST /mcp/": RouteConfig(
-            accepts=options,
-            resource=resource,
-            description=description,
-            mime_type="application/json",
-        ),
-        "POST /mcp/call": RouteConfig(
-            accepts=options,
-            resource=f"{settings.public_api_base_url}/mcp/call",
-            description="Call a DeltaZero MCP tool directly via A2MCP",
-            mime_type="application/json",
-        ),
+        "POST /mcp": mcp_route,
+        "POST /mcp/": mcp_route,
+        "GET /mcp": mcp_route,
+        "GET /mcp/": mcp_route,
+        "POST /mcp/call": call_route,
+        "GET /mcp/call": call_route,
     }
 
 
