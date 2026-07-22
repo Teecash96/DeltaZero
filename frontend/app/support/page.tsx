@@ -15,7 +15,7 @@ export default function SupportPage() {
       <section className="support-grid">
         <article className="panel"><span>Product support</span><h2>Ask DeltaZero</h2><p>Questions about Strategy Build, Hedge Intelligence, Funding Stress Testing, Monte Carlo, or Agent Console.</p><a className="button button-secondary" href="https://x.com/DeltaZeroASP" target="_blank" rel="noreferrer">Message on X</a></article>
         <article className="panel"><span>Bug reports</span><h2>Open an issue</h2><p>Report reproducible UI, API, integration, or data-quality problems in the public repository.</p><a className="button button-secondary" href="https://github.com/Teecash96/DeltaZero/issues/new" target="_blank" rel="noreferrer">Create GitHub issue</a></article>
-        <article className="panel"><span>Developer help</span><h2>Inspect the API</h2><p>Review live schemas, validation rules, response formats, and temporarily free analysis endpoints.</p><a className="button button-secondary" href="https://deltazero-production.up.railway.app/docs" target="_blank" rel="noreferrer">Open API docs</a></article>
+        <article className="panel"><span>Developer help</span><h2>Inspect the API</h2><p>Review live schemas, validation rules, response formats, and payment-protected analysis endpoints.</p><a className="button button-secondary" href="https://deltazero-production.up.railway.app/docs" target="_blank" rel="noreferrer">Open API docs</a></article>
       </section>
       <section className="panel support-checklist">
         <div className="methodology-heading"><span>Faster resolution</span><h2>What to include</h2></div>

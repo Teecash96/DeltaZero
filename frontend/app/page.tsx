@@ -182,7 +182,7 @@ const faqs = [
   {
     question: "Are protocol integrations live?",
     answer:
-      "Hyperliquid, Aave, and Morpho are live read-only integrations. Pendle, Ethena, live funding inputs, and additional coverage remain planned. Hedge Intelligence is temporarily free during listing review.",
+      "Hyperliquid, Aave, and Morpho are live read-only integrations. Pendle, Ethena, live funding inputs, and additional coverage remain planned.",
   },
   {
     question: "Is my data stored?",
@@ -318,7 +318,7 @@ export default function Home() {
       </section>
 
       <section className="section-wrap action-demo-section anchor-section" aria-labelledby="action-demo-title">
-        <div className="section-heading"><div><p className="kicker">Live product workflow</p><h2 id="action-demo-title">Run DeltaZero end to end.</h2></div><p>Use the real free analysis services across one connected risk workflow.</p></div>
+        <div className="section-heading"><div><p className="kicker">Live product workflow</p><h2 id="action-demo-title">Run DeltaZero end to end.</h2></div><p>Use the full analysis suite across one connected risk workflow.</p></div>
         <div className="action-demo-shell glass-card">
           <div className="action-demo-track">
             {[['01', 'Hedge Intelligence', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Funding Stress Testing', 'Apply a deterministic funding scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}

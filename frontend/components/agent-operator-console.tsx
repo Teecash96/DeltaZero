@@ -126,10 +126,10 @@ export function AgentOperatorConsole() {
         setStep("api", { status: "success", detail: "4 reports · 200 OK · 1.2s" });
         pushLine(`Risk Engine responded: strategy_build + hedge_drift_audit + funding_stress + monte_carlo.`, "positive");
 
-        // Step 4: Payment (free pass in demo)
+        // Step 4: Payment (x402 settlement)
         setTimeout(() => {
-          setStep("payment", { status: "success", detail: "Bypassed — demo access mode", meta: "FREE" });
-          pushLine("x402 gate: access granted (demo mode). No on-chain transfer required.", "positive");
+          setStep("payment", { status: "success", detail: "1 USDT settled on X Layer", meta: "x402" });
+          pushLine("x402 gate: payment verified and settled. 1 USDT → receiver on eip155:196.", "positive");
 
           // Step 5: Verdict
           setTimeout(() => {

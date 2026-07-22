@@ -115,7 +115,7 @@ export function HyperliquidLive() {
           ) : null}
 
           <section className="panel hyperliquid-upgrade">
-            <div><span>Temporary listing preview</span><h2>Market context and deterministic risk intelligence are free during review.</h2><p>Run hedge-drift verdicts, Safety Buffer scoring, funding stress testing, Monte Carlo sensitivity, and actionable operator recommendations through the DeltaZero Risk Engine.</p></div>
+            <div><span>x402 payment-protected</span><h2>Market context is free. Risk intelligence requires 1 USDT.</h2><p>Run hedge-drift verdicts, Safety Buffer scoring, funding stress testing, Monte Carlo sensitivity, and actionable operator recommendations through the DeltaZero Risk Engine.</p></div>
             <div><Link href="/risk-engine" className="button button-primary">Open Risk Engine →</Link><Link href="/wallet" className="button button-secondary">Hedge Intelligence</Link></div>
           </section>
         </div>
