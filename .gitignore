@@ -16,6 +16,7 @@ node_modules/
 out/
 build/
 sdk/**/dist/
+subscription-gateway/dist/
 
 # Local environment files (keep documented examples)
 .env

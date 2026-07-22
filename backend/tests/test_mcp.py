@@ -37,6 +37,17 @@ def _tool_call(name: str, arguments: dict, *, message_id: int = 3) -> dict:
     )
 
 
+def test_service_root_advertises_the_mcp_transport_as_a2mcp_endpoint() -> None:
+    with TestClient(create_app()) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.json()["service_type"] == "A2MCP"
+    assert response.json()["a2mcp_endpoint"] == (
+        "https://deltazero-production.up.railway.app/mcp"
+    )
+
+
 def test_mcp_initialize_and_discovery_are_free() -> None:
     with TestClient(create_app(payment_settings=SETTINGS)) as client:
         initialize = _message(

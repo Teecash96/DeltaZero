@@ -53,7 +53,17 @@ MCP initialization, discovery, resources, market context, and deterministic tool
 
 Agents can also discover `deltazero://schemas/risk-envelope-v1` as an MCP resource. It exposes the same JSON Schema available over REST.
 
-The **OKX Agent Payments Protocol** implementation remains staged. Set `DELTAZERO_ACCESS_MODE=paid` after the temporary free-access period to restore the existing 1 USDT per-call boundary without changing application code.
+The registered OKX.AI service is an A2MCP API service whose public Streamable
+HTTP transport is `/mcp`. OKX.AI supports either free or per-call billing for
+that marketplace endpoint. DeltaZero therefore keeps marketplace billing
+separate from its direct-customer plan.
+
+For direct HTTP/API customers, `subscription-gateway/` implements an official
+**OKX Agent Payments Protocol** subscription: **5 USDT per calendar month** for
+all deterministic analysis routes. It uses the official Node.js `period`
+scheme, durable Redis state, signed access proofs, and scheduled renewal
+charges. The current Python payment SDK does not support subscriptions, so the
+deterministic FastAPI engine remains unchanged behind this gateway.
 
 The MCP tools call the same Python service functions used by the REST API; formulas and recommendation logic are not duplicated. Tool inputs and structured outputs are generated from the same Pydantic contracts, so compatible agents do not need endpoint-specific response parsers.
 
@@ -146,7 +156,8 @@ Hyperliquid accounts.
 | Decision Engine | Live | Centralizes carry, hedge, Safety Buffer, capital-risk, health, action, and confidence evaluation. |
 | Grounded Risk Explanation | Live · Optional | Uses OpenAI Structured Outputs to explain verified Risk Envelope evidence without recalculating metrics, inventing market causes, or changing the deterministic action. Falls back safely when unavailable. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
-| Agent Payment Gate | Staged · Temporarily Free | The verified 1 USDT X Layer payment boundary remains in the backend and can be restored with `DELTAZERO_ACCESS_MODE=paid`. All analysis calls are currently free during listing review. |
+| Marketplace API service | Live · Temporarily Free | The MCP endpoint is reachable at `/mcp` for OKX.AI review. Marketplace A2MCP access is free or paid per call. |
+| Monthly API plan | Deployment-ready | The separate official subscription gateway charges 5 USDT per calendar month for all deterministic HTTP analysis routes. |
 | Interactive Strategy Preview | Live · Permanently Free | Compares Conservative Income and Aggressive Carry through the production deterministic builder without a wallet or payment. |
 | TypeScript SDK | Published · npm | Supplies a typed client through [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). |
 | Python SDK | Published · PyPI | Supplies a typed client through [`deltazero-core`](https://pypi.org/project/deltazero-core/). |
@@ -514,9 +525,15 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/risk-envelope/evaluate` | Return the portable Risk Envelope v1 decision artifact for one coordinated analysis. Temporarily free. |
 | `POST` | `/` | OKX.AI-compatible alias for the complete coordinated Risk Engine analysis. A bare review probe returns the documented SOL reference scenario; callers can submit their own full request body. |
 
-### Temporary free access and staged payments
+### A2MCP marketplace access and direct subscriptions
 
-DeltaZero currently defaults to `DELTAZERO_ACCESS_MODE=free`. In this mode every REST analysis route and every MCP tool is available without payment so OKX.AI reviewers and the demo editor can exercise the live product end to end.
+DeltaZero currently defaults to `DELTAZERO_ACCESS_MODE=free`. In this mode every REST analysis route and every MCP tool is available without payment so OKX.AI reviewers can exercise the live product end to end. The marketplace endpoint that must be registered is:
+
+```text
+https://deltazero-production.up.railway.app/mcp
+```
+
+It is a stateless Streamable HTTP MCP transport, not the base API URL.
 
 The production payment implementation remains in the codebase. After listing and demo completion, set:
 
@@ -526,7 +543,15 @@ export DELTAZERO_ACCESS_MODE="paid"
 
 Paid mode uses the official OKX seller middleware. An unpaid request to a protected route returns `HTTP 402 Payment Required` with a base64-encoded `PAYMENT-REQUIRED` header. The header is the authoritative payment quote and identifies the network, stablecoin contract, atomic amount, receiver, and supported payment schemes.
 
-The future price is configured with `PAYMENT_PRICE_USDT`. When paid mode is restored, the primary product flow calls `/risk-engine/analyze`: one 1 USDT payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
+The legacy per-call price is configured with `PAYMENT_PRICE_USDT`. When that mode is restored, the primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
+
+The direct-customer monthly plan is implemented separately in
+`subscription-gateway/`. It protects Strategy Build, Hedge-Drift Auditing,
+Funding Stress Testing, Monte Carlo Sensitivity, and the combined Risk Engine
+for **5 USDT per calendar month**. An OKX-compatible buyer authorizes once;
+active requests carry signed access proof and the seller scheduler triggers
+each due monthly charge. Deploy the gateway with Redis and the documented OKX
+developer credentials before advertising its URL as live.
 
 In paid mode, only the three `PAYMENT_*` variables produce challenge-only behavior: the server returns the quote but never releases a protected resource. Once all three official OKX facilitator credentials are configured, the submitted payment credential is verified and settled synchronously before the handler runs, and a successful response includes `PAYMENT-RESPONSE`.
 

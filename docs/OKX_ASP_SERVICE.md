@@ -122,6 +122,34 @@ The service returns a deterministic JSON report with:
 
 ## Listing and Operations Notes
 
+### A2MCP transport
+
+DeltaZero is a deterministic API service. Its registered OKX.AI endpoint must
+be the public Streamable HTTP MCP transport—not the base FastAPI URL:
+
+```text
+https://deltazero-production.up.railway.app/mcp
+```
+
+Before listing or resubmitting, run the public review probe from the repository
+root:
+
+```bash
+python3 backend/scripts/verify_a2mcp.py
+```
+
+The probe initializes MCP, discovers the available tools, executes a
+deterministic strategy calculation, rejects tool-level errors, and reports
+measured latency.
+
+### Billing compatibility
+
+OKX.AI A2MCP marketplace services support free or pay-per-call billing. A
+monthly fee is therefore not encoded into the marketplace's per-call fee
+field. DeltaZero's direct API subscription is a separate HTTP seller service
+under `subscription-gateway/` and uses the official **OKX Agent Payments
+Protocol** calendar-month subscription flow at 5 USDT per month.
+
 Before marketplace approval and wider production use, maintain:
 
 - service registration metadata

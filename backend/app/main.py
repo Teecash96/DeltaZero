@@ -121,11 +121,17 @@ def create_app(
 
     @application.get("/")
     def root() -> dict[str, str]:
+        public_base_url = (
+            payment_settings.public_api_base_url
+            if payment_settings
+            else "https://deltazero-production.up.railway.app"
+        )
         return {
             "service": "DeltaZero Risk Engine",
             "status": "ok",
-            "a2mcp_endpoint": f"{payment_settings.public_api_base_url if payment_settings else 'https://deltazero-production.up.railway.app'}/",
-            "mcp_endpoint": f"{payment_settings.public_api_base_url if payment_settings else 'https://deltazero-production.up.railway.app'}/mcp",
+            "service_type": "A2MCP",
+            "a2mcp_endpoint": f"{public_base_url}/mcp",
+            "mcp_endpoint": f"{public_base_url}/mcp",
         }
 
     @application.post(
