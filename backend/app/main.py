@@ -109,14 +109,13 @@ def _dispatch_mcp_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, A
 
 
 def load_runtime_payment_settings() -> PaymentSettings | None:
-    """Return paid settings only when production payment enforcement is enabled.
+    """Return paid settings when production payment enforcement is enabled.
 
-    DeltaZero defaults to temporary free access during the OKX.AI listing
-    process. Setting ``DELTAZERO_ACCESS_MODE=paid`` restores the existing
-    payment middleware without a code change.
+    Payment gating is ON by default. Setting ``DELTAZERO_ACCESS_MODE=free``
+    disables the REST payment middleware (local development only).
     """
 
-    access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "free").strip().lower()
+    access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "paid").strip().lower()
     if access_mode == "free":
         return None
     if access_mode == "paid":
