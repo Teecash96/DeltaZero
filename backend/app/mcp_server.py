@@ -243,13 +243,6 @@ class MCPToolPaymentGate:
             await self.app(scope, receive, send)
             return
 
-        # /mcp/call is the free A2MCP direct-call endpoint (fee = 0 USDT).
-        # It returns content directly without a payment gate.
-        path = scope.get("path", "")
-        if path == "/mcp/call" or path == "/mcp/call/":
-            await self.app(scope, receive, send)
-            return
-
         body, replay_receive = await self._buffer_request(receive)
         if self._is_free_operation(body):
             await self.app(scope, replay_receive, send)
