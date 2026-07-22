@@ -31,3 +31,4 @@ subscription-gateway/dist/
 *~
 *.tmp
 *.temp
+.qoder/

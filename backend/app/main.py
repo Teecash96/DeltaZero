@@ -2,9 +2,11 @@
 
 from contextlib import asynccontextmanager
 import os
+from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from x402.server import x402ResourceServer
 
 from app.models.risk_engine import RiskEnginePassRequest, RiskEnginePassResponse
@@ -19,6 +21,15 @@ from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
 from app.mcp_server import MCPToolPaymentGate, create_mcp_server
 from app.services.risk_engine import run_risk_engine_pass
+from app.services.builder import build_strategy
+from app.services.auditor import audit_strategy
+from app.services.stress_test import stress_test_strategy
+from app.services.monte_carlo import run_monte_carlo as run_monte_carlo_analysis
+from app.services.market_data import get_hyperliquid_market
+from app.services.strategy_registry import evaluate_strategy_registry
+from app.models.schemas import AuditRequest, BuildRequest, StressTestRequest
+from app.models.monte_carlo import MonteCarloRequest
+from app.models.registry import RegistryEvaluationRequest
 
 
 A2MCP_REVIEW_PROBE = RiskEnginePassRequest(
@@ -34,6 +45,67 @@ A2MCP_REVIEW_PROBE = RiskEnginePassRequest(
     time_horizon_days=30,
     seed=42,
 )
+
+
+# ─── A2MCP tool dispatch table ──────────────────────────────────────────
+# Maps tool names to handler functions for the /mcp/call endpoint.
+
+def _call_risk_engine(args: dict[str, Any]) -> dict[str, Any]:
+    req = RiskEnginePassRequest(**args) if args else A2MCP_REVIEW_PROBE
+    return run_risk_engine_pass(req).model_dump(mode="json", exclude_none=True)
+
+
+def _call_build(args: dict[str, Any]) -> dict[str, Any]:
+    return build_strategy(BuildRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_audit(args: dict[str, Any]) -> dict[str, Any]:
+    return audit_strategy(AuditRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_stress(args: dict[str, Any]) -> dict[str, Any]:
+    return stress_test_strategy(StressTestRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_monte_carlo(args: dict[str, Any]) -> dict[str, Any]:
+    return run_monte_carlo_analysis(MonteCarloRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_market(args: dict[str, Any]) -> dict[str, Any]:
+    asset = args.get("asset", "SOL")
+    lookback = args.get("lookback_hours", 24)
+    dex = args.get("dex")
+    return get_hyperliquid_market(asset, dex, lookback).model_dump(mode="json", exclude_none=True)
+
+
+def _call_registry(args: dict[str, Any]) -> dict[str, Any]:
+    return evaluate_strategy_registry(RegistryEvaluationRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_risk_envelope(args: dict[str, Any]) -> dict[str, Any]:
+    req = RiskEnginePassRequest(**args) if args else A2MCP_REVIEW_PROBE
+    return run_risk_engine_pass(req).risk_envelope.model_dump(mode="json", exclude_none=True)
+
+
+_MCP_TOOL_DISPATCH: dict[str, Any] = {
+    "run_complete_risk_engine": _call_risk_engine,
+    "build_neutral_strategy": _call_build,
+    "audit_hedge_drift": _call_audit,
+    "run_funding_stress": _call_stress,
+    "run_monte_carlo": _call_monte_carlo,
+    "get_hyperliquid_market_context": _call_market,
+    "evaluate_strategy_memory": _call_registry,
+    "evaluate_risk_envelope": _call_risk_envelope,
+    "explain_risk_recommendation": _call_risk_engine,
+}
+
+
+def _dispatch_mcp_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, Any] | None:
+    """Dispatch a tool call to the appropriate handler. Returns None if unknown."""
+    handler = _MCP_TOOL_DISPATCH.get(tool_name)
+    if handler is None:
+        return None
+    return handler(arguments)
 
 
 def load_runtime_payment_settings() -> PaymentSettings | None:
@@ -192,6 +264,33 @@ def create_app(
     @application.get("/health")
     def health_check() -> dict[str, str]:
         return {"status": "ok"}
+
+    # ─── A2MCP direct tool-call endpoint ────────────────────────────────
+    # OKX's A2MCP client POSTs to /mcp/call with a simplified body:
+    #   {"tool": "run_complete_risk_engine", "arguments": {...}}
+    # This is protected by the MCPToolPaymentGate (x402 402 for unpaid).
+    @application.post("/mcp/call", tags=["a2mcp"])
+    async def mcp_call(request: Request) -> JSONResponse:
+        """Direct A2MCP tool invocation — returns the tool result as JSON."""
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Invalid JSON body"},
+            )
+
+        tool_name = body.get("tool") or body.get("name") or ""
+        arguments = body.get("arguments") or body.get("params") or {}
+
+        # Dispatch to the appropriate service function.
+        result = _dispatch_mcp_tool(tool_name, arguments)
+        if result is None:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Unknown tool: {tool_name}", "available_tools": sorted(_MCP_TOOL_DISPATCH.keys())},
+            )
+        return JSONResponse(content={"tool": tool_name, "result": result})
 
     return application
 
