@@ -52,11 +52,39 @@ def load_runtime_payment_settings() -> PaymentSettings | None:
     raise RuntimeError("DELTAZERO_ACCESS_MODE must be either 'free' or 'paid'")
 
 
+def load_mcp_payment_settings() -> PaymentSettings | None:
+    """Return payment settings for the MCP x402 gate.
+
+    The MCP endpoint must always be x402-compliant for OKX.AI A2MCP listing,
+    regardless of whether the REST routes are in free or paid mode.  This
+    loads the same PAYMENT_* environment variables.  When they are absent
+    (local development), returns None and the MCP gate is skipped.
+    """
+
+    # If full paid mode is active, reuse those settings.
+    access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "free").strip().lower()
+    if access_mode == "paid":
+        return PaymentSettings.from_environment()
+
+    # Even in free mode, load payment settings for the MCP x402 gate if
+    # the required variables are present.
+    try:
+        return PaymentSettings.from_environment()
+    except RuntimeError:
+        return None
+
+
 def create_app(
     payment_settings: PaymentSettings | None = None,
     payment_server: x402ResourceServer | None = None,
+    mcp_payment_settings: PaymentSettings | None = None,
 ) -> FastAPI:
-    """Create the API, optionally protecting paid resources with x402."""
+    """Create the API, optionally protecting paid resources with x402.
+
+    The MCP x402 gate is always active when ``mcp_payment_settings`` (or
+    ``payment_settings``) is available, ensuring the /mcp endpoint returns
+    HTTP 402 for unpaid requests as required by OKX.AI A2MCP listing.
+    """
 
     mcp_server = create_mcp_server()
     mcp_application = mcp_server.streamable_http_app()
@@ -74,6 +102,9 @@ def create_app(
     )
     application.state.payment_settings = payment_settings
 
+    # Resolve MCP payment settings: prefer explicit, fall back to REST settings.
+    effective_mcp_settings = mcp_payment_settings or payment_settings
+
     if payment_settings is not None:
         application.add_middleware(
             DeltaZeroPaymentMiddleware,
@@ -81,9 +112,14 @@ def create_app(
             server=payment_server or create_payment_server(payment_settings),
             admin_key=payment_settings.admin_key,
         )
+
+    # The MCP x402 gate is ALWAYS active when payment settings are available,
+    # independent of DELTAZERO_ACCESS_MODE.  This ensures OKX's x402 probe
+    # receives HTTP 402 (not 406 from MCP content negotiation).
+    if effective_mcp_settings is not None:
         application.add_middleware(
             MCPToolPaymentGate,
-            payment_settings=payment_settings,
+            payment_settings=effective_mcp_settings,
         )
 
     # CORS is registered after x402 so browser clients can read payment headers
@@ -160,4 +196,7 @@ def create_app(
     return application
 
 
-app = create_app(payment_settings=load_runtime_payment_settings())
+app = create_app(
+    payment_settings=load_runtime_payment_settings(),
+    mcp_payment_settings=load_mcp_payment_settings(),
+)

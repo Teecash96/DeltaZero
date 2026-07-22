@@ -41,6 +41,26 @@ PREMIUM_MCP_TOOLS = frozenset(
     }
 )
 
+# MCP methods and tools that are always free (no x402 charge).
+# Any request that is NOT one of these will receive a 402 challenge.
+FREE_MCP_METHODS = frozenset(
+    {
+        "initialize",
+        "notifications/initialized",
+        "tools/list",
+        "resources/list",
+        "resources/read",
+        "ping",
+    }
+)
+
+FREE_MCP_TOOLS = frozenset(
+    {
+        "get_hyperliquid_market_context",
+        "evaluate_strategy_memory",
+    }
+)
+
 
 def create_mcp_server() -> FastMCP:
     """Create the stateless MCP server and register native typed tools."""
@@ -193,7 +213,16 @@ def create_mcp_server() -> FastMCP:
 
 
 class MCPToolPaymentGate:
-    """Charge only premium MCP tool calls while leaving MCP discovery free."""
+    """x402 payment gate for the MCP Streamable HTTP transport.
+
+    Intercepts ALL POST requests to /mcp BEFORE MCP content negotiation.
+    Only explicitly free operations (initialize, discovery, free tools) pass
+    through without payment.  Any other request — including bare probes,
+    unparseable bodies, and premium tool calls — receives a 402 challenge.
+
+    This ordering guarantees OKX's x402 verification probe receives HTTP 402
+    with a valid ``accepts`` array instead of the MCP transport's HTTP 406.
+    """
 
     def __init__(
         self,
@@ -215,10 +244,12 @@ class MCPToolPaymentGate:
             return
 
         body, replay_receive = await self._buffer_request(receive)
-        if self._calls_premium_tool(body):
-            await self.payment_app(scope, replay_receive, send)
+        if self._is_free_operation(body):
+            await self.app(scope, replay_receive, send)
             return
-        await self.app(scope, replay_receive, send)
+        # Everything else (premium tools, bare probes, unparseable bodies)
+        # goes through x402 which returns 402 for unpaid requests.
+        await self.payment_app(scope, replay_receive, send)
 
     @staticmethod
     async def _buffer_request(receive: Receive) -> tuple[bytes, Receive]:
@@ -243,16 +274,36 @@ class MCPToolPaymentGate:
         return body, replay
 
     @staticmethod
-    def _calls_premium_tool(body: bytes) -> bool:
+    def _is_free_operation(body: bytes) -> bool:
+        """Return True only if the body is a known free MCP operation.
+
+        Any request that cannot be parsed as valid MCP JSON-RPC is treated
+        as paid so that bare x402 probes receive 402 instead of falling
+        through to the MCP content-negotiation layer (which returns 406).
+        """
         try:
             payload = json.loads(body)
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
             return False
+
         messages = payload if isinstance(payload, list) else [payload]
-        return any(
-            isinstance(message, dict)
-            and message.get("method") == "tools/call"
-            and isinstance(message.get("params"), dict)
-            and message["params"].get("name") in PREMIUM_MCP_TOOLS
-            for message in messages
-        )
+        if not messages:
+            return False
+
+        for message in messages:
+            if not isinstance(message, dict):
+                return False
+            method = message.get("method")
+            # Free protocol-level methods (initialize, discovery, notifications)
+            if method in FREE_MCP_METHODS:
+                continue
+            # Free tool calls
+            if (
+                method == "tools/call"
+                and isinstance(message.get("params"), dict)
+                and message["params"].get("name") in FREE_MCP_TOOLS
+            ):
+                continue
+            # Anything else is a paid operation
+            return False
+        return True
