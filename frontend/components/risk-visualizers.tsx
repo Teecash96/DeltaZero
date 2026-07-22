@@ -63,6 +63,159 @@ function buildHistogram(values: number[], binCount = 12) {
   }));
 }
 
+/* ─── Impairment Density Curve ─────────────────────────────────────────── */
+
+interface DensityPoint {
+  impairment: number;
+  density: number;
+  inCatastrophe: boolean;
+}
+
+function buildDensityCurve(
+  values: number[],
+  p95: number,
+  binCount = 60,
+): DensityPoint[] {
+  if (values.length === 0) return [];
+  const sorted = [...values].sort((a, b) => a - b);
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+  const width = Math.max((max - min) / binCount, 0.01);
+
+  const bins = Array.from({ length: binCount }, (_, i) => ({
+    center: min + (i + 0.5) * width,
+    count: 0,
+  }));
+
+  for (const v of sorted) {
+    const idx = Math.min(Math.floor((v - min) / width), binCount - 1);
+    bins[idx].count += 1;
+  }
+
+  const totalArea = sorted.length * width;
+  return bins.map((bin) => ({
+    impairment: Number(bin.center.toFixed(2)),
+    density: bin.count / totalArea,
+    inCatastrophe: bin.center >= p95,
+  }));
+}
+
+export function ImpairmentDistributionChart({ result }: { result: MonteCarloResponse }) {
+  const paths = result.sample_paths.map((p) => p.impairment_loss_pct);
+  const { p50, p95, p99 } = result.percentiles.impairment_loss_pct;
+  const curve = buildDensityCurve(paths, p95);
+  const model = result.systemic_risk_model;
+
+  // Split into safe zone and catastrophe zone for layered rendering
+  const safeData = curve.map((pt) => ({
+    ...pt,
+    safeDensity: pt.inCatastrophe ? 0 : pt.density,
+    catastropheDensity: pt.inCatastrophe ? pt.density : 0,
+  }));
+
+  return (
+    <section className="panel impairment-density-panel">
+      <div className="section-label-row">
+        <div>
+          <span className="decision-eyebrow">Tail-risk topology</span>
+          <h2 className="panel-title">Impairment Probability Density</h2>
+        </div>
+        <span className="density-model-badge">
+          {model.distribution === "student_t" ? `Student-t · ${model.degrees_of_freedom} DoF` : "Independent Normal"}
+        </span>
+      </div>
+
+      <div className="density-chart-canvas" role="img" aria-label="Impairment probability density curve with P50, P95, P99 markers and catastrophe zone">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={safeData} margin={{ top: 24, right: 16, bottom: 12, left: 8 }}>
+            <defs>
+              <linearGradient id="densitySafe" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--green)" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="var(--green)" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="densityCatastrophe" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--danger)" stopOpacity={0.5} />
+                <stop offset="100%" stopColor="var(--danger)" stopOpacity={0.05} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke={colors.grid} strokeDasharray="3 5" vertical={false} />
+            <XAxis
+              dataKey="impairment"
+              stroke={colors.text}
+              tick={{ fontSize: 10 }}
+              tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+              label={{ value: "Impairment loss", position: "insideBottomRight", fill: colors.text, fontSize: 10, dy: 8 }}
+            />
+            <YAxis stroke={colors.text} tick={{ fontSize: 9 }} tickFormatter={(v: number) => v.toFixed(3)} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              formatter={(value) => [Number(value).toFixed(4), "Density"]}
+              labelFormatter={(v) => `Impairment: ${Number(v).toFixed(1)}%`}
+            />
+
+            {/* Catastrophe zone background */}
+            <ReferenceArea
+              x1={p95}
+              x2={curve.length > 0 ? curve[curve.length - 1].impairment : p95}
+              fill="var(--danger)"
+              fillOpacity={0.08}
+              stroke="var(--danger)"
+              strokeOpacity={0.2}
+              strokeDasharray="4 3"
+            />
+
+            {/* Safe zone area */}
+            <Area
+              type="monotone"
+              dataKey="safeDensity"
+              stroke="var(--green)"
+              strokeWidth={2.5}
+              fill="url(#densitySafe)"
+              dot={false}
+              activeDot={{ r: 4 }}
+            />
+            {/* Catastrophe zone area */}
+            <Area
+              type="monotone"
+              dataKey="catastropheDensity"
+              stroke="var(--danger)"
+              strokeWidth={2.5}
+              fill="url(#densityCatastrophe)"
+              dot={false}
+              activeDot={{ r: 4 }}
+            />
+
+            {/* Percentile markers */}
+            <ReferenceLine x={p50} stroke="var(--green)" strokeWidth={2} strokeDasharray="6 3" label={{ value: `P50 ${p50.toFixed(1)}%`, fill: "var(--green)", fontSize: 11, position: "top" }} />
+            <ReferenceLine x={p95} stroke="var(--warning)" strokeWidth={2} strokeDasharray="6 3" label={{ value: `P95 ${p95.toFixed(1)}%`, fill: "var(--warning)", fontSize: 11, position: "top" }} />
+            <ReferenceLine x={p99} stroke="var(--danger)" strokeWidth={2} strokeDasharray="6 3" label={{ value: `P99 ${p99.toFixed(1)}%`, fill: "var(--danger)", fontSize: 11, position: "top" }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="density-stats-strip">
+        <article><span>Median (P50)</span><strong>{p50.toFixed(2)}%</strong></article>
+        <article><span>P95 tail</span><strong>{p95.toFixed(2)}%</strong></article>
+        <article><span>P99 tail</span><strong>{p99.toFixed(2)}%</strong></article>
+        <article><span>Worst path</span><strong>{result.summary.worst_case_impairment_loss_pct.toFixed(2)}%</strong></article>
+        <article><span>Catastrophe mass</span><strong>{(100 - 95).toFixed(0)}% of paths ≥ P95</strong></article>
+      </div>
+
+      <div className="chart-legend">
+        <span><i className="legend-accent" />Normal operating range</span>
+        <span><i className="legend-danger" />Catastrophe zone (≥ P95)</span>
+        <span><i className="legend-warning" />P95 boundary</span>
+      </div>
+
+      {model.distribution === "student_t" ? (
+        <p className="density-model-note">
+          Correlated Student-t model ({model.degrees_of_freedom} degrees of freedom) couples market, funding, and collateral shocks — fat tails capture extreme co-movement that Gaussian models miss.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 export function MonteCarloOutcomeVisualizer({ result }: { result: MonteCarloResponse }) {
   const histogram = buildHistogram(result.sample_paths.map((path) => path.impairment_loss_pct));
   const equityPaths = [...result.sample_paths]

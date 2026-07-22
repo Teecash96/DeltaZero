@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import { PaymentRequiredCard, ReportActions } from "@/components/report-polish";
 import { RiskZonePanel } from "@/components/risk-zone-panel";
-import { MonteCarloOutcomeVisualizer } from "@/components/risk-visualizers";
+import { MonteCarloOutcomeVisualizer, ImpairmentDistributionChart } from "@/components/risk-visualizers";
 import { PaymentRequiredError, runMonteCarlo, type X402Challenge } from "@/lib/api";
 import { MONTE_CARLO_HANDOFF_KEY, MONTE_CARLO_RESULT_KEY, readSession, type MonteCarloHandoff, type MonteCarloResultHandoff } from "@/lib/handoff";
 import { appendReportHistory } from "@/lib/report-history";
@@ -37,7 +37,7 @@ function PercentileDistribution({ result }: { result: MonteCarloResponse }) {
 }
 
 function Distribution({ result }: { result: MonteCarloResponse }) {
-  return <><MonteCarloOutcomeVisualizer result={result} /><PercentileDistribution result={result} /></>;
+  return <><ImpairmentDistributionChart result={result} /><MonteCarloOutcomeVisualizer result={result} /><PercentileDistribution result={result} /></>;
 }
 
 function PathTable({ paths }: { paths: MonteCarloPath[] }) { const [all, setAll] = useState(false); return <section className="panel"><div className="section-label-row"><h2 className="panel-title">Sample Paths</h2><span>First 50 returned</span></div><div className="wallet-table-scroll"><table className="mc-table"><thead><tr>{["Path", "Market shock", "Funding shift", "Collateral depeg", "Slippage", "Haircut", "Protocol loss", "Impairment", "Safety Buffer", "Hedge drift"].map((h) => <th key={h}>{h}</th>)}</tr></thead><tbody>{paths.slice(0, all ? 50 : 10).map((p) => <tr key={p.path_id}><td>{p.path_id}</td><td>{pct(p.market_shock_pct)}</td><td>{pct(p.funding_shift_apy)}</td><td>{pct(p.collateral_depeg_pct)}</td><td>{pct(p.slippage_pct)}</td><td>{pct(p.collateral_haircut_pct)}</td><td>{pct(p.protocol_loss_pct)}</td><td>{pct(p.impairment_loss_pct)}</td><td>{p.safety_buffer_score.toFixed(1)}</td><td>{pct(p.hedge_drift_pct)}</td></tr>)}</tbody></table></div>{paths.length > 10 ? <button className="wallet-table-toggle" type="button" onClick={() => setAll(!all)}>{all ? "Show first 10" : "Show all 50"}</button> : null}</section>; }
