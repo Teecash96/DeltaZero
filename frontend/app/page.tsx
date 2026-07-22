@@ -321,7 +321,7 @@ export default function Home() {
         <div className="section-heading"><div><p className="kicker">Live product workflow</p><h2 id="action-demo-title">Run DeltaZero end to end.</h2></div><p>Use the full analysis suite across one connected risk workflow.</p></div>
         <div className="action-demo-shell glass-card">
           <div className="action-demo-track">
-            {[['01', 'Hedge Intelligence', 'Read supported public positions.'], ['02', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['03', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['04', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['05', 'Funding Stress Testing', 'Apply a deterministic funding scenario.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
+            {[['01', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['02', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['03', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['04', 'Funding Stress Testing', 'Apply a deterministic funding scenario.'], ['05', 'Hedge Intelligence', 'Read supported public positions.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
           </div>
           <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
         </div>
