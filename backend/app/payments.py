@@ -270,6 +270,10 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
             "/monte-carlo/run",
             "Run deterministic Monte Carlo sensitivity analysis",
         ),
+        "POST /preview/compare": route(
+            "/preview/compare",
+            "Compare conservative and aggressive strategy styles",
+        ),
     }
 
 

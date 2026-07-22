@@ -84,7 +84,7 @@ export function InteractiveStrategyPreview() {
   }
 
   return <section id="interactive-preview" className="section-wrap interactive-preview-section anchor-section" aria-labelledby="interactive-preview-title">
-    <div className="section-heading"><div><p className="kicker">No wallet · no payment · live engine</p><h2 id="interactive-preview-title">Build and compare a strategy in 60 seconds.</h2></div><p>The landing page is the demo. Submit assumptions to the same deterministic builder used by DeltaZero’s API, then compare Conservative Income with Aggressive Carry.</p></div>
+    <div className="section-heading"><div><p className="kicker">x402 protected · 1 USDT · live engine</p><h2 id="interactive-preview-title">Build and compare a strategy in 60 seconds.</h2></div><p>Submit assumptions to the same deterministic builder used by DeltaZero's API, then compare Conservative Income with Aggressive Carry. Payment settled on X Layer via x402.</p></div>
     <div className="interactive-preview-shell glass-card">
       <div className="preview-input-panel">
         <div className="preview-input-grid">
