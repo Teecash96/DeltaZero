@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(npx next build 2 >& 1)",
+      "Shell(onchainos:*)",
+      "Shell(npx skills add okx/onchainos-skills --yes -g 2 >& 1)",
+      "Shell(python -m pytest tests/test_monte_carlo.py -v 2 >& 1)",
+      "Shell(python3 -m pytest tests/test_monte_carlo.py -v 2 >& 1)",
+      "Shell(ls:*)",
+      "Shell(python3 -m pip list 2 > /dev/null)",
+      "Shell(.venv/bin/python:*)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

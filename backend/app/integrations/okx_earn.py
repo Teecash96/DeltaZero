@@ -112,51 +112,45 @@ DEMO_OKX_POSITIONS: list[dict[str, Any]] = [
 
 class OKXReadAdapterProtocol(WalletAdapter):
     """Read-only adapter for OKX Earn.
-    
-    IMPORTANT: This is a demo adapter using mock data.
-    OKX does not expose a public API for reading user positions.
-    
-    For production, you would need:
-    1. User authentication through OKX API (requires API keys)
-    2. Manual position entry via web UI
-    3. Integration through third-party portfolio trackers
-    
-    For hackathon demos, this returns realistic mock data to showcase the analysis pipeline.
+
+    **PREVIEW** — OKX does not expose a public API for reading user positions,
+    so this adapter returns realistic demo data to showcase the analysis pipeline.
+    In production, positions would need manual entry or OKX API key integration.
     """
-    
+
     protocol = "okx-earn"
     network = "okx-earn"
-    
+
     def __init__(self):
         self._enabled = True
-    
+
     @property
     def enabled(self) -> bool:
         return self._enabled
-    
+
     @enabled.setter
     def enabled(self, value: bool):
         self._enabled = value
-    
+
     async def fetch_positions(
         self,
         wallet_address: str | None,
         include_assets: list[str] | None = None,
     ) -> tuple[list[OKXPosition], str | None]:
         """Fetch positions from OKX Earn.
-        
+
         Returns mock demo data that represents typical OKX Earn yield positions.
         This showcases the full integration even without real API access.
         """
         await asyncio.sleep(0.15)  # Simulate realistic API latency
-        
+
         # Filter assets if requested
         if include_assets:
             filtered = [p for p in DEMO_OKX_POSITIONS if p["asset"].upper() in [a.upper() for a in include_assets]]
             positions_data = filtered if filtered else DEMO_OKX_POSITIONS
         else:
             positions_data = DEMO_OKX_POSITIONS
-        
+
         positions = [OKXPosition(**{
             "asset": p["asset"],
             "amount_usd": p["amount_usd"],
@@ -165,20 +159,32 @@ class OKXReadAdapterProtocol(WalletAdapter):
             "protocol": p.get("protocol", "OKX Earn"),
             "network": p.get("network", "OKX Web3 Wallet"),
         }) for p in positions_data]
-        
+
         return positions, None
-    
+
     def supports(self, network: str, protocol: str) -> bool:
         """Check if this adapter supports the given network and protocol."""
         return network == "okx-earn" and protocol.lower() in {"okx-earn", "okx earn", "earn"}
-    
+
     def fetch_wallet_data(self, wallet_address: str):
-        """Mock implementation - returns empty snapshot."""
+        """Mock implementation — returns empty snapshot."""
         from app.integrations.base import ProtocolSnapshot
-        return ProtocolSnapshot(protocol=self.protocol, network=self.network, wallet_address=wallet_address)
-    
+        return ProtocolSnapshot(
+            protocol=self.protocol,
+            network=self.network,
+            wallet_address=wallet_address,
+            market_context={"_preview": True},
+            warnings=["OKX Earn adapter is in preview mode — positions shown are demo data, not live."],
+        )
+
     def normalize_positions(self, snapshot) -> list[NormalizedPosition]:
-        """Convert OKX positions to normalized format."""
+        """Convert OKX positions to normalized format.
+
+        NOTE: OKX does not expose a public API for user positions.
+        This returns realistic demo data for hackathon demonstration.
+        The `wallet_address` parameter from `fetch_wallet_data` is
+        intentionally unused — the mock data represents typical positions.
+        """
         positions = []
         for pos in DEMO_OKX_POSITIONS:
             positions.append(NormalizedPosition(
@@ -197,7 +203,7 @@ class OKXReadAdapterProtocol(WalletAdapter):
                 liquidation_price=None,
                 health_factor=None,
                 data_timestamp="2024-07-22T00:00:00Z",
-                data_quality="complete",
+                data_quality="preview",
                 side="long",
                 subaccount_name=None,
                 subaccount_address=None,

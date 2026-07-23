@@ -29,6 +29,8 @@ class DecisionProfile:
     min_net_carry_apy_for_open: float
     capital_risk_warning_pct: float
     capital_risk_critical_pct: float
+    impairment_warning_pct: float
+    impairment_critical_pct: float
     style_label: str
 
 
@@ -65,6 +67,8 @@ DECISION_PROFILES: dict[str, DecisionProfile] = {
         min_net_carry_apy_for_open=3.0,
         capital_risk_warning_pct=12.0,
         capital_risk_critical_pct=20.0,
+        impairment_warning_pct=8.0,
+        impairment_critical_pct=16.0,
         style_label="Low Risk",
     ),
     "medium": DecisionProfile(
@@ -77,6 +81,8 @@ DECISION_PROFILES: dict[str, DecisionProfile] = {
         min_net_carry_apy_for_open=2.0,
         capital_risk_warning_pct=18.0,
         capital_risk_critical_pct=28.0,
+        impairment_warning_pct=10.0,
+        impairment_critical_pct=20.0,
         style_label="Medium Risk",
     ),
     "high": DecisionProfile(
@@ -89,6 +95,8 @@ DECISION_PROFILES: dict[str, DecisionProfile] = {
         min_net_carry_apy_for_open=1.0,
         capital_risk_warning_pct=22.0,
         capital_risk_critical_pct=32.0,
+        impairment_warning_pct=12.0,
+        impairment_critical_pct=24.0,
         style_label="High Risk",
     ),
 }
@@ -106,6 +114,8 @@ BUILDER_STYLE_PROFILES: dict[TargetStyle, DecisionProfile] = {
         min_net_carry_apy_for_open=2.0,
         capital_risk_warning_pct=18.0,
         capital_risk_critical_pct=28.0,
+        impairment_warning_pct=10.0,
+        impairment_critical_pct=20.0,
         style_label="Neutral Yield",
     ),
     "conservative_income": DecisionProfile(
@@ -118,6 +128,8 @@ BUILDER_STYLE_PROFILES: dict[TargetStyle, DecisionProfile] = {
         min_net_carry_apy_for_open=1.0,
         capital_risk_warning_pct=14.0,
         capital_risk_critical_pct=22.0,
+        impairment_warning_pct=6.0,
+        impairment_critical_pct=14.0,
         style_label="Conservative Income",
     ),
     "aggressive_carry": DecisionProfile(
@@ -130,6 +142,8 @@ BUILDER_STYLE_PROFILES: dict[TargetStyle, DecisionProfile] = {
         min_net_carry_apy_for_open=3.0,
         capital_risk_warning_pct=24.0,
         capital_risk_critical_pct=34.0,
+        impairment_warning_pct=14.0,
+        impairment_critical_pct=28.0,
         style_label="Aggressive Carry",
     ),
     "capital_preservation": DecisionProfile(
@@ -142,6 +156,8 @@ BUILDER_STYLE_PROFILES: dict[TargetStyle, DecisionProfile] = {
         min_net_carry_apy_for_open=0.5,
         capital_risk_warning_pct=10.0,
         capital_risk_critical_pct=18.0,
+        impairment_warning_pct=4.0,
+        impairment_critical_pct=10.0,
         style_label="Capital Preservation",
     ),
 }

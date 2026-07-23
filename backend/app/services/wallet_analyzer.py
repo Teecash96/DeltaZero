@@ -73,6 +73,8 @@ def _normalise_profile(stress_profile: str) -> DecisionProfile:
         min_net_carry_apy_for_open=0.0,
         capital_risk_warning_pct=profile.capital_risk_warning_pct,
         capital_risk_critical_pct=profile.capital_risk_critical_pct,
+        impairment_warning_pct=profile.impairment_warning_pct,
+        impairment_critical_pct=profile.impairment_critical_pct,
         style_label=stress_profile.title(),
     )
 
