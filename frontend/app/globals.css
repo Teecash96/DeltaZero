@@ -103,9 +103,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-dashboard-grid { margin-top: 18px; display: grid; grid-template-columns: 1.45fr 1fr; gap: 12px; }
 .hero-dashboard-grid article, .hero-dashboard-lower article { min-width: 0; padding: 17px; border: 1px solid rgba(174,194,177,.14); border-radius: 12px; background: rgba(7,12,8,.55); }
 .hero-safety-gauge { grid-row: span 2; display: flex; align-items: center; gap: 18px; }
-.hero-gauge { position: relative; width: 116px; height: 116px; display: grid; place-content: center; flex: 0 0 auto; border: 11px solid #29372c; border-top-color: var(--green); border-right-color: var(--green); border-radius: 50%; }
-.hero-gauge strong { font: 34px var(--font-geist-mono); letter-spacing: -.08em; }
-.hero-gauge span { position: absolute; right: 21px; bottom: 27px; color: var(--green); font-size: 10px; }
+.hero-gauge { position: relative; width: 116px; height: 116px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: 0 0 auto; border: 11px solid #29372c; border-top-color: var(--green); border-right-color: var(--green); border-radius: 50%; }
+.hero-gauge strong { font: 34px var(--font-geist-mono); letter-spacing: -.08em; line-height: 1; }
+.hero-gauge span { color: var(--green); font-size: 10px; line-height: 1; }
 .hero-safety-gauge > div:last-child { display: grid; gap: 7px; }
 .hero-safety-gauge > div:last-child span { color: #8c988f; font-size: 11px; }
 .hero-safety-gauge b { color: var(--green); font-size: 14px; }
