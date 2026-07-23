@@ -90,6 +90,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-marketing-copy { min-width: 0; }
 .hero-marketing h1 { margin-top: 23px; font-size: clamp(55px, 6.3vw, 88px); }
 .hero-marketing .hero-copy { max-width: 640px; margin: 0; }
+.hero-positioning { max-width: 640px; margin-top: 16px; padding: 12px 16px; border-left: 3px solid var(--accent); background: rgba(174,194,177,.06); border-radius: 0 6px 6px 0; color: #d4ddd6; font-size: 14px; font-weight: 600; line-height: 1.5; letter-spacing: -.01em; }
 .hero-marketing .hero-actions { justify-content: flex-start; }
 .hero-trust-badges { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 9px; }
 .hero-trust-badges span { padding: 7px 10px; border: 1px solid rgba(174,194,177,.18); border-radius: 999px; background: rgba(11,17,13,.55); color: #a9b5ac; font: 10px var(--font-geist-mono); letter-spacing: .04em; }
