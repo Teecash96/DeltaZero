@@ -1497,6 +1497,108 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .provenance-grid strong { margin-top: 12px; color: var(--text); font: 11px var(--font-mono), monospace; line-height: 1.5; overflow-wrap: anywhere; text-transform: capitalize; }
 .provenance-panel > p { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 
+/* ─── Why DeltaZero floating action button ──────────────────────────────── */
+
+.why-deltazero-fab {
+  position: fixed;
+  z-index: 50;
+  cursor: pointer;
+  font-family: var(--font-geist-sans);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Desktop: vertical ribbon on the left edge */
+@media (min-width: 761px) {
+  .why-deltazero-fab {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    padding: 18px 12px;
+    border: 1px solid rgba(185, 246, 90, 0.18);
+    border-left: 0;
+    border-radius: 0 10px 10px 0;
+    background: rgba(18, 24, 20, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    color: #edf1ee;
+    font-size: 12px;
+    font-weight: 680;
+    letter-spacing: 0.12em;
+  }
+  .why-deltazero-fab:hover {
+    border-color: rgba(185, 246, 90, 0.45);
+    background: rgba(22, 30, 24, 0.9);
+    box-shadow: 0 8px 32px rgba(185, 246, 90, 0.08);
+    color: #e8ffd1;
+    padding-left: 18px;
+  }
+  .why-deltazero-fab:focus-visible {
+    outline: none;
+    border-color: rgba(185, 246, 90, 0.55);
+    box-shadow: 0 0 0 3px rgba(185, 246, 90, 0.12),
+                0 8px 32px rgba(185, 246, 90, 0.08);
+  }
+}
+
+/* Mobile: compact floating button near bottom-left */
+@media (max-width: 760px) {
+  .why-deltazero-fab {
+    left: 16px;
+    bottom: 20px;
+    padding: 11px 18px;
+    border: 1px solid rgba(185, 246, 90, 0.2);
+    border-radius: 999px;
+    background: rgba(18, 24, 20, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    color: #edf1ee;
+    font-size: 13px;
+    font-weight: 680;
+  }
+  .why-deltazero-fab:hover {
+    border-color: rgba(185, 246, 90, 0.4);
+    background: rgba(22, 30, 24, 0.92);
+  }
+  .why-deltazero-fab:focus-visible {
+    outline: none;
+    border-color: rgba(185, 246, 90, 0.55);
+    box-shadow: 0 0 0 3px rgba(185, 246, 90, 0.12);
+  }
+}
+
+/* Light mode overrides for the FAB */
+[data-theme="light"] .why-deltazero-fab {
+  border-color: rgba(79, 125, 18, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #1a2d1a;
+  box-shadow: 0 8px 32px rgba(42, 63, 48, 0.1);
+}
+
+[data-theme="light"] .why-deltazero-fab:hover {
+  border-color: rgba(79, 125, 18, 0.4);
+  background: rgba(248, 251, 248, 0.95);
+  color: #2a4d1a;
+  box-shadow: 0 8px 32px rgba(79, 125, 18, 0.08);
+}
+
+[data-theme="light"] .why-deltazero-fab:focus-visible {
+  border-color: rgba(79, 125, 18, 0.55);
+  box-shadow: 0 0 0 3px rgba(79, 125, 18, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-deltazero-fab {
+    transition: none;
+  }
+}
+
 [data-theme="light"] .formula-grid article { background: rgba(32,53,37,.025); }
 [data-theme="light"] .methodology-callout, [data-theme="light"] .support-safety { background: rgba(79,125,18,.07); }
 
