@@ -37,4 +37,4 @@ def test_duplicate_registration_requires_explicit_replace() -> None:
 
 
 def test_default_registry_exposes_supported_protocols() -> None:
-    assert create_default_adapter_registry().protocols == ("aave", "hyperliquid", "morpho")
+    assert create_default_adapter_registry().protocols == ("aave", "hyperliquid", "morpho", "okx-earn")

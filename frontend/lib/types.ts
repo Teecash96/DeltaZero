@@ -18,8 +18,8 @@ export type ScenarioType =
   | "price_drop"
   | "price_rise"
   | "yield_drops";
-export type WalletNetwork = "ethereum" | "arbitrum" | "hyperliquid";
-export type WalletProtocol = "hyperliquid" | "aave" | "morpho";
+export type WalletNetwork = "ethereum" | "arbitrum" | "hyperliquid" | "okx-earn";
+export type WalletProtocol = "hyperliquid" | "aave" | "morpho" | "okx-earn";
 export type WalletStressProfile = "standard" | "elevated" | "strict";
 export type WalletAction = "HOLD" | "REBALANCE" | "REDUCE" | "CLOSE";
 export type WalletStrategyHealth = "healthy" | "warning" | "fragile" | "critical";

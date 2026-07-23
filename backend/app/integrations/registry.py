@@ -6,6 +6,7 @@ from app.integrations.aave import AaveAdapter
 from app.integrations.base import WalletAdapter
 from app.integrations.hyperliquid import HyperliquidAdapter
 from app.integrations.morpho import MorphoAdapter
+from app.integrations.okx_earn import OKXReadAdapterProtocol, create_okx_earn_adapter
 
 AdapterFactory = Callable[[str], WalletAdapter | None]
 
@@ -44,6 +45,7 @@ def create_default_adapter_registry() -> ProtocolAdapterRegistry:
     registry.register("hyperliquid", lambda network: HyperliquidAdapter() if network == "hyperliquid" else None)
     registry.register("aave", lambda network: AaveAdapter(network) if network in {"ethereum", "arbitrum"} else None)
     registry.register("morpho", lambda network: MorphoAdapter(network) if network in {"ethereum", "arbitrum"} else None)
+    registry.register("okx-earn", lambda network: create_okx_earn_adapter(network))
     return registry
 
 

@@ -35,12 +35,14 @@ const NETWORK_OPTIONS: Array<{ value: WalletNetwork; label: string; note: string
   { value: "ethereum", label: "Ethereum", note: "Aave and Morpho coverage" },
   { value: "arbitrum", label: "Arbitrum", note: "Aave and Morpho coverage" },
   { value: "hyperliquid", label: "Hyperliquid", note: "Perpetual hedge data" },
+  { value: "okx-earn", label: "OKX Earn", note: "Yield positions (demo mode)" },
 ];
 
 const PROTOCOL_OPTIONS: Array<{ value: WalletProtocol; label: string; note: string }> = [
   { value: "hyperliquid", label: "Hyperliquid", note: "Perpetual positions and margin" },
   { value: "aave", label: "Aave", note: "Supply, borrow, and health factor" },
   { value: "morpho", label: "Morpho", note: "Market and vault positions" },
+  { value: "okx-earn", label: "OKX Earn", note: "Flexible savings and liquid staking" },
 ];
 
 const PROFILE_OPTIONS: Array<{ value: WalletStressProfile; label: string; note: string }> = [
