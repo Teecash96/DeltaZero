@@ -13,6 +13,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.integrations.base import WalletAdapter
+from app.models.wallet import NormalizedPosition
+
 
 @dataclass
 class OKXPosition:
@@ -107,7 +110,7 @@ DEMO_OKX_POSITIONS: list[dict[str, Any]] = [
 ]
 
 
-class OKXReadAdapterProtocol:
+class OKXReadAdapterProtocol(WalletAdapter):
     """Read-only adapter for OKX Earn.
     
     IMPORTANT: This is a demo adapter using mock data.
@@ -121,9 +124,19 @@ class OKXReadAdapterProtocol:
     For hackathon demos, this returns realistic mock data to showcase the analysis pipeline.
     """
     
-    def __init__(self, network: str = "okx-earn"):
-        self.network = network
-        self.enabled = True  # Enabled for demo purposes
+    protocol = "okx-earn"
+    network = "okx-earn"
+    
+    def __init__(self):
+        self._enabled = True
+    
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+    
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = value
     
     async def fetch_positions(
         self,
@@ -155,13 +168,41 @@ class OKXReadAdapterProtocol:
         
         return positions, None
     
-    def validate_network(self, network: str) -> bool:
-        """OKX Earn is only supported via web wallet mode."""
-        return network == "okx-earn"
-    
     def supports(self, network: str, protocol: str) -> bool:
         """Check if this adapter supports the given network and protocol."""
         return network == "okx-earn" and protocol.lower() in {"okx-earn", "okx earn", "earn"}
+    
+    def fetch_wallet_data(self, wallet_address: str):
+        """Mock implementation - returns empty snapshot."""
+        from app.integrations.base import ProtocolSnapshot
+        return ProtocolSnapshot(protocol=self.protocol, network=self.network, wallet_address=wallet_address)
+    
+    def normalize_positions(self, snapshot) -> list[NormalizedPosition]:
+        """Convert OKX positions to normalized format."""
+        positions = []
+        for pos in DEMO_OKX_POSITIONS:
+            positions.append(NormalizedPosition(
+                protocol="okx-earn",
+                network="okx-earn",
+                position_type="lending_supply",
+                asset=pos["asset"],
+                quantity=None,
+                notional_usd=pos["amount_usd"],
+                current_value_usd=pos["amount_usd"],
+                entry_value_usd=pos["amount_usd"] * (1 - pos["apy"] / 100),
+                unrealized_pnl_usd=pos["amount_usd"] * (pos["apy"] / 100),
+                collateral_usd=pos["amount_usd"],
+                debt_usd=None,
+                funding_apy=pos["apy"],
+                liquidation_price=None,
+                health_factor=None,
+                data_timestamp="2024-07-22T00:00:00Z",
+                data_quality="complete",
+                side="long",
+                subaccount_name=None,
+                subaccount_address=None,
+            ))
+        return positions
 
 
 def create_okx_earn_adapter(network: str) -> OKXReadAdapterProtocol | None:
