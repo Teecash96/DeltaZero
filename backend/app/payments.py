@@ -34,6 +34,12 @@ _EVM_ADDRESS_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 _CAIP2_EVM_NETWORK_RE = re.compile(r"^eip155:[1-9][0-9]*$")
 _ADMIN_HEADER = b"x-deltazero-admin-key"
 _DEFAULT_PUBLIC_API_BASE_URL = "https://deltazero-production.up.railway.app"
+
+# USDT0 token address on XLayer (eip155:196) — the registered settlement token
+# for all x402 payments.  Must appear in every accepts array so that OKX's
+# x402 verification probe can validate the PaymentOption against the ASP's
+# on-chain registration.
+USDT0_XLAYER = "0x779ded0c9e1022225f8e0630b35a9b54be713736"
 logger = logging.getLogger(__name__)
 
 
@@ -216,21 +222,20 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
 
     price = f"${settings.price_usdt}"
 
+    def _make_option(scheme: str) -> PaymentOption:
+        return PaymentOption(
+            scheme=scheme,
+            price=price,
+            network=settings.network,
+            pay_to=settings.receiver,
+            extra={"token": USDT0_XLAYER},
+        )
+
     def route(path: str, description: str) -> RouteConfig:
         return RouteConfig(
             accepts=[
-                PaymentOption(
-                    scheme="exact",
-                    price=price,
-                    network=settings.network,
-                    pay_to=settings.receiver,
-                ),
-                PaymentOption(
-                    scheme="aggr_deferred",
-                    price=price,
-                    network=settings.network,
-                    pay_to=settings.receiver,
-                ),
+                _make_option("exact"),
+                _make_option("aggr_deferred"),
             ],
             resource=f"{settings.public_api_base_url}{path}",
             description=description,
@@ -281,19 +286,19 @@ def mcp_paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
     """Protect premium MCP tool calls without charging initialization or discovery."""
 
     price = f"${settings.price_usdt}"
+
+    def _make_option(scheme: str) -> PaymentOption:
+        return PaymentOption(
+            scheme=scheme,
+            price=price,
+            network=settings.network,
+            pay_to=settings.receiver,
+            extra={"token": USDT0_XLAYER},
+        )
+
     options = [
-        PaymentOption(
-            scheme="exact",
-            price=price,
-            network=settings.network,
-            pay_to=settings.receiver,
-        ),
-        PaymentOption(
-            scheme="aggr_deferred",
-            price=price,
-            network=settings.network,
-            pay_to=settings.receiver,
-        ),
+        _make_option("exact"),
+        _make_option("aggr_deferred"),
     ]
     description = "Run a premium deterministic DeltaZero MCP risk tool"
     resource = f"{settings.public_api_base_url}/mcp"

@@ -123,26 +123,27 @@ def load_runtime_payment_settings() -> PaymentSettings | None:
     raise RuntimeError("DELTAZERO_ACCESS_MODE must be either 'free' or 'paid'")
 
 
-def load_mcp_payment_settings() -> PaymentSettings | None:
+def load_mcp_payment_settings() -> PaymentSettings:
     """Return payment settings for the MCP x402 gate.
 
-    The MCP endpoint must always be x402-compliant for OKX.AI A2MCP listing,
-    regardless of whether the REST routes are in free or paid mode.  This
-    loads the same PAYMENT_* environment variables.  When they are absent
-    (local development), returns None and the MCP gate is skipped.
+    The MCP endpoint MUST always be x402-compliant for OKX.AI A2MCP listing.
+    Unlike the REST routes, the MCP gate cannot be disabled — if environment
+    variables are absent it falls back to challenge-only mode so that the
+    x402 middleware is always in the request path (returning 402 instead of
+    the MCP transport's 406 for bare probes).
     """
 
-    # If full paid mode is active, reuse those settings.
-    access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "free").strip().lower()
-    if access_mode == "paid":
-        return PaymentSettings.from_environment()
+    settings = PaymentSettings.from_environment()
+    if settings is not None:
+        return settings
 
-    # Even in free mode, load payment settings for the MCP x402 gate if
-    # the required variables are present.
-    try:
-        return PaymentSettings.from_environment()
-    except RuntimeError:
-        return None
+    # Fallback: challenge-only mode (no settlement, but valid 402 response).
+    # This guarantees the MCPToolPaymentGate is always registered.
+    return PaymentSettings(
+        receiver="0x0000000000000000000000000000000000000001",
+        price_usdt="1",
+        network="eip155:196",
+    )
 
 
 def create_app(
