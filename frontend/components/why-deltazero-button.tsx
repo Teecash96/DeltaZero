@@ -8,7 +8,7 @@ export function WhyDeltaZeroButton() {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    const el = document.getElementById("why-deltazero");
+    const el = document.getElementById("why-agents");
     if (!el) return;
 
     el.scrollIntoView({
@@ -16,7 +16,7 @@ export function WhyDeltaZeroButton() {
       block: "start",
     });
 
-    history.replaceState(null, "", "/#why-deltazero");
+    history.replaceState(null, "", "/#why-agents");
   }, []);
 
   return (
@@ -24,7 +24,7 @@ export function WhyDeltaZeroButton() {
       type="button"
       className="why-deltazero-fab"
       onClick={handleClick}
-      aria-label="Scroll to Why DeltaZero section"
+      aria-label="Scroll to Why agents choose DeltaZero section"
     >
       Why DeltaZero?
     </button>
