@@ -4,8 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-WalletNetwork = Literal["ethereum", "arbitrum", "hyperliquid"]
-WalletProtocol = Literal["hyperliquid", "aave", "morpho"]
+WalletNetwork = Literal["ethereum", "arbitrum", "hyperliquid", "okx-earn"]
+WalletProtocol = Literal["hyperliquid", "aave", "morpho", "okx-earn"]
 WalletStressProfile = Literal["standard", "elevated", "strict"]
 WalletAction = Literal["HOLD", "REBALANCE", "REDUCE", "CLOSE"]
 WalletStrategyHealth = Literal["healthy", "warning", "fragile", "critical"]
