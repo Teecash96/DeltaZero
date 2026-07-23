@@ -1565,6 +1565,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .term-line { display: flex; gap: 14px; padding: 3px 0; animation: lineIn .3s ease; }
 .term-line time { flex-shrink: 0; color: #3d4f42; font-size: 10px; }
 .term-line span { color: #9aab9f; }
+/* Block headers with emoji icons */
+.term-line.tone-positive span:first-child::before,
+.term-line.tone-warning span:first-child::before,
+.term-line.tone-critical span:first-child::before {
+  margin-right: 8px;
+  font-size: 1.1em;
+}
+.term-line.tone-neutral span:first-child::before { color: #8a9a8f; }
 .term-line.tone-positive span { color: var(--accent); }
 .term-line.tone-warning span { color: var(--warning); }
 .term-line.tone-critical span { color: var(--danger); }
@@ -1572,6 +1580,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .agent-terminal-footer { justify-content: flex-start; flex-wrap: wrap; border-top: 1px solid #1a241c; border-bottom: 0; }
 .agent-terminal-footer span { color: #4a5a4f; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
 .agent-terminal-footer strong { margin-right: 16px; color: #c8d4cc; font-family: var(--font-geist-mono), monospace; font-size: 10px; }
+.agent-terminal-footer strong.denied { color: var(--danger); }
 
 /* ─── Policy Panel (Bottom) ─────────────────────────────────────────── */
 .agent-policy-panel { margin-bottom: 18px; }
