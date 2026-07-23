@@ -209,4 +209,4 @@ def create_okx_earn_adapter(network: str) -> OKXReadAdapterProtocol | None:
     """Factory function for OKX Earn adapter registry."""
     if network != "okx-earn":
         return None
-    return OKXReadAdapterProtocol(network=network)
+    return OKXReadAdapterProtocol()
