@@ -23,6 +23,8 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 
 DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets. An optional grounded LLM layer explains those computed results in plain language; it cannot change the underlying numbers or recommendation.
 
+> **🔍 Judge's shortcut — live API docs:** [`https://deltazero-production.up.railway.app/docs`](https://deltazero-production.up.railway.app/docs) — inspect every endpoint, schema, and response model in real time. The deterministic risk engine is not a mock frontend.
+
 ## Product screenshots
 
 ### Live risk-intelligence interface
