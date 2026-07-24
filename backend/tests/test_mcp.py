@@ -13,6 +13,10 @@ HEADERS = {
     "Accept": "application/json, text/event-stream",
     "Content-Type": "application/json",
 }
+JSON_ONLY_HEADERS = {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+}
 SETTINGS = PaymentSettings(
     receiver="0x" + "1" * 40,
     price_usdt="1",
@@ -83,6 +87,24 @@ def test_mcp_initialize_and_discovery_are_free() -> None:
         "deltazero://supported-protocols",
         "deltazero://schemas/risk-envelope-v1",
     }
+
+
+def test_mcp_accepts_json_only_clients_without_returning_406() -> None:
+    initialize = _message(
+        "initialize",
+        params={
+            "protocolVersion": "2025-03-26",
+            "capabilities": {},
+            "clientInfo": {"name": "OKX replay", "version": "1"},
+        },
+    )
+    with TestClient(create_app(payment_settings=SETTINGS)) as client:
+        response = client.post("/mcp", headers=JSON_ONLY_HEADERS, json=initialize)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["jsonrpc"] == "2.0"
+    assert response.json()["result"]["serverInfo"]["name"] == "DeltaZero"
 
 
 def test_free_mcp_tool_is_not_payment_gated() -> None:

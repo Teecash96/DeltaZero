@@ -245,23 +245,60 @@ class MCPToolPaymentGate:
 
         path = scope.get("path", "")
         method = scope.get("method", "")
+        compatible_scope = self._with_json_accept_compatibility(scope)
 
         # Non-POST requests to MCP paths (e.g. GET probes from x402-check)
         # go straight to the payment gate so they receive 402, not 405/406.
         if method != "POST":
             if path in ("/mcp", "/mcp/", "/mcp/call", "/mcp/call/"):
-                await self.payment_app(scope, receive, send)
+                await self.payment_app(compatible_scope, receive, send)
                 return
-            await self.app(scope, receive, send)
+            await self.app(compatible_scope, receive, send)
             return
 
         body, replay_receive = await self._buffer_request(receive)
         if self._is_free_operation(body):
-            await self.app(scope, replay_receive, send)
+            await self.app(compatible_scope, replay_receive, send)
             return
         # Everything else (premium tools, bare probes, unparseable bodies)
         # goes through x402 which returns 402 for unpaid requests.
-        await self.payment_app(scope, replay_receive, send)
+        await self.payment_app(compatible_scope, replay_receive, send)
+
+    @staticmethod
+    def _with_json_accept_compatibility(scope: Scope) -> Scope:
+        """Accept JSON-only MCP clients while preserving the SDK transport.
+
+        The MCP SDK currently requires clients to advertise JSON and SSE even
+        when json_response=True returns a standard JSON-RPC response. OKX's
+        paid replay correctly advertises application/json only. Add the SSE
+        capability internally so the caller still receives JSON instead of a
+        406 response.
+        """
+
+        if scope.get("type") != "http" or scope.get("method") != "POST":
+            return scope
+        if scope.get("path", "").rstrip("/") != "/mcp":
+            return scope
+
+        headers = list(scope.get("headers", []))
+        accept_values = [
+            value for name, value in headers if name.lower() == b"accept"
+        ]
+        combined = b", ".join(accept_values).lower()
+        if b"text/event-stream" in combined:
+            return scope
+        if accept_values and b"application/json" not in combined:
+            return scope
+
+        compatible_headers = [
+            (name, value) for name, value in headers if name.lower() != b"accept"
+        ]
+        compatible_headers.append(
+            (b"accept", b"application/json, text/event-stream")
+        )
+        compatible_scope = dict(scope)
+        compatible_scope["headers"] = compatible_headers
+        return compatible_scope
 
     @staticmethod
     async def _buffer_request(receive: Receive) -> tuple[bytes, Receive]:
