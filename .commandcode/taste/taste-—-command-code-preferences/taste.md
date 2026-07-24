@@ -6,3 +6,6 @@
 - Expects a three-phase process: inspect the codebase first → implement changes → run build/tests and report every file changed. Confidence: 0.9
 - Prefers surgical, minimal changes that do not touch or redesign unrelated sections. Confidence: 0.8
 - Expects code changes to be committed and pushed to git automatically after implementation, rather than left unstaged. Confidence: 1.0
+- Shares raw external communications (team feedback, partner messages) verbatim and expects the assistant to parse, interpret, and act on them autonomously — not summarized instructions. Confidence: 0.9
+- When given a vague external bug report with a symptom (e.g. "returns HTTP 406 instead of 402"), expects deep end-to-end investigation across the full codebase to find root causes, fix them, add tests, commit, and push — all autonomously without step-by-step guidance. Confidence: 0.8
+- Trusts the assistant to execute deployment commands (e.g. Railway CLI) directly and verify the live deployment end-to-end afterward, rather than being given manual instructions to follow. Confidence: 0.7

@@ -142,15 +142,11 @@ The probe initializes MCP, discovers the available tools, executes a
 deterministic strategy calculation, rejects tool-level errors, and reports
 measured latency.
 
-### Billing compatibility
+### Billing
 
-OKX.AI A2MCP marketplace services support free or pay-per-call billing. A
-monthly fee is therefore not encoded into the marketplace's per-call fee
-field. DeltaZero's direct API subscription is a separate HTTP seller service
-under `subscription-gateway/` and uses the official **OKX Agent Payments
-Protocol** calendar-month subscription flow at 5 USDT per month.
-
-Before marketplace approval and wider production use, maintain:
+OKX.AI A2MCP marketplace services support free or pay-per-call billing.
+DeltaZero uses the x402 protocol for per-call settlement at 1 USDT per
+analysis on X Layer.
 
 - service registration metadata
 - ownership and contact details

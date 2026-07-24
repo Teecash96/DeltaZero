@@ -8,7 +8,8 @@
       "Shell(python3 -m pytest tests/test_monte_carlo.py -v 2 >& 1)",
       "Shell(ls:*)",
       "Shell(python3 -m pip list 2 > /dev/null)",
-      "Shell(.venv/bin/python:*)"
+      "Shell(.venv/bin/python:*)",
+      "Shell(python3 -c from x402.http import PaymentOption; import inspect; print(inspect.getsource(PaymentOption)) 2 >& 1)"
     ],
     "deny": [],
     "defaultMode": "default"
