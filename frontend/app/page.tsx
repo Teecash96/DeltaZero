@@ -240,8 +240,8 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <article className="integration-card">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+              <span className="w-2 h-2 rounded-full bg-amber-400/60" />
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Demo</span>
             </div>
             <h3 className="text-base mb-1">SOL Funding Rate</h3>
             <div className="text-2xl font-mono font-bold text-emerald-400 mb-1">-0.003%</div>
@@ -250,8 +250,8 @@ export default function Home() {
           </article>
           <article className="integration-card">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+              <span className="w-2 h-2 rounded-full bg-amber-400/60" />
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Demo</span>
             </div>
             <h3 className="text-base mb-1">ETH Supply APY</h3>
             <div className="text-2xl font-mono font-bold text-emerald-400 mb-1">3.2%</div>
@@ -260,8 +260,8 @@ export default function Home() {
           </article>
           <article className="integration-card">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+              <span className="w-2 h-2 rounded-full bg-amber-400/60" />
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Demo</span>
             </div>
             <h3 className="text-base mb-1">SOL Open Interest</h3>
             <div className="text-2xl font-mono font-bold text-slate-200 mb-1">$2.4B</div>
@@ -269,8 +269,7 @@ export default function Home() {
             <div className="mt-3 text-[10px] text-slate-600">Updated 8s ago</div>
           </article>
         </div>
-        <p className="mt-4 text-xs text-slate-500 flex items-center gap-1">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <p className="mt-4 text-xs text-slate-500">
           Data shown is simulated for demo. Connect to live API via the production endpoint.
         </p>
       </section>
