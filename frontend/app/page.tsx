@@ -235,7 +235,7 @@ export default function Home() {
       <section className="section-wrap" id="live-data">
         <div className="section-heading">
           <div><p className="kicker">Real-time market context</p><h2>Live Protocol Data</h2></div>
-          <p>Simulated feeds styled after real protocol data. Connect the live API for current rates.</p>
+          <p>Simulated feeds for demo. Live data available via the production API.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <article className="integration-card">
@@ -270,7 +270,7 @@ export default function Home() {
           </article>
         </div>
         <p className="mt-4 text-xs text-slate-500">
-          Data shown is simulated for demo. Connect to live API via the production endpoint.
+          Ticker values are simulated for this demo. The same engine powers live data via the production API.
         </p>
       </section>
 
