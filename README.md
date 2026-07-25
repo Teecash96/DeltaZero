@@ -43,7 +43,14 @@ DeltaZero exposes a standards-compliant, stateless Streamable HTTP Model Context
 https://deltazero-production.up.railway.app/mcp
 ```
 
-MCP initialization, discovery, resources, market context, and deterministic tools are temporarily free during listing review:
+The marketplace-listed `/mcp` resource is protected end to end by the
+**OKX Agent Payments Protocol**. Every unpaid request—including initialization,
+discovery, and tool invocation—returns the same standards-compliant HTTP 402
+challenge. A verified paid replay receives a JSON-RPC 200 response. Public
+Hyperliquid, Aave, and Morpho data remains free through the separate REST
+market and position routes.
+
+Paid MCP tools include:
 
 - `build_neutral_strategy`
 - `audit_hedge_drift`
@@ -56,8 +63,7 @@ MCP initialization, discovery, resources, market context, and deterministic tool
 Agents can also discover `deltazero://schemas/risk-envelope-v1` as an MCP resource. It exposes the same JSON Schema available over REST.
 
 The registered OKX.AI service is an A2MCP API service whose public Streamable
-HTTP transport is `/mcp`. OKX.AI supports either free or per-call billing for
-that marketplace endpoint.
+HTTP transport is `/mcp`, billed at the registered 1 USD₮0 per call on X Layer.
 
 The MCP tools call the same Python service functions used by the REST API; formulas and recommendation logic are not duplicated. Tool inputs and structured outputs are generated from the same Pydantic contracts, so compatible agents do not need endpoint-specific response parsers.
 
@@ -79,7 +85,7 @@ DeltaZero classifies completed Strategy Build, Wallet Auditor, Funding Stress Te
 
 Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
 
-The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, Agent Operator Console, an opt-in Strategy Registry, and a no-wallet live strategy comparison. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The backend payment boundary is staged but temporarily disabled for listing review; payment credentials remain separate from any trading or protocol permission.
+The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, Agent Operator Console, an opt-in Strategy Registry, and a no-wallet live strategy comparison. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The registered MCP endpoint keeps its production payment boundary active for OKX validation; payment credentials remain separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -520,7 +526,9 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 
 ### A2MCP marketplace access
 
-DeltaZero currently defaults to `DELTAZERO_ACCESS_MODE=free`. In this mode every REST analysis route and every MCP tool is available without payment so OKX.AI reviewers can exercise the live product end to end. The marketplace endpoint that must be registered is:
+DeltaZero may expose free REST previews through `DELTAZERO_ACCESS_MODE=free`,
+but that switch never disables payment validation on the registered MCP
+resource. The marketplace endpoint that must be registered is:
 
 ```text
 https://deltazero-production.up.railway.app/mcp
@@ -528,21 +536,30 @@ https://deltazero-production.up.railway.app/mcp
 
 It is a stateless Streamable HTTP MCP transport, not the base API URL.
 
-The production payment implementation remains in the codebase. After listing and demo completion, set:
+To protect the REST analysis routes as well, set:
 
 ```bash
 export DELTAZERO_ACCESS_MODE="paid"
 ```
 
-Paid mode uses the official OKX seller middleware. An unpaid request to a protected route returns `HTTP 402 Payment Required` with a base64-encoded `PAYMENT-REQUIRED` header. The header is the authoritative payment quote and identifies the network, stablecoin contract, atomic amount, receiver, and supported payment schemes.
+The MCP endpoint always uses the official OKX seller middleware. An unpaid
+request returns `HTTP 402 Payment Required` with a base64-encoded
+`PAYMENT-REQUIRED` header. The header is the authoritative payment quote and
+identifies the network, stablecoin contract, atomic amount, receiver, and
+supported payment schemes.
 
 The per-call price is configured with `PAYMENT_PRICE_USDT`. When that mode is restored, the primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
 
 ### Agent-native payment
 
-DeltaZero does not collect payment or connect wallets in the website. During the temporary free preview, autonomous clients can invoke the API without payment. When paid mode is restored, the **OKX Agent Payments Protocol** handles the quote, authorization, paid replay, and machine-readable settlement receipt before the backend releases the requested report.
+DeltaZero does not collect MCP payment or connect wallets in the website. The
+**OKX Agent Payments Protocol** handles the quote, authorization, paid replay,
+and machine-readable settlement receipt before the backend releases the
+requested MCP result.
 
-The website remains a read-only product, methodology, and API-discovery surface. Agent clients can inspect the OpenAPI and MCP contracts and run the live analysis tools freely during review.
+The website remains a read-only product, methodology, and API-discovery
+surface. Agent clients can inspect public contracts without payment and use an
+x402-compatible client for the registered MCP resource.
 
 ### Grounded natural-language explanations
 

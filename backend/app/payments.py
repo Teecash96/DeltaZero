@@ -283,7 +283,7 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
 
 
 def mcp_paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
-    """Protect premium MCP tool calls without charging initialization or discovery."""
+    """Protect every request to the marketplace-registered MCP resources."""
 
     price = f"${settings.price_usdt}"
 

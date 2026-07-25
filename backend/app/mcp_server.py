@@ -45,27 +45,6 @@ PREMIUM_MCP_TOOLS = frozenset(
     }
 )
 
-# MCP methods and tools that are always free (no x402 charge).
-# Any request that is NOT one of these will receive a 402 challenge.
-FREE_MCP_METHODS = frozenset(
-    {
-        "initialize",
-        "notifications/initialized",
-        "tools/list",
-        "resources/list",
-        "resources/read",
-        "ping",
-    }
-)
-
-FREE_MCP_TOOLS = frozenset(
-    {
-        "get_hyperliquid_market_context",
-        "evaluate_strategy_memory",
-    }
-)
-
-
 def create_mcp_server() -> FastMCP:
     """Create the stateless MCP server and register native typed tools."""
 
@@ -307,6 +286,9 @@ class PaidMCPHandler:
     Accept headers and returns 400/406 for non-standard x402 replay clients).
     """
 
+    def __init__(self, protocol_app: ASGIApp) -> None:
+        self.protocol_app = protocol_app
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope.get("type") != "http":
             return
@@ -384,7 +366,20 @@ class PaidMCPHandler:
                     },
                 })
             else:
-                results.append(_jsonrpc_error(req_id, -32601, f"Method not found: {method}"))
+                # Let the real MCP server produce discovery, resource, and
+                # protocol-level responses after payment verification. The
+                # request body is replayed because it was consumed above.
+                replayed = False
+
+                async def replay_receive() -> Message:
+                    nonlocal replayed
+                    if not replayed:
+                        replayed = True
+                        return {"type": "http.request", "body": body, "more_body": False}
+                    return {"type": "http.request", "body": b"", "more_body": False}
+
+                await self.protocol_app(scope, replay_receive, send)
+                return
 
         payload_out = results if isinstance(payload, list) else results[0]
         await _send_json_response(send, 200, payload_out)
@@ -429,10 +424,11 @@ async def _send_json_response(send: Send, status: int, body: Any) -> None:
 class MCPToolPaymentGate:
     """x402 payment gate for the MCP Streamable HTTP transport.
 
-    Intercepts ALL POST requests to /mcp BEFORE MCP content negotiation.
-    Only explicitly free operations (initialize, discovery, free tools) pass
-    through without payment.  Any other request — including bare probes,
-    unparseable bodies, and premium tool calls — receives a 402 challenge.
+    Intercepts every request to the registered MCP resources before MCP
+    content negotiation. Every unpaid request receives the same standard x402
+    challenge, including initialize, discovery, bare probes, and tool calls.
+    Public protocol data remains available through separate free REST routes;
+    the marketplace-listed ``/mcp`` resource is consistently paid.
 
     After x402 verifies payment, PaidMCPHandler handles the replay instead of
     the MCP transport, bypassing the SDK's security middleware (which returns
@@ -451,7 +447,7 @@ class MCPToolPaymentGate:
         # (Content-Type validation) and Accept-header content negotiation,
         # both of which reject x402 replay clients with 400/406.
         self.payment_app = DeltaZeroPaymentMiddleware(
-            PaidMCPHandler(),
+            PaidMCPHandler(app),
             routes=mcp_paid_routes(payment_settings),
             server=create_payment_server(payment_settings),
             admin_key=payment_settings.admin_key,
@@ -481,12 +477,9 @@ class MCPToolPaymentGate:
             await self.app(compatible_scope, receive, send)
             return
 
-        body, replay_receive = await self._buffer_request(receive)
-        if self._is_free_operation(body):
-            await self.app(compatible_scope, replay_receive, send)
-            return
-        # Everything else (premium tools, bare probes, unparseable bodies)
-        # goes through x402 which returns 402 for unpaid requests.
+        _body, replay_receive = await self._buffer_request(receive)
+        # One validator-friendly contract: every unpaid marketplace request
+        # returns 402; every verified replay reaches the JSON-RPC handler.
         await self.payment_app(compatible_scope, replay_receive, send)
 
     @staticmethod
@@ -545,38 +538,3 @@ class MCPToolPaymentGate:
             return {"type": "http.request", "body": b"", "more_body": False}
 
         return body, replay
-
-    @staticmethod
-    def _is_free_operation(body: bytes) -> bool:
-        """Return True only if the body is a known free MCP operation.
-
-        Any request that cannot be parsed as valid MCP JSON-RPC is treated
-        as paid so that bare x402 probes receive 402 instead of falling
-        through to the MCP content-negotiation layer (which returns 406).
-        """
-        try:
-            payload = json.loads(body)
-        except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
-            return False
-
-        messages = payload if isinstance(payload, list) else [payload]
-        if not messages:
-            return False
-
-        for message in messages:
-            if not isinstance(message, dict):
-                return False
-            method = message.get("method")
-            # Free protocol-level methods (initialize, discovery, notifications)
-            if method in FREE_MCP_METHODS:
-                continue
-            # Free tool calls
-            if (
-                method == "tools/call"
-                and isinstance(message.get("params"), dict)
-                and message["params"].get("name") in FREE_MCP_TOOLS
-            ):
-                continue
-            # Anything else is a paid operation
-            return False
-        return True

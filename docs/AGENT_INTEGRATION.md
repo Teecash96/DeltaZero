@@ -122,7 +122,7 @@ async function runAgentLoop() {
 
 For agents registered on OKX.AI, use the MCP server for seamless tool calls.
 
-**Tool list discovery:**
+**Tool list discovery (x402 protected):**
 
 ```bash
 curl -i -X POST https://deltazero-production.up.railway.app/mcp \
@@ -130,7 +130,9 @@ curl -i -X POST https://deltazero-production.up.railway.app/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 
-Returns all available tools including:
+The first unpaid call returns HTTP 402 with `PAYMENT-REQUIRED`. An
+x402-compatible client authorizes the selected option and replays the same
+request to receive the tool list. Available tools include:
 
 - `build_neutral_strategy`
 - `audit_hedge_drift`
@@ -163,10 +165,10 @@ curl -i -X POST https://deltazero-production.up.railway.app/mcp/call \
 
 **Payment flow (A2MCP x402):**
 
-1. Agent calls `/mcp/call` without payment → gets HTTP 402
+1. Agent calls `/mcp` or `/mcp/call` without payment → gets HTTP 402
 2. Agent receives base64-encoded `PAYMENT-REQUIRED` header
 3. Agent signs EIP-3009 transfer (1 USDT on X Layer)
-4. Agent replays request with `X-PAYMENT` signature
+4. Agent replays the exact request with `PAYMENT-SIGNATURE` (`X-PAYMENT` is accepted for legacy clients)
 5. Backend verifies on-chain → returns full analysis
 
 **OKX.AI integration example:**

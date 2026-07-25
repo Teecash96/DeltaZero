@@ -52,7 +52,7 @@ def test_service_root_advertises_the_mcp_transport_as_a2mcp_endpoint() -> None:
     )
 
 
-def test_mcp_initialize_and_discovery_are_free() -> None:
+def test_every_unpaid_mcp_operation_returns_standard_x402_challenge() -> None:
     with TestClient(create_app(payment_settings=SETTINGS)) as client:
         initialize = _message(
             "initialize",
@@ -66,30 +66,15 @@ def test_mcp_initialize_and_discovery_are_free() -> None:
         tools = client.post("/mcp", headers=HEADERS, json=_message("tools/list"))
         resources = client.post("/mcp", headers=HEADERS, json=_message("resources/list"))
 
-    assert initialized.status_code == 200
-    assert initialized.json()["result"]["serverInfo"]["name"] == "DeltaZero"
-    assert tools.status_code == 200
-    names = {tool["name"] for tool in tools.json()["result"]["tools"]}
-    assert names == {
-        "get_hyperliquid_market_context",
-        "build_neutral_strategy",
-        "audit_hedge_drift",
-        "run_funding_stress",
-        "run_monte_carlo",
-        "run_complete_risk_engine",
-        "evaluate_risk_envelope",
-        "explain_risk_recommendation",
-        "evaluate_strategy_memory",
-    }
-    uris = {resource["uri"] for resource in resources.json()["result"]["resources"]}
-    assert uris == {
-        "deltazero://methodology",
-        "deltazero://supported-protocols",
-        "deltazero://schemas/risk-envelope-v1",
-    }
+    for response in (initialized, tools, resources):
+        assert response.status_code == 402
+        assert "PAYMENT-REQUIRED" in response.headers
+        challenge = json.loads(base64.b64decode(response.headers["PAYMENT-REQUIRED"]))
+        assert challenge["x402Version"] == 2
+        assert challenge["resource"]["url"].endswith("/mcp")
 
 
-def test_mcp_accepts_json_only_clients_without_returning_406() -> None:
+def test_unpaid_json_only_mcp_client_receives_402_not_406() -> None:
     initialize = _message(
         "initialize",
         params={
@@ -101,13 +86,12 @@ def test_mcp_accepts_json_only_clients_without_returning_406() -> None:
     with TestClient(create_app(payment_settings=SETTINGS)) as client:
         response = client.post("/mcp", headers=JSON_ONLY_HEADERS, json=initialize)
 
-    assert response.status_code == 200
+    assert response.status_code == 402
     assert response.headers["content-type"].startswith("application/json")
-    assert response.json()["jsonrpc"] == "2.0"
-    assert response.json()["result"]["serverInfo"]["name"] == "DeltaZero"
+    assert "PAYMENT-REQUIRED" in response.headers
 
 
-def test_free_mcp_tool_is_not_payment_gated() -> None:
+def test_market_context_tool_is_payment_gated_on_registered_mcp_endpoint() -> None:
     call = _tool_call(
         "get_hyperliquid_market_context",
         {"asset": "NOT_A_MARKET", "lookback_hours": 24},
@@ -115,11 +99,11 @@ def test_free_mcp_tool_is_not_payment_gated() -> None:
     with TestClient(create_app(payment_settings=SETTINGS)) as client:
         response = client.post("/mcp", headers=HEADERS, json=call)
 
-    assert response.status_code == 200
-    assert "PAYMENT-REQUIRED" not in response.headers
+    assert response.status_code == 402
+    assert "PAYMENT-REQUIRED" in response.headers
 
 
-def test_strategy_memory_evaluation_is_free_and_agent_native() -> None:
+def test_strategy_memory_tool_is_payment_gated_on_registered_mcp_endpoint() -> None:
     call = _tool_call(
         "evaluate_strategy_memory",
         {
@@ -140,9 +124,8 @@ def test_strategy_memory_evaluation_is_free_and_agent_native() -> None:
     with TestClient(create_app(payment_settings=SETTINGS)) as client:
         response = client.post("/mcp", headers=HEADERS, json=call)
 
-    assert response.status_code == 200
-    assert "PAYMENT-REQUIRED" not in response.headers
-    assert response.json()["result"]["structuredContent"]["observed_count"] == 1
+    assert response.status_code == 402
+    assert "PAYMENT-REQUIRED" in response.headers
 
 
 def test_premium_mcp_tool_returns_x402_challenge() -> None:
@@ -277,7 +260,8 @@ def test_mcp_gate_active_even_in_free_access_mode() -> None:
         response = client.post("/mcp", headers=HEADERS, json=call)
         assert response.status_code == 402
 
-        # Free operations still work
+        # Discovery is also protected on the marketplace endpoint so the OKX
+        # standard validator always receives a challenge for unpaid calls.
         initialize = _message(
             "initialize",
             params={
@@ -287,7 +271,8 @@ def test_mcp_gate_active_even_in_free_access_mode() -> None:
             },
         )
         init_response = client.post("/mcp", headers=HEADERS, json=initialize)
-        assert init_response.status_code == 200
+        assert init_response.status_code == 402
+        assert "PAYMENT-REQUIRED" in init_response.headers
 
         # REST routes remain free (no payment middleware)
         rest_response = client.post(

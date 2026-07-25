@@ -138,9 +138,10 @@ root:
 python3 backend/scripts/verify_a2mcp.py
 ```
 
-The probe initializes MCP, discovers the available tools, executes a
-deterministic strategy calculation, rejects tool-level errors, and reports
-measured latency.
+The probe verifies that bare POST, initialize, tools/list, and tools/call all
+return the same standard x402 v2 challenge while unpaid. It validates the
+registered X Layer network, USD₮0 asset, 1 USD₮0 atomic amount, resource URL,
+and exact payment option.
 
 ### Billing
 
