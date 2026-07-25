@@ -14,6 +14,21 @@ const RISK_TOLERANCES: { key: RiskTolerance; label: string }[] = [
   { key: "medium", label: "Medium" },
   { key: "aggressive", label: "Aggressive" },
 ];
+
+function RiskToleranceSelector({ value, onChange }: { value: RiskTolerance; onChange: (v: RiskTolerance) => void }) {
+  return (
+    <div className="grid grid-cols-3 gap-1 bg-slate-900 rounded-xl p-1 border border-slate-800">
+      {RISK_TOLERANCES.map(r => (
+        <button key={r.key} onClick={() => onChange(r.key)}
+          className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 text-center overflow-hidden ${
+            value === r.key ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-slate-400 hover:text-slate-200 border border-transparent"
+          }`}>
+          <span className="truncate block">{r.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 const TARGET_STYLES: { key: TargetStyle; label: string }[] = [
   { key: "neutral_yield", label: "Neutral Yield" },
   { key: "conservative_income", label: "Conservative Income" },
@@ -85,14 +100,7 @@ export function InputPanel({ inputs, onChange }: InputPanelProps) {
       {/* Risk Tolerance */}
       <div>
         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Risk Tolerance</label>
-        <div className="flex gap-1 bg-slate-900 rounded-xl p-1 border border-slate-800">
-          {RISK_TOLERANCES.map(r => (
-            <button key={r.key} onClick={() => set("risk_tolerance", r.key)}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                inputs.risk_tolerance === r.key ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-slate-400 hover:text-slate-200 border border-transparent"
-              }`}>{r.label}</button>
-          ))}
-        </div>
+        <RiskToleranceSelector value={inputs.risk_tolerance} onChange={v => set("risk_tolerance", v)} />
       </div>
 
       {/* Target Style */}

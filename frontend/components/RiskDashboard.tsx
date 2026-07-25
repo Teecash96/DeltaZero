@@ -72,10 +72,10 @@ export function RiskDashboard({ report, previousReport }: RiskDashboardProps) {
       <AnimatePresence mode="wait">
         <motion.div key={report.risk_zone} initial={zoneChanged ? { scale: 1.3 } : false}
           animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          className="rounded-xl px-5 py-3 text-center border"
+          className="rounded-xl px-5 py-3 text-center border overflow-hidden"
           style={{ backgroundColor: `${zc}15`, borderColor: `${zc}40`, color: zc }}>
           <div className="text-[10px] font-semibold uppercase tracking-widest opacity-70">Risk Zone</div>
-          <div className="text-2xl font-bold tracking-tight">{report.risk_zone}</div>
+          <div className="text-2xl font-bold tracking-tight truncate">{report.risk_zone}</div>
         </motion.div>
       </AnimatePresence>
 
@@ -91,9 +91,9 @@ export function RiskDashboard({ report, previousReport }: RiskDashboardProps) {
       </div>
 
       {/* Action Button */}
-      <motion.div whileHover={{ scale: 1.02 }} className="rounded-xl py-4 text-center text-lg font-black tracking-widest uppercase border-2 cursor-default"
+      <motion.div whileHover={{ scale: 1.02 }} className="rounded-xl py-4 text-center text-lg font-black tracking-widest uppercase border-2 cursor-default overflow-hidden"
         style={{ backgroundColor: `${zc}20`, borderColor: `${zc}60`, color: zc }}>
-        {report.action}
+        <span className="truncate block px-2">{report.action}</span>
       </motion.div>
     </div>
   );
