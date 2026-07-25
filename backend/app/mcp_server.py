@@ -29,6 +29,10 @@ from app.services.strategy_registry import evaluate_strategy_registry
 from app.services.stress_test import stress_test_strategy
 
 
+_JSONRPC_VERSION = "2.0"
+_JSON_CONTENT_TYPE = b"application/json"
+
+
 PREMIUM_MCP_TOOLS = frozenset(
     {
         "build_neutral_strategy",
@@ -212,6 +216,216 @@ def create_mcp_server() -> FastMCP:
     return server
 
 
+# ─── Tool dispatch for paid MCP replays ──────────────────────────────────
+# Duplicated dispatch functions because mcp_server.py already imports every
+# service function needed. Using these avoids circular imports from main.py.
+
+def _call_risk_engine(args: dict[str, Any]) -> dict[str, Any]:
+    from app.models.risk_engine import RiskEnginePassRequest
+    from app.services.risk_engine import run_risk_engine_pass
+
+    req = RiskEnginePassRequest(**args) if args else RiskEnginePassRequest(
+        asset="SOL", capital_usd=5000, risk_tolerance="medium",
+        target_style="neutral_yield", long_yield_apy=14,
+        short_funding_apy=3, fee_drag_apy=1, stress_magnitude_pct=4,
+        simulation_count=100, time_horizon_days=30, seed=42,
+    )
+    return run_risk_engine_pass(req).model_dump(mode="json", exclude_none=True)
+
+
+def _call_build(args: dict[str, Any]) -> dict[str, Any]:
+    from app.models.schemas import BuildRequest
+    from app.services.builder import build_strategy
+    return build_strategy(BuildRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_audit(args: dict[str, Any]) -> dict[str, Any]:
+    from app.models.schemas import AuditRequest
+    from app.services.auditor import audit_strategy
+    return audit_strategy(AuditRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_stress(args: dict[str, Any]) -> dict[str, Any]:
+    from app.models.schemas import StressTestRequest
+    from app.services.stress_test import stress_test_strategy
+    return stress_test_strategy(StressTestRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_monte_carlo(args: dict[str, Any]) -> dict[str, Any]:
+    from app.models.monte_carlo import MonteCarloRequest
+    from app.services.monte_carlo import run_monte_carlo as _run_mc
+    return _run_mc(MonteCarloRequest(**args)).model_dump(mode="json", exclude_none=True)
+
+
+def _call_market(args: dict[str, Any]) -> dict[str, Any]:
+    from app.services.market_data import get_hyperliquid_market
+    asset = args.get("asset", "SOL")
+    lookback = args.get("lookback_hours", 24)
+    dex = args.get("dex")
+    return get_hyperliquid_market(asset, dex, lookback).model_dump(mode="json", exclude_none=True)
+
+
+def _call_registry(args: dict[str, Any]) -> dict[str, Any]:
+    from app.models.registry import RegistryEvaluationRequest
+    from app.services.strategy_registry import evaluate_strategy_registry
+    return evaluate_strategy_registry(RegistryEvaluationRequest(**args)).model_dump(
+        mode="json", exclude_none=True
+    )
+
+
+def _call_risk_envelope(args: dict[str, Any]) -> dict[str, Any]:
+    from app.models.risk_engine import RiskEnginePassRequest
+    from app.services.risk_engine import run_risk_engine_pass
+    req = RiskEnginePassRequest(**args) if args else RiskEnginePassRequest(
+        asset="SOL", capital_usd=5000, risk_tolerance="medium",
+        target_style="neutral_yield", long_yield_apy=14,
+        short_funding_apy=3, fee_drag_apy=1, stress_magnitude_pct=4,
+        simulation_count=100, time_horizon_days=30, seed=42,
+    )
+    return run_risk_engine_pass(req).risk_envelope.model_dump(mode="json", exclude_none=True)
+
+
+_PAID_MCP_DISPATCH: dict[str, Any] = {
+    "run_complete_risk_engine": _call_risk_engine,
+    "build_neutral_strategy": _call_build,
+    "audit_hedge_drift": _call_audit,
+    "run_funding_stress": _call_stress,
+    "run_monte_carlo": _call_monte_carlo,
+    "get_hyperliquid_market_context": _call_market,
+    "evaluate_strategy_memory": _call_registry,
+    "evaluate_risk_envelope": _call_risk_envelope,
+    "explain_risk_recommendation": _call_risk_engine,
+}
+
+
+class PaidMCPHandler:
+    """ASGI app that handles paid MCP tool calls after x402 verification.
+
+    After the x402 middleware validates the PAYMENT-SIGNATURE, it calls the
+    inner app. This handler processes the JSON-RPC request directly, bypassing
+    the MCP transport's security middleware (which validates Content-Type /
+    Accept headers and returns 400/406 for non-standard x402 replay clients).
+    """
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope.get("type") != "http":
+            return
+
+        body = await _read_body(receive)
+        if not body:
+            return await _send_json_response(send, 400, {"error": "Empty request body"})
+
+        try:
+            payload = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return await _send_json_response(send, 400, {"error": "Invalid JSON body"})
+
+        path = scope.get("path", "").rstrip("/")
+
+        # --- Custom /mcp/call format: {"tool": "...", "arguments": {...}} ---
+        if path == "/mcp/call":
+            result = self._dispatch_tool(
+                payload.get("tool") or payload.get("name") or "",
+                payload.get("arguments") or payload.get("params") or {},
+            )
+            if result is None:
+                return await _send_json_response(send, 400, {
+                    "error": "Unknown tool",
+                    "available_tools": sorted(_PAID_MCP_DISPATCH.keys()),
+                })
+            return await _send_json_response(send, 200, {"result": result})
+
+        # --- Standard JSON-RPC batch / single ---
+        messages = payload if isinstance(payload, list) else [payload]
+        if not messages:
+            return await _send_json_response(send, 400, {"error": "Empty request array"})
+
+        results: list[dict[str, Any]] = []
+        for msg in messages:
+            if not isinstance(msg, dict):
+                results.append(_jsonrpc_error(None, -32600, "Invalid Request"))
+                continue
+
+            req_id = msg.get("id")
+            method: str = msg.get("method", "")
+
+            if method == "tools/call":
+                params = msg.get("params", {})
+                tool_name = (params.get("name", "") if isinstance(params, dict) else "")
+                tool_args = (params.get("arguments", {}) if isinstance(params, dict) else {})
+                # MCP SDK sends typed-parameter arguments wrapped in a dict
+                # keyed by the parameter name (e.g. {"request": {...}}).
+                # Unwrap single-key wrappers so dispatch gets flat fields.
+                if isinstance(tool_args, dict) and len(tool_args) == 1 and "request" in tool_args:
+                    tool_args = tool_args["request"]
+                dispatched = self._dispatch_tool(tool_name, tool_args)
+                if dispatched is None:
+                    results.append(_jsonrpc_error(req_id, -32601, f"Unknown tool: {tool_name}"))
+                else:
+                    # Match the SDK's CombinationContent format: both a text
+                    # content block and a structuredContent dict.
+                    results.append({
+                        "jsonrpc": _JSONRPC_VERSION,
+                        "id": req_id,
+                        "result": {
+                            "content": [{"type": "text", "text": json.dumps(dispatched)}],
+                            "structuredContent": dispatched,
+                            "isError": False,
+                        },
+                    })
+            elif method in ("initialize", "notifications/initialized", "ping"):
+                results.append({
+                    "jsonrpc": _JSONRPC_VERSION,
+                    "id": req_id,
+                    "result": {} if method != "initialize" else {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "serverInfo": {"name": "DeltaZero", "version": "0.1.0"},
+                    },
+                })
+            else:
+                results.append(_jsonrpc_error(req_id, -32601, f"Method not found: {method}"))
+
+        payload_out = results if isinstance(payload, list) else results[0]
+        await _send_json_response(send, 200, payload_out)
+
+    @staticmethod
+    def _dispatch_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, Any] | None:
+        handler = _PAID_MCP_DISPATCH.get(tool_name)
+        return handler(arguments) if handler is not None else None
+
+
+# ─── Helpers ─────────────────────────────────────────────────────────────
+
+async def _read_body(receive: Receive) -> bytes:
+    chunks: list[bytes] = []
+    more_body = True
+    while more_body:
+        msg = await receive()
+        if msg["type"] != "http.request":
+            continue
+        chunks.append(msg.get("body", b""))
+        more_body = msg.get("more_body", False)
+    return b"".join(chunks)
+
+
+def _jsonrpc_error(req_id: Any, code: int, message: str) -> dict[str, Any]:
+    return {"jsonrpc": _JSONRPC_VERSION, "id": req_id, "error": {"code": code, "message": message}}
+
+
+async def _send_json_response(send: Send, status: int, body: Any) -> None:
+    data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+    await send({
+        "type": "http.response.start",
+        "status": status,
+        "headers": [
+            (b"content-type", _JSON_CONTENT_TYPE),
+            (b"content-length", str(len(data)).encode()),
+        ],
+    })
+    await send({"type": "http.response.body", "body": data})
+
+
 class MCPToolPaymentGate:
     """x402 payment gate for the MCP Streamable HTTP transport.
 
@@ -220,8 +434,9 @@ class MCPToolPaymentGate:
     through without payment.  Any other request — including bare probes,
     unparseable bodies, and premium tool calls — receives a 402 challenge.
 
-    This ordering guarantees OKX's x402 verification probe receives HTTP 402
-    with a valid ``accepts`` array instead of the MCP transport's HTTP 406.
+    After x402 verifies payment, PaidMCPHandler handles the replay instead of
+    the MCP transport, bypassing the SDK's security middleware (which returns
+    400/406 for non-standard x402 client headers).
     """
 
     def __init__(
@@ -231,8 +446,12 @@ class MCPToolPaymentGate:
         payment_settings: PaymentSettings,
     ) -> None:
         self.app = app
+        # After x402 verifies payment, it calls PaidMCPHandler instead of the
+        # MCP transport. This bypasses the SDK's TransportSecurityMiddleware
+        # (Content-Type validation) and Accept-header content negotiation,
+        # both of which reject x402 replay clients with 400/406.
         self.payment_app = DeltaZeroPaymentMiddleware(
-            app,
+            PaidMCPHandler(),
             routes=mcp_paid_routes(payment_settings),
             server=create_payment_server(payment_settings),
             admin_key=payment_settings.admin_key,
@@ -256,6 +475,12 @@ class MCPToolPaymentGate:
             await self.app(compatible_scope, receive, send)
             return
 
+        # Only intercept /mcp POST paths.  All other POST routes go straight
+        # to the FastAPI app (they are not MCP tool calls).
+        if path not in ("/mcp", "/mcp/", "/mcp/call", "/mcp/call/"):
+            await self.app(compatible_scope, receive, send)
+            return
+
         body, replay_receive = await self._buffer_request(receive)
         if self._is_free_operation(body):
             await self.app(compatible_scope, replay_receive, send)
@@ -266,13 +491,12 @@ class MCPToolPaymentGate:
 
     @staticmethod
     def _with_json_accept_compatibility(scope: Scope) -> Scope:
-        """Accept JSON-only MCP clients while preserving the SDK transport.
+        """Accept JSON-only MCP clients while preserving the MCP transport.
 
-        The MCP SDK currently requires clients to advertise JSON and SSE even
-        when json_response=True returns a standard JSON-RPC response. OKX's
-        paid replay correctly advertises application/json only. Add the SSE
-        capability internally so the caller still receives JSON instead of a
-        406 response.
+        The MCP transport requires text/event-stream in Accept headers even
+        when json_response=True. x402 replay clients and some MCP tooling
+        send only application/json. Patch the scope so free operations through
+        the MCP transport don't get a 406 response.
         """
 
         if scope.get("type") != "http" or scope.get("method") != "POST":
