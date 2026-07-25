@@ -113,7 +113,7 @@ export default function Home() {
             The only MCP service on OKX.AI that runs a 4-module deterministic risk engine with on-chain x402 settlement — no custody, no signatures, 18ms.
           </p>
         </div>
-        <div className="flex justify-center gap-3 mt-4 flex-wrap">
+        <div className="flex justify-center gap-3 mt-6 mb-8 flex-wrap">
           <span className="px-3 py-1.5 border border-slate-700/50 rounded-full text-[10px] text-slate-500 font-mono tracking-wider">Read only</span>
           <span className="px-3 py-1.5 border border-slate-700/50 rounded-full text-[10px] text-slate-500 font-mono tracking-wider">No signatures</span>
           <span className="px-3 py-1.5 border border-slate-700/50 rounded-full text-[10px] text-slate-500 font-mono tracking-wider">Deterministic engine</span>
