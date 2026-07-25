@@ -55,9 +55,9 @@ export function MonteCarloChart({ data, loading, onRun }: MonteCarloChartProps) 
   const p99Line = yScale(spot_price * (1 - p99_impairment / 100));
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 overflow-hidden">
+    <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">Monte Carlo Simulation</div>
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Monte Carlo Simulation</div>
         <button onClick={onRun} disabled={loading}
           className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-semibold border border-emerald-500/30 hover:bg-emerald-500/30 disabled:opacity-50 transition-all shrink-0">
           {loading ? "Running..." : "Run Simulation"}

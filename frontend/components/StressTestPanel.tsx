@@ -50,9 +50,9 @@ export function StressTestPanel({ scenarios, activeScenario, onApply, stressedRe
                   {stressedReport.risk_zone}
                 </div>
               </div>
-              <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700 overflow-hidden">
+              <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Action</div>
-                <div className="text-lg font-black mt-1 tracking-widest uppercase truncate" style={{ color: ZONE_COLORS_DARK[stressedReport.risk_zone] }}>
+                <div className="text-lg font-black mt-1 tracking-widest uppercase" style={{ color: ZONE_COLORS_DARK[stressedReport.risk_zone] }}>
                   {stressedReport.action}
                 </div>
               </div>

@@ -17,13 +17,13 @@ const RISK_TOLERANCES: { key: RiskTolerance; label: string }[] = [
 
 function RiskToleranceSelector({ value, onChange }: { value: RiskTolerance; onChange: (v: RiskTolerance) => void }) {
   return (
-    <div className="grid grid-cols-3 gap-1 bg-slate-900 rounded-xl p-1 border border-slate-800">
+    <div className="flex gap-1 bg-slate-900 rounded-xl p-1 border border-slate-800">
       {RISK_TOLERANCES.map(r => (
         <button key={r.key} onClick={() => onChange(r.key)}
-          className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all duration-200 text-center overflow-hidden ${
+          className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-center transition-all duration-200 ${
             value === r.key ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-slate-400 hover:text-slate-200 border border-transparent"
           }`}>
-          <span className="truncate block">{r.label}</span>
+          {r.label}
         </button>
       ))}
     </div>
