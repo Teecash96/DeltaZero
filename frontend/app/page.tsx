@@ -107,8 +107,17 @@ export default function Home() {
             Know your hedge.<br /><span style={{ color: "#859188" }}>Protect your capital.</span>
           </h1>
           <p className="hero-copy" style={{ maxWidth: 640, margin: "0 auto", fontSize: 15 }}>
-            Adjust any input below and watch the risk engine update in real time. No backend, no wallet, no hidden math.
+            DeltaZero helps agents and users build strategies, analyze hedge drift, and test funding stress for pseudo delta neutral DeFi positions using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.
           </p>
+          <p className="hero-positioning" style={{ maxWidth: 640, margin: "16px auto 0" }}>
+            The only MCP service on OKX.AI that runs a 4-module deterministic risk engine with on-chain x402 settlement — no custody, no signatures, 18ms.
+          </p>
+        </div>
+        <div className="flex justify-center gap-3 mt-4 flex-wrap">
+          <span className="px-3 py-1.5 border border-slate-700/50 rounded-full text-[10px] text-slate-500 font-mono tracking-wider">Read only</span>
+          <span className="px-3 py-1.5 border border-slate-700/50 rounded-full text-[10px] text-slate-500 font-mono tracking-wider">No signatures</span>
+          <span className="px-3 py-1.5 border border-slate-700/50 rounded-full text-[10px] text-slate-500 font-mono tracking-wider">Deterministic engine</span>
+          <span className="px-3 py-1.5 border border-slate-700/50 rounded-full text-[10px] text-slate-500 font-mono tracking-wider">Agent payment ready</span>
         </div>
         <StrategyBuilder />
         <div className="flex justify-center gap-3 mt-6 flex-wrap">
