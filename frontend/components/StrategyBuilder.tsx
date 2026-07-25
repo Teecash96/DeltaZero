@@ -15,10 +15,10 @@ export function StrategyBuilder() {
   } = useRiskEngine();
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Input Panel - Left */}
-        <div className="lg:col-span-3 bg-slate-950/80 border border-slate-800 rounded-2xl p-5">
+        <div className="lg:col-span-3 bg-slate-950/80 border border-slate-800 rounded-2xl p-4 sm:p-5 min-w-0">
           <div className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
             <span className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold">Δ</span>
             Strategy Inputs
@@ -27,12 +27,12 @@ export function StrategyBuilder() {
         </div>
 
         {/* Dashboard - Center */}
-        <div className="lg:col-span-5 space-y-3">
+        <div className="lg:col-span-5 space-y-3 min-w-0">
           <RiskDashboard report={activeReport} previousReport={report} />
         </div>
 
         {/* Monte Carlo + Stress - Right */}
-        <div className="lg:col-span-4 space-y-3">
+        <div className="lg:col-span-4 space-y-3 min-w-0">
           <MonteCarloChart data={mcResult} loading={mcLoading} onRun={runSimulation} />
           <StressTestPanel
             scenarios={scenarios}

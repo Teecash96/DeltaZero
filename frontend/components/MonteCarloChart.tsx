@@ -55,16 +55,16 @@ export function MonteCarloChart({ data, loading, onRun }: MonteCarloChartProps) 
   const p99Line = yScale(spot_price * (1 - p99_impairment / 100));
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+    <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 overflow-hidden">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Monte Carlo Simulation</div>
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">Monte Carlo Simulation</div>
         <button onClick={onRun} disabled={loading}
-          className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-semibold border border-emerald-500/30 hover:bg-emerald-500/30 disabled:opacity-50 transition-all">
+          className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-semibold border border-emerald-500/30 hover:bg-emerald-500/30 disabled:opacity-50 transition-all shrink-0">
           {loading ? "Running..." : "Run Simulation"}
         </button>
       </div>
 
-      <svg viewBox={`0 0 ${w} ${h + 20}`} className="w-full h-auto" style={{ maxHeight: 300 }}>
+      <svg viewBox={`0 0 ${w} ${h + 20}`} className="w-full h-auto max-w-full" style={{ maxHeight: 300 }}>
         {/* Y axis labels */}
         {[0, 0.25, 0.5, 0.75, 1].map(t => {
           const val = minVal + range * t;
@@ -97,7 +97,7 @@ export function MonteCarloChart({ data, loading, onRun }: MonteCarloChartProps) 
         ))}
       </svg>
 
-      <div className="flex items-center gap-4 mt-2 text-[10px] text-slate-500">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-slate-500">
         <span className="flex items-center gap-1.5"><i className="w-3 h-0.5 rounded bg-emerald-400 inline-block" /> Profitable</span>
         <span className="flex items-center gap-1.5"><i className="w-3 h-0.5 rounded bg-rose-400 inline-block" /> Impaired</span>
         <span className="flex items-center gap-1.5"><i className="w-3 h-0.5 rounded bg-amber-400 inline-block" style={{ borderTop: "1px dashed" }} /> P95</span>

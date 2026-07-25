@@ -35,7 +35,7 @@ export function StressTestPanel({ scenarios, activeScenario, onApply, stressedRe
         {stressedReport && (
           <motion.div key={activeScenario} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="space-y-3">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
                 <div className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">Safety Buffer</div>
                 <motion.div key={stressedReport.safety_buffer} initial={{ scale: 1.3 }} animate={{ scale: 1 }}

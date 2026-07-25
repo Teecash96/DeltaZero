@@ -165,7 +165,7 @@ export default function Home() {
             <p><strong>Net Carry APY</strong> = Long Yield APY − Short Funding APY − Fee Drag APY</p>
             <p><strong>Decision Confidence</strong> = 100 − |Safety Buffer − Zone Midpoint| − (Hedge Drift × 5)</p>
             <p><strong>Zone thresholds by risk tolerance:</strong></p>
-            <div className="grid grid-cols-5 gap-2 mt-2" style={{ fontSize: 10 }}>
+            <div className="grid grid-cols-5 gap-2 mt-2 overflow-x-auto" style={{ fontSize: 10 }}>
               {["", "Optimal", "Healthy", "Watch", "Defensive", "Critical"].map(h => <div key={h} style={{ fontWeight: 700, color: "var(--ink)" }}>{h}</div>)}
               <div style={{ color: "var(--green)" }}>Conservative</div>
               <div>&gt;80%</div><div>60-80%</div><div>40-60%</div><div>20-40%</div><div>&lt;20%</div>
