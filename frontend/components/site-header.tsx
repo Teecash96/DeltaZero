@@ -6,14 +6,15 @@ import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
-  { href: "/", label: "Home" },
   { href: "/risk-engine", label: "Risk Engine" },
   { href: "/agent", label: "Agent Console" },
   { href: "/registry", label: "Strategy Registry" },
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/" || href.startsWith("/#")) return pathname === "/";
+  if (href.startsWith("/#")) {
+    return pathname === "/";
+  }
   return pathname === href;
 }
 
