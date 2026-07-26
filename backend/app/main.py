@@ -133,10 +133,11 @@ def load_mcp_payment_settings() -> PaymentSettings | None:
     the MCP transport's 406 for bare probes).
     """
 
-    access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "paid").strip().lower()
-    if access_mode == "free":
-        return None
-
+    # DELTAZERO_ACCESS_MODE only controls the human-facing REST analysis
+    # routes.  The marketplace-registered A2MCP endpoint must always expose a
+    # standard unpaid 402 challenge so OKX can validate and purchase it.
+    # Disabling this gate makes the validator fall through to the upstream MCP
+    # transport, which answers its GET probe with HTTP 406.
     settings = PaymentSettings.from_environment()
     if settings is not None:
         return settings

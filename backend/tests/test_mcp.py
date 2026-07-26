@@ -5,7 +5,7 @@ import json
 
 from fastapi.testclient import TestClient
 
-from app.main import create_app
+from app.main import create_app, load_mcp_payment_settings
 from app.payments import PaymentSettings
 
 
@@ -123,6 +123,39 @@ def test_free_mcp_accepts_generic_accept_header_and_returns_jsonrpc() -> None:
     assert payload["result"]["structuredContent"]["pass_scope"] == (
         "one_strategy_analysis"
     )
+
+
+def test_registered_mcp_payment_gate_stays_enabled_when_rest_is_free(
+    monkeypatch,
+) -> None:
+    """Free REST previews must not disable the OKX marketplace 402 boundary."""
+    monkeypatch.setenv("DELTAZERO_ACCESS_MODE", "free")
+    for name in (
+        "PAYMENT_RECEIVER",
+        "PAYMENT_PRICE_USDT",
+        "PAYMENT_NETWORK",
+        "OKX_API_KEY",
+        "OKX_SECRET_KEY",
+        "OKX_PASSPHRASE",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+    settings = load_mcp_payment_settings()
+
+    assert settings is not None
+    assert settings.price_usdt == "1"
+    app = create_app(payment_settings=None, mcp_payment_settings=settings)
+    with TestClient(app) as client:
+        get_probe = client.get("/mcp")
+        post_probe = client.post(
+            "/mcp",
+            headers={"Accept": "*/*", "Content-Type": "application/json"},
+            json=_message("tools/list"),
+        )
+
+    for response in (get_probe, post_probe):
+        assert response.status_code == 402
+        assert "PAYMENT-REQUIRED" in response.headers
 
 
 def test_market_context_tool_is_payment_gated_on_registered_mcp_endpoint() -> None:
