@@ -390,6 +390,31 @@ class PaidMCPHandler:
         return handler(arguments) if handler is not None else None
 
 
+class FreeMCPJSONHandler:
+    """Serve JSON-RPC directly while temporary free access is enabled.
+
+    OKX's replay client may send ``Accept: */*`` or omit the Accept header.
+    The upstream Streamable HTTP transport rejects those valid JSON-RPC calls
+    with HTTP 406.  Routing free calls through the same deterministic JSON
+    dispatcher used after paid verification keeps both response paths
+    compatible and prevents content negotiation from blocking delivery.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+        self.json_handler = PaidMCPHandler(app)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if (
+            scope.get("type") == "http"
+            and scope.get("method") == "POST"
+            and scope.get("path", "").rstrip("/") == "/mcp"
+        ):
+            await self.json_handler(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
+
+
 # ─── Helpers ─────────────────────────────────────────────────────────────
 
 async def _read_body(receive: Receive) -> bytes:

@@ -19,7 +19,7 @@ from app.routers.preview import router as preview_router
 from app.routers.standards import evaluation_router as envelope_router, router as standards_router
 from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
-from app.mcp_server import MCPToolPaymentGate, create_mcp_server
+from app.mcp_server import FreeMCPJSONHandler, MCPToolPaymentGate, create_mcp_server
 from app.services.risk_engine import run_risk_engine_pass
 from app.services.builder import build_strategy
 from app.services.auditor import audit_strategy
@@ -197,6 +197,10 @@ def create_app(
             MCPToolPaymentGate,
             payment_settings=effective_mcp_settings,
         )
+    else:
+        # Temporary free mode must preserve the same JSON-RPC contract as a
+        # verified x402 replay, including for clients that send Accept: */*.
+        application.add_middleware(FreeMCPJSONHandler)
 
     # CORS is registered after x402 so browser clients can read payment headers
     # on both 402 challenges and successful settled responses.

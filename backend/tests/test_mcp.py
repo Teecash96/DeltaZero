@@ -91,6 +91,40 @@ def test_unpaid_json_only_mcp_client_receives_402_not_406() -> None:
     assert "PAYMENT-REQUIRED" in response.headers
 
 
+def test_free_mcp_accepts_generic_accept_header_and_returns_jsonrpc() -> None:
+    """Temporary free mode remains compatible with OKX's replay client."""
+    call = _tool_call(
+        "run_complete_risk_engine",
+        {
+            "request": {
+                "asset": "SOL",
+                "capital_usd": 5000,
+                "risk_tolerance": "medium",
+                "target_style": "neutral_yield",
+                "long_yield_apy": 14,
+                "short_funding_apy": 3,
+                "fee_drag_apy": 1,
+                "simulation_count": 100,
+                "seed": 42,
+            }
+        },
+    )
+    with TestClient(create_app()) as client:
+        response = client.post(
+            "/mcp",
+            headers={"Accept": "*/*", "Content-Type": "application/json"},
+            json=call,
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["jsonrpc"] == "2.0"
+    assert payload["id"] == 3
+    assert payload["result"]["structuredContent"]["pass_scope"] == (
+        "one_strategy_analysis"
+    )
+
+
 def test_market_context_tool_is_payment_gated_on_registered_mcp_endpoint() -> None:
     call = _tool_call(
         "get_hyperliquid_market_context",
