@@ -123,7 +123,7 @@ def load_runtime_payment_settings() -> PaymentSettings | None:
     raise RuntimeError("DELTAZERO_ACCESS_MODE must be either 'free' or 'paid'")
 
 
-def load_mcp_payment_settings() -> PaymentSettings:
+def load_mcp_payment_settings() -> PaymentSettings | None:
     """Return payment settings for the MCP x402 gate.
 
     The MCP endpoint MUST always be x402-compliant for OKX.AI A2MCP listing.
@@ -132,6 +132,10 @@ def load_mcp_payment_settings() -> PaymentSettings:
     x402 middleware is always in the request path (returning 402 instead of
     the MCP transport's 406 for bare probes).
     """
+
+    access_mode = os.getenv("DELTAZERO_ACCESS_MODE", "paid").strip().lower()
+    if access_mode == "free":
+        return None
 
     settings = PaymentSettings.from_environment()
     if settings is not None:
