@@ -295,7 +295,29 @@ class PaidMCPHandler:
 
         body = await _read_body(receive)
         if not body:
-            return await _send_json_response(send, 400, {"error": "Empty request body"})
+            # OKX task payments may replay the paid request without a business
+            # body when the task itself carries the service description.  A
+            # settled payment must still receive a usable deliverable rather
+            # than an HTTP 400 that leaves the task stuck in ``accepted``.
+            # Return the complete engine's documented SOL reference analysis
+            # as a standard JSON-RPC tool result. Clients that need custom
+            # assumptions should send a normal ``tools/call`` payload.
+            dispatched = self._dispatch_tool("run_complete_risk_engine", {})
+            return await _send_json_response(
+                send,
+                200,
+                {
+                    "jsonrpc": _JSONRPC_VERSION,
+                    "id": None,
+                    "result": {
+                        "content": [
+                            {"type": "text", "text": json.dumps(dispatched)}
+                        ],
+                        "structuredContent": dispatched,
+                        "isError": False,
+                    },
+                },
+            )
 
         try:
             payload = json.loads(body)

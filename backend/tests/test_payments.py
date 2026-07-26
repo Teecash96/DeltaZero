@@ -494,6 +494,48 @@ def test_paid_mcp_initialize_replay_returns_jsonrpc_200(
     assert facilitator.settle_calls == 1
 
 
+def test_paid_empty_mcp_replay_returns_default_deliverable(
+    payment_settings: PaymentSettings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """OKX task replay may omit a body after settling the x402 payment."""
+
+    server, facilitator = fake_payment_server(payment_settings)
+    monkeypatch.setattr("app.mcp_server.create_payment_server", lambda _: server)
+    app = create_app(payment_settings, server)
+    headers = {"Accept": "application/json", "Content-Type": "application/json"}
+
+    with TestClient(app) as client:
+        challenge_response = client.post("/mcp", headers=headers)
+        assert challenge_response.status_code == 402
+        challenge = json.loads(
+            base64.b64decode(challenge_response.headers["PAYMENT-REQUIRED"])
+        )
+        payment_payload = PaymentPayload(
+            payload={"signature": "facilitator-test-signature"},
+            accepted=PaymentRequirements.model_validate(challenge["accepts"][0]),
+        )
+        response = client.post(
+            "/mcp",
+            headers={
+                **headers,
+                "PAYMENT-SIGNATURE": encode_payment_signature_header(payment_payload),
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["jsonrpc"] == "2.0"
+    assert response.json()["id"] is None
+    assert response.json()["result"]["isError"] is False
+    assert response.json()["result"]["structuredContent"]["pass_scope"] == (
+        "one_strategy_analysis"
+    )
+    assert "PAYMENT-RESPONSE" in response.headers
+    assert facilitator.verify_calls == 1
+    assert facilitator.settle_calls == 1
+
+
 def test_payment_configuration_is_disabled_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     for key in (
         "PAYMENT_RECEIVER",
