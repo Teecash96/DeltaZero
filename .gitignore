@@ -29,4 +29,6 @@ sdk/**/dist/
 *~
 *.tmp
 *.temp
+.tmp_docx/
+artifacts/
 .qoder/
