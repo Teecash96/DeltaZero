@@ -3,13 +3,14 @@
 import { useMemo, useState } from "react";
 
 const links = [
-  { label: "GitHub SDK folder", href: "https://github.com/Teecash96/DeltaZero/tree/main/sdk" },
+  { label: "npm: deltazero-core", href: "https://www.npmjs.com/package/deltazero-core" },
+  { label: "PyPI: deltazero-core", href: "https://pypi.org/project/deltazero-core/" },
   { label: "API documentation", href: "https://deltazero-production.up.railway.app/docs" },
   { label: "OKX ASP documentation", href: "https://github.com/Teecash96/DeltaZero/blob/main/docs/OKX_ASP_SERVICE.md" },
 ];
 
 const snippets = {
-  typescript: `import { DeltaZeroClient } from "@deltazero/core";\n\nconst client = new DeltaZeroClient({\n  baseUrl: "https://deltazero-production.up.railway.app",\n});\n\nconst report = await client.buildStrategy({\n  asset: "SOL",\n  capital_usd: 5000,\n  risk_tolerance: "medium",\n  target_style: "neutral_yield",\n  long_yield_apy: 14,\n  short_funding_apy: 3,\n  fee_drag_apy: 1,\n});\n\nconsole.log(report.recommendation.action);`,
+  typescript: `import { DeltaZeroClient } from "deltazero-core";\n\nconst client = new DeltaZeroClient({\n  baseUrl: "https://deltazero-production.up.railway.app",\n});\n\nconst report = await client.buildStrategy({\n  asset: "SOL",\n  capital_usd: 5000,\n  risk_tolerance: "medium",\n  target_style: "neutral_yield",\n  long_yield_apy: 14,\n  short_funding_apy: 3,\n  fee_drag_apy: 1,\n});\n\nconsole.log(report.recommendation.action);`,
   python: `from deltazero import DeltaZeroClient\n\nclient = DeltaZeroClient(\n    base_url="https://deltazero-production.up.railway.app"\n)\n\nreport = client.build_strategy({\n    "asset": "SOL",\n    "capital_usd": 5000,\n    "risk_tolerance": "medium",\n    "target_style": "neutral_yield",\n    "long_yield_apy": 14,\n    "short_funding_apy": 3,\n    "fee_drag_apy": 1,\n})\n\nprint(report["recommendation"]["action"])`,
 } as const;
 
@@ -37,7 +38,7 @@ export function AgentSdkSection() {
         </div>
         <div className="sdk-badge-stack">
           <span className="sdk-badge">SDK PREVIEW</span>
-          <span className="sdk-status">Local SDK package · Planned npm publication</span>
+          <span className="sdk-status">Published on npm and PyPI</span>
         </div>
       </div>
       <p className="sdk-copy">
@@ -85,8 +86,7 @@ export function AgentSdkSection() {
             ))}
           </div>
           <p className="sdk-note">
-            Install the SDKs from this repository locally. They are thin clients around the deployed API and are not
-            published yet.
+            Install from npm (<code>npm install deltazero-core</code>) or PyPI (<code>pip install deltazero-core</code>). The SDKs are thin, typed clients around the deployed API.
           </p>
         </div>
       </div>

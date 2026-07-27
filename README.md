@@ -14,6 +14,7 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 [![License: MIT](https://img.shields.io/badge/License-MIT-84CC16.svg)](LICENSE)
 [![OKX AI Hackathon](https://img.shields.io/badge/OKX_AI-Hackathon-000000)](https://www.okx.com/)
 
+[🎬 Watch the 2-minute demo →](https://drive.google.com/file/d/10FnOtqaoEykPCZ3PklQyNNml_Kfh7Lnk/view) ·
 [Live Application](https://delta-zero-alpha.vercel.app) ·
 [API Documentation](https://deltazero-production.up.railway.app/docs) ·
 [Published SDKs](#published-sdks) ·
