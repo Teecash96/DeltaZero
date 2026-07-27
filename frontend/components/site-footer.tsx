@@ -16,7 +16,7 @@ const quickLinks = [
 const externalLinks = [
   { label: "GitHub", href: "https://github.com/Teecash96/DeltaZero" },
   { label: "X", href: "https://x.com/DeltaZeroASP" },
-  { label: "Live Demo", href: "https://delta-zero-alpha.vercel.app" },
+  { label: "Live Demo", href: "https://drive.google.com/file/d/10FnOtqaoEykPCZ3PklQyNNml_Kfh7Lnk/view" },
 ];
 
 export function SiteFooter() {
