@@ -256,6 +256,7 @@ export default function Home() {
           <p className="hero-copy">DeltaZero helps agents and users build strategies, analyze hedge drift, and test funding stress for pseudo delta neutral DeFi positions using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
           <p className="hero-positioning">The only MCP service on OKX.AI that runs a 4-module deterministic risk engine with on-chain x402 settlement — no custody, no signatures, 18ms.</p>
           <div className="hero-actions">
+            <a href="https://drive.google.com/file/d/10FnOtqaoEykPCZ3PklQyNNml_Kfh7Lnk/view" target="_blank" rel="noreferrer" className="button button-primary">Watch Demo <span>▶</span></a>
             <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/agent" className="button button-secondary">Agent Console <span>◎</span></Link>
             <Link href="/wallet" className="button button-secondary">Hedge Intelligence <span>◇</span></Link>
