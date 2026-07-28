@@ -158,7 +158,7 @@ Hyperliquid accounts.
 | Grounded Risk Explanation | Live · Optional | Uses OpenAI Structured Outputs to explain verified Risk Envelope evidence without recalculating metrics, inventing market causes, or changing the deterministic action. Falls back safely when unavailable. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | Marketplace API service | Live · Temporarily Free | The MCP endpoint is reachable at `/mcp` for OKX.AI review. Marketplace A2MCP access is free or paid per call using x402 micropayments. |
-| Interactive Strategy Preview | Live · Permanently Free | Compares Conservative Income and Aggressive Carry through the production deterministic builder without a wallet or payment. |
+| Interactive Strategy Preview | Live · Pay per use | Compares Conservative Income and Aggressive Carry through the production deterministic builder. |
 | TypeScript SDK | Published · npm | Supplies a typed client through [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). |
 | Python SDK | Published · PyPI | Supplies a typed client through [`deltazero-core`](https://pypi.org/project/deltazero-core/). |
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
@@ -519,7 +519,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/strategy/stress-test` | Legacy alias retained for SDK compatibility. Temporarily free. |
 | `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, and Morpho positions and generate a read-only hedge-intelligence report. Permanently free. |
 | `POST` | `/strategy-registry/evaluate` | Evaluate a client-owned recommendation and observed-outcome registry without server persistence or silent retraining. Free. |
-| `POST` | `/preview/compare` | Compare Conservative Income and Aggressive Carry through the production strategy engine. Permanently free. |
+| `POST` | `/preview/compare` | Compare Conservative Income and Aggressive Carry through the production strategy engine. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
 | `POST` | `/risk-engine/analyze` | Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity as one coordinated free-preview analysis. |
 | `POST` | `/risk-envelope/evaluate` | Return the portable Risk Envelope v1 decision artifact for one coordinated analysis. Temporarily free. |
