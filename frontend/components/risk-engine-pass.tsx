@@ -58,7 +58,7 @@ export function RiskEnginePass() {
     <section className="risk-pass-stack" aria-labelledby="risk-pass-title">
       <div className="panel risk-pass-offer">
         <div><span className="decision-eyebrow">x402 payment-protected</span><h2 id="risk-pass-title">Risk Engine Pass</h2><p>Run Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity from the same inputs.</p></div>
-        <strong>0.5 USDT <small>per pass</small></strong>
+        <strong>1 USDT <small>per pass</small></strong>
       </div>
       <form className="panel risk-pass-form" onSubmit={(event) => void submit(event)}>
         <div className="form-grid">

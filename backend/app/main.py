@@ -10,7 +10,13 @@ from fastapi.responses import JSONResponse
 from x402.server import x402ResourceServer
 
 from app.models.risk_engine import RiskEnginePassRequest, RiskEnginePassResponse
-from app.payments import DeltaZeroPaymentMiddleware, PaymentSettings, create_payment_server, paid_routes
+from app.payments import (
+    DeltaZeroPaymentMiddleware,
+    PaymentSettings,
+    create_payment_server,
+    marketplace_payment_settings,
+    paid_routes,
+)
 from app.routers.market import router as market_router
 from app.routers.monte_carlo import router as monte_carlo_router
 from app.routers.risk_engine import router as risk_engine_router
@@ -140,7 +146,7 @@ def load_mcp_payment_settings() -> PaymentSettings | None:
     # transport, which answers its GET probe with HTTP 406.
     settings = PaymentSettings.from_environment()
     if settings is not None:
-        return settings
+        return marketplace_payment_settings(settings)
 
     # Fallback: challenge-only mode (no settlement, but valid 402 response).
     # This guarantees the MCPToolPaymentGate is always registered.
@@ -188,6 +194,8 @@ def create_app(
             routes=paid_routes(payment_settings),
             server=payment_server or create_payment_server(payment_settings),
             admin_key=payment_settings.admin_key,
+            replay_db_path=payment_settings.replay_db_path,
+            replay_ttl_seconds=payment_settings.replay_ttl_seconds,
         )
 
     # The MCP x402 gate is ALWAYS active when payment settings are available,
@@ -218,6 +226,8 @@ def create_app(
         expose_headers=[
             "PAYMENT-REQUIRED",
             "PAYMENT-RESPONSE",
+            "X-DeltaZero-Request-Id",
+            "X-DeltaZero-Replay",
             "Mcp-Session-Id",
             "Mcp-Protocol-Version",
         ],

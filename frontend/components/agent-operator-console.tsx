@@ -36,7 +36,7 @@ const INITIAL_STEPS: PipelineStep[] = [
   { id: "scan", label: "Scanning simulated wallet", detail: "Reading SOL neutral-carry position…", status: "pending" },
   { id: "drift", label: "Evaluating hedge drift", detail: "Computing net delta against policy boundary…", status: "pending" },
   { id: "api", label: "Calling Risk Engine API", detail: "POST /risk-engine/analyze", status: "pending" },
-  { id: "payment", label: "x402 payment gate", detail: "0.5 USDT · X Layer · USD₮0", status: "pending" },
+  { id: "payment", label: "x402 payment gate", detail: "1 USDT · X Layer · USD₮0", status: "pending" },
   { id: "verdict", label: "Recommendation", detail: "Awaiting engine verdict…", status: "pending" },
 ];
 
@@ -128,8 +128,8 @@ export function AgentOperatorConsole() {
 
         // Step 4: Payment (x402 settlement)
         setTimeout(() => {
-          setStep("payment", { status: "success", detail: "0.5 USDT settled on X Layer", meta: "x402" });
-          pushLine("x402 gate: payment verified and settled. 0.5 USDT → receiver on eip155:196.", "positive");
+          setStep("payment", { status: "success", detail: "1 USDT settled on X Layer", meta: "x402" });
+          pushLine("x402 gate: payment verified and settled. 1 USDT → receiver on eip155:196.", "positive");
 
           // Step 5: Verdict
           setTimeout(() => {
@@ -146,7 +146,7 @@ export function AgentOperatorConsole() {
       }).catch((error: unknown) => {
         if (error instanceof PaymentRequiredError) {
           const opt = error.challenge?.accepts?.[0];
-          const amt = opt?.amount ? `${Number(opt.amount) / 1e6} USDT` : "0.5 USDT";
+          const amt = opt?.amount ? `${Number(opt.amount) / 1e6} USDT` : "1 USDT";
           const net = opt?.network ?? "eip155:196";
           setStep("api", { status: "success", detail: "402 → x402 challenge received" });
           setStep("payment", { status: "active", detail: `${amt} · ${net} · USD₮0`, meta: "402" });

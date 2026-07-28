@@ -8,13 +8,21 @@ in challenge-only mode and never releases a protected resource.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import asyncio
+import base64
+from dataclasses import dataclass, field, replace
 from decimal import Decimal, InvalidOperation
+import hashlib
+import json
 import logging
 import os
 import re
 import secrets
+import sqlite3
+import threading
+import time
 from typing import Any
+import uuid
 
 from x402.http import (
     OKXAuthConfig,
@@ -33,6 +41,7 @@ from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 _EVM_ADDRESS_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 _CAIP2_EVM_NETWORK_RE = re.compile(r"^eip155:[1-9][0-9]*$")
 _ADMIN_HEADER = b"x-deltazero-admin-key"
+_PAYMENT_HEADERS = (b"payment-signature", b"x-payment")
 _DEFAULT_PUBLIC_API_BASE_URL = "https://deltazero-production.up.railway.app"
 
 # USDT0 token address on XLayer (eip155:196) — the registered settlement token
@@ -56,6 +65,8 @@ class PaymentSettings:
     okx_base_url: str = "https://web3.okx.com"
     public_api_base_url: str = _DEFAULT_PUBLIC_API_BASE_URL
     admin_key: str | None = field(default=None, repr=False)
+    replay_db_path: str | None = None
+    replay_ttl_seconds: int = 86_400
 
     @classmethod
     def from_environment(cls) -> PaymentSettings | None:
@@ -124,6 +135,15 @@ class PaymentSettings:
             okx_base_url=base_url.rstrip("/"),
             public_api_base_url=public_api_base_url.rstrip("/"),
             admin_key=os.getenv("DELTAZERO_ADMIN_KEY") or None,
+            replay_db_path=os.getenv(
+                "PAYMENT_REPLAY_DB_PATH",
+                "/tmp/deltazero-payment-replays.sqlite3",
+            ).strip()
+            or None,
+            replay_ttl_seconds=_positive_int_environment(
+                "PAYMENT_REPLAY_TTL_SECONDS",
+                86_400,
+            ),
         )
 
     @property
@@ -147,6 +167,94 @@ def _normalize_price(value: str) -> str:
         raise RuntimeError("PAYMENT_PRICE_USDT supports at most six decimal places")
 
     return format(price.normalize(), "f")
+
+
+def _positive_int_environment(name: str, default: int) -> int:
+    raw = os.getenv(name, str(default)).strip()
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be a positive integer") from exc
+    if value <= 0:
+        raise RuntimeError(f"{name} must be a positive integer")
+    return value
+
+
+def marketplace_payment_settings(settings: PaymentSettings) -> PaymentSettings:
+    """Pin MCP pricing to the immutable OKX marketplace service price.
+
+    REST pricing can be changed independently for previews, but service 33993
+    is already in use and remains registered at 1 USDT. Keeping a dedicated
+    setting prevents a stale REST environment variable from breaking the
+    marketplace payment/replay contract.
+    """
+
+    price = _normalize_price(os.getenv("MCP_PAYMENT_PRICE_USDT", "1").strip() or "1")
+    return replace(settings, price_usdt=price)
+
+
+class PaymentReplayStore:
+    """Durably cache successful paid responses for exact request retries."""
+
+    def __init__(self, path: str, ttl_seconds: int) -> None:
+        if path != ":memory:":
+            parent = os.path.dirname(os.path.abspath(path))
+            os.makedirs(parent, exist_ok=True)
+        self.ttl_seconds = ttl_seconds
+        self._lock = threading.RLock()
+        self._connection = sqlite3.connect(path, check_same_thread=False)
+        if path != ":memory:":
+            os.chmod(path, 0o600)
+        with self._connection:
+            self._connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS payment_replays (
+                    replay_key TEXT PRIMARY KEY,
+                    status_code INTEGER NOT NULL,
+                    headers_json TEXT NOT NULL,
+                    body BLOB NOT NULL,
+                    created_at REAL NOT NULL
+                )
+                """
+            )
+
+    def get(self, replay_key: str) -> tuple[int, list[tuple[bytes, bytes]], bytes] | None:
+        cutoff = time.time() - self.ttl_seconds
+        with self._lock, self._connection:
+            self._connection.execute(
+                "DELETE FROM payment_replays WHERE created_at < ?",
+                (cutoff,),
+            )
+            row = self._connection.execute(
+                "SELECT status_code, headers_json, body FROM payment_replays "
+                "WHERE replay_key = ?",
+                (replay_key,),
+            ).fetchone()
+        if row is None:
+            return None
+        headers = [
+            (name.encode("latin-1"), value.encode("latin-1"))
+            for name, value in json.loads(row[1])
+        ]
+        return int(row[0]), headers, bytes(row[2])
+
+    def put(
+        self,
+        replay_key: str,
+        status_code: int,
+        headers: list[tuple[bytes, bytes]],
+        body: bytes,
+    ) -> None:
+        encoded_headers = json.dumps(
+            [(name.decode("latin-1"), value.decode("latin-1")) for name, value in headers]
+        )
+        with self._lock, self._connection:
+            self._connection.execute(
+                "INSERT OR REPLACE INTO payment_replays "
+                "(replay_key, status_code, headers_json, body, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (replay_key, status_code, encoded_headers, body, time.time()),
+            )
 
 
 class ChallengeOnlyFacilitator:
@@ -339,11 +447,19 @@ class DeltaZeroPaymentMiddleware:
         routes: dict[str, RouteConfig],
         server: x402ResourceServer,
         admin_key: str | None,
+        replay_db_path: str | None = None,
+        replay_ttl_seconds: int = 86_400,
     ) -> None:
         self.app = app
         self.admin_key = admin_key
         self.protected_routes = frozenset(routes)
         self.payment_app = PaymentMiddlewareASGI(app, routes=routes, server=server)
+        self.replay_store = (
+            PaymentReplayStore(replay_db_path, replay_ttl_seconds)
+            if replay_db_path
+            else None
+        )
+        self._replay_locks: dict[str, asyncio.Lock] = {}
 
     async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
         route_key = f"{scope.get('method', '')} {scope.get('path', '')}"
@@ -367,7 +483,152 @@ class DeltaZeroPaymentMiddleware:
                 await self.app(sanitized_scope, receive, send)
                 return
 
-        await self.payment_app(scope, receive, send)
+        if scope.get("type") != "http" or route_key not in self.protected_routes:
+            await self.payment_app(scope, receive, send)
+            return
+
+        request_id = self._request_id(scope.get("headers", []))
+        proof = self._payment_proof(scope.get("headers", []))
+        started = time.monotonic()
+
+        if proof is None:
+            async def challenge_send(message: dict[str, Any]) -> None:
+                if message.get("type") == "http.response.start":
+                    status = int(message.get("status", 0))
+                    message = self._with_response_header(
+                        message,
+                        b"x-deltazero-request-id",
+                        request_id.encode(),
+                    )
+                    event = "payment_challenge_issued" if status == 402 else "payment_request_completed"
+                    self._log_event(event, request_id, route_key, status, started)
+                await send(message)
+
+            await self.payment_app(scope, receive, challenge_send)
+            return
+
+        body, replay_receive = await self._buffer_request(receive)
+        replay_key = self._replay_key(scope, body, proof)
+        lock = self._replay_locks.setdefault(replay_key, asyncio.Lock())
+        async with lock:
+            cached = self.replay_store.get(replay_key) if self.replay_store else None
+            if cached is not None:
+                status, headers, cached_body = cached
+                headers = self._replace_header(
+                    headers,
+                    b"x-deltazero-request-id",
+                    request_id.encode(),
+                )
+                headers = self._replace_header(
+                    headers,
+                    b"x-deltazero-replay",
+                    b"recovered",
+                )
+                self._log_event("payment_replay_recovered", request_id, route_key, status, started)
+                try:
+                    await send({"type": "http.response.start", "status": status, "headers": headers})
+                    await send({"type": "http.response.body", "body": cached_body})
+                except Exception:
+                    logger.exception(
+                        "payment_event=payment_result_delivery_failed request_id=%s route=%s replay=recovered",
+                        request_id,
+                        route_key,
+                    )
+                    raise
+                logger.info(
+                    "payment_event=payment_result_delivered request_id=%s route=%s replay=recovered",
+                    request_id,
+                    route_key,
+                )
+                self._replay_locks.pop(replay_key, None)
+                return
+
+            captured: list[dict[str, Any]] = []
+
+            async def capture_send(message: dict[str, Any]) -> None:
+                captured.append(dict(message))
+
+            logger.info(
+                "payment_event=payment_replay_started request_id=%s route=%s",
+                request_id,
+                route_key,
+            )
+            try:
+                await self.payment_app(scope, replay_receive, capture_send)
+            except Exception:
+                logger.exception(
+                    "payment_event=payment_replay_exception request_id=%s route=%s",
+                    request_id,
+                    route_key,
+                )
+                raise
+
+            start_message = next(
+                (message for message in captured if message.get("type") == "http.response.start"),
+                None,
+            )
+            if start_message is None:
+                logger.error(
+                    "payment_event=payment_replay_missing_response request_id=%s route=%s",
+                    request_id,
+                    route_key,
+                )
+                for message in captured:
+                    await send(message)
+                return
+
+            status = int(start_message.get("status", 0))
+            headers = list(start_message.get("headers", []))
+            response_body = b"".join(
+                message.get("body", b"")
+                for message in captured
+                if message.get("type") == "http.response.body"
+            )
+            has_settlement = self._has_header(headers, b"payment-response")
+            settlement_transaction = self._settlement_transaction(headers)
+            event = "payment_replay_completed" if 200 <= status < 300 else "payment_replay_failed"
+            self._log_event(
+                event,
+                request_id,
+                route_key,
+                status,
+                started,
+                has_settlement,
+                settlement_transaction,
+            )
+
+            headers = self._replace_header(
+                headers,
+                b"x-deltazero-request-id",
+                request_id.encode(),
+            )
+            start_message["headers"] = headers
+            if (
+                self.replay_store is not None
+                and 200 <= status < 300
+                and has_settlement
+            ):
+                self.replay_store.put(replay_key, status, headers, response_body)
+
+            try:
+                for message in captured:
+                    await send(message)
+            except Exception:
+                logger.exception(
+                    "payment_event=payment_result_delivery_failed request_id=%s route=%s replay=fresh transaction=%s",
+                    request_id,
+                    route_key,
+                    settlement_transaction or "none",
+                )
+                raise
+            logger.info(
+                "payment_event=payment_result_delivered request_id=%s route=%s replay=fresh transaction=%s",
+                request_id,
+                route_key,
+                settlement_transaction or "none",
+            )
+
+        self._replay_locks.pop(replay_key, None)
 
     @staticmethod
     def _header_value(headers: list[tuple[bytes, bytes]]) -> str | None:
@@ -378,3 +639,116 @@ class DeltaZeroPaymentMiddleware:
                 except UnicodeDecodeError:
                     return None
         return None
+
+    @staticmethod
+    def _payment_proof(headers: list[tuple[bytes, bytes]]) -> bytes | None:
+        for name, value in headers:
+            if name.lower() in _PAYMENT_HEADERS:
+                return value
+        return None
+
+    @staticmethod
+    def _request_id(headers: list[tuple[bytes, bytes]]) -> str:
+        for name, value in headers:
+            if name.lower() == b"x-request-id":
+                try:
+                    candidate = value.decode("ascii")
+                except UnicodeDecodeError:
+                    break
+                if 1 <= len(candidate) <= 128 and re.fullmatch(r"[A-Za-z0-9._:-]+", candidate):
+                    return candidate
+        return uuid.uuid4().hex
+
+    @staticmethod
+    async def _buffer_request(receive: Any) -> tuple[bytes, Any]:
+        chunks: list[bytes] = []
+        while True:
+            message = await receive()
+            if message.get("type") != "http.request":
+                continue
+            chunks.append(message.get("body", b""))
+            if not message.get("more_body", False):
+                break
+        body = b"".join(chunks)
+        sent = False
+
+        async def replay_receive() -> dict[str, Any]:
+            nonlocal sent
+            if not sent:
+                sent = True
+                return {"type": "http.request", "body": body, "more_body": False}
+            return {"type": "http.disconnect"}
+
+        return body, replay_receive
+
+    @staticmethod
+    def _replay_key(scope: dict[str, Any], body: bytes, proof: bytes) -> str:
+        digest = hashlib.sha256()
+        digest.update(str(scope.get("method", "")).encode())
+        digest.update(b"\0")
+        digest.update(str(scope.get("path", "")).encode())
+        digest.update(b"\0")
+        digest.update(scope.get("query_string", b""))
+        digest.update(b"\0")
+        digest.update(body)
+        digest.update(b"\0")
+        digest.update(proof)
+        return digest.hexdigest()
+
+    @staticmethod
+    def _has_header(headers: list[tuple[bytes, bytes]], name: bytes) -> bool:
+        return any(header_name.lower() == name for header_name, _ in headers)
+
+    @staticmethod
+    def _settlement_transaction(headers: list[tuple[bytes, bytes]]) -> str | None:
+        for name, value in headers:
+            if name.lower() != b"payment-response":
+                continue
+            try:
+                payload = json.loads(base64.b64decode(value))
+            except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+                return None
+            transaction = payload.get("transaction")
+            if isinstance(transaction, str) and re.fullmatch(r"0x[a-fA-F0-9]+", transaction):
+                return transaction
+        return None
+
+    @staticmethod
+    def _replace_header(
+        headers: list[tuple[bytes, bytes]],
+        name: bytes,
+        value: bytes,
+    ) -> list[tuple[bytes, bytes]]:
+        return [(key, item) for key, item in headers if key.lower() != name] + [(name, value)]
+
+    @classmethod
+    def _with_response_header(
+        cls,
+        message: dict[str, Any],
+        name: bytes,
+        value: bytes,
+    ) -> dict[str, Any]:
+        updated = dict(message)
+        updated["headers"] = cls._replace_header(list(message.get("headers", [])), name, value)
+        return updated
+
+    @staticmethod
+    def _log_event(
+        event: str,
+        request_id: str,
+        route: str,
+        status: int,
+        started: float,
+        settlement_receipt: bool = False,
+        settlement_transaction: str | None = None,
+    ) -> None:
+        logger.info(
+            "payment_event=%s request_id=%s route=%s status=%s duration_ms=%s settlement_receipt=%s transaction=%s",
+            event,
+            request_id,
+            route,
+            status,
+            round((time.monotonic() - started) * 1000, 2),
+            str(settlement_receipt).lower(),
+            settlement_transaction or "none",
+        )

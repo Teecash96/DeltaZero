@@ -498,6 +498,8 @@ class MCPToolPaymentGate:
             routes=mcp_paid_routes(payment_settings),
             server=create_payment_server(payment_settings),
             admin_key=payment_settings.admin_key,
+            replay_db_path=payment_settings.replay_db_path,
+            replay_ttl_seconds=payment_settings.replay_ttl_seconds,
         )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:

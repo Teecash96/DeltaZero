@@ -445,6 +445,111 @@ def test_valid_paid_mcp_replay_accepts_json_only_and_returns_jsonrpc(
     assert facilitator.settle_calls == 1
 
 
+def test_successful_paid_mcp_replay_is_idempotent(
+    payment_settings: PaymentSettings,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """An exact marketplace retry returns the saved deliverable without a second charge."""
+
+    settings = replace(
+        payment_settings,
+        replay_db_path=str(tmp_path / "payment-replays.sqlite3"),
+    )
+    server, facilitator = fake_payment_server(settings)
+    monkeypatch.setattr("app.mcp_server.create_payment_server", lambda _: server)
+    app = create_app(settings, server)
+    request = {
+        "jsonrpc": "2.0",
+        "id": 91,
+        "method": "tools/call",
+        "params": {
+            "name": "run_complete_risk_engine",
+            "arguments": {
+                "request": {
+                    **BUILD_PAYLOAD,
+                    "stress_magnitude_pct": 4,
+                    "simulation_count": 100,
+                    "time_horizon_days": 30,
+                    "seed": 42,
+                }
+            },
+        },
+    }
+    base_headers = {"Accept": "application/json", "Content-Type": "application/json"}
+
+    with TestClient(app) as client:
+        challenge_response = client.post("/mcp", json=request, headers=base_headers)
+        challenge = json.loads(
+            base64.b64decode(challenge_response.headers["PAYMENT-REQUIRED"])
+        )
+        payment_payload = PaymentPayload(
+            payload={"signature": "one-proof-one-result"},
+            accepted=PaymentRequirements.model_validate(challenge["accepts"][0]),
+        )
+        paid_headers = {
+            **base_headers,
+            "PAYMENT-SIGNATURE": encode_payment_signature_header(payment_payload),
+        }
+
+        first = client.post("/mcp", json=request, headers=paid_headers)
+        retry = client.post("/mcp", json=request, headers=paid_headers)
+
+    assert first.status_code == 200
+    assert retry.status_code == 200
+    assert retry.json() == first.json()
+    assert retry.headers["PAYMENT-RESPONSE"] == first.headers["PAYMENT-RESPONSE"]
+    assert retry.headers["X-DeltaZero-Replay"] == "recovered"
+    assert facilitator.verify_calls == 1
+    assert facilitator.settle_calls == 1
+
+
+def test_payment_trace_logs_do_not_expose_payment_proof(
+    payment_settings: PaymentSettings,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    settings = replace(
+        payment_settings,
+        replay_db_path=str(tmp_path / "payment-traces.sqlite3"),
+    )
+    server, _ = fake_payment_server(settings)
+    monkeypatch.setattr("app.mcp_server.create_payment_server", lambda _: server)
+    app = create_app(settings, server)
+    request = {
+        "jsonrpc": "2.0",
+        "id": 92,
+        "method": "tools/call",
+        "params": {"name": "run_complete_risk_engine", "arguments": {}},
+    }
+    base_headers = {"Accept": "application/json", "Content-Type": "application/json"}
+
+    with TestClient(app) as client:
+        challenge_response = client.post("/mcp", json=request, headers=base_headers)
+        challenge = json.loads(
+            base64.b64decode(challenge_response.headers["PAYMENT-REQUIRED"])
+        )
+        secret_proof = "proof-must-never-appear-in-logs"
+        payment_payload = PaymentPayload(
+            payload={"signature": secret_proof},
+            accepted=PaymentRequirements.model_validate(challenge["accepts"][0]),
+        )
+        with caplog.at_level("INFO", logger="app.payments"):
+            response = client.post(
+                "/mcp",
+                json=request,
+                headers={
+                    **base_headers,
+                    "PAYMENT-SIGNATURE": encode_payment_signature_header(payment_payload),
+                },
+            )
+
+    assert response.status_code == 200
+    assert "payment_replay_completed" in caplog.text
+    assert secret_proof not in caplog.text
+
+
 def test_paid_mcp_initialize_replay_returns_jsonrpc_200(
     payment_settings: PaymentSettings,
     monkeypatch: pytest.MonkeyPatch,

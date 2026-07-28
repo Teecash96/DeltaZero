@@ -549,7 +549,7 @@ request returns `HTTP 402 Payment Required` with a base64-encoded
 identifies the network, stablecoin contract, atomic amount, receiver, and
 supported payment schemes.
 
-The per-call price is configured with `PAYMENT_PRICE_USDT`. When that mode is restored, the primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
+The REST per-call price is configured with `PAYMENT_PRICE_USDT`. The registered OKX.AI MCP service is fixed at **1 USDT per call** and uses `MCP_PAYMENT_PRICE_USDT` (default `1`) so a stale REST setting cannot change its marketplace contract. The primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
 
 ### Agent-native payment
 
@@ -615,6 +615,19 @@ curl --include \
 ```
 
 Never construct a payment credential by hand or treat the presence of a header as proof of payment. In challenge-only mode all paid replays fail closed. In settlement mode DeltaZero forwards credentials to the OKX facilitator for cryptographic verification and settlement before returning the protected resource.
+
+### Paid replay reliability
+
+Successful paid responses are saved against a one-way digest of the payment proof, HTTP method, route, query, and exact request body. If an agent retries that identical request with the same proof, DeltaZero returns the original JSON-RPC deliverable and `PAYMENT-RESPONSE` receipt with `X-DeltaZero-Replay: recovered`; it does not ask the facilitator to settle again.
+
+Configure durable replay storage in production:
+
+```bash
+export PAYMENT_REPLAY_DB_PATH="/data/deltazero-payment-replays.sqlite3"
+export PAYMENT_REPLAY_TTL_SECONDS="86400"
+```
+
+`/data` should be a persistent Railway volume. Without a persistent volume, recovery remains available only until the container is replaced. Payment proofs, facilitator credentials, admin keys, and request bodies are never written to logs. Each protected response includes `X-DeltaZero-Request-Id`, and structured events cover challenge issuance, replay start, settlement completion, recovery, and failure.
 
 ### Admin Testing
 
@@ -710,8 +723,10 @@ To restore paid mode later, set `DELTAZERO_ACCESS_MODE="paid"` and configure the
 ```bash
 export PAYMENT_RECEIVER="0xYourReceivingAddress"
 export PAYMENT_PRICE_USDT="1"
+export MCP_PAYMENT_PRICE_USDT="1"
 export PAYMENT_NETWORK="eip155:196"
 export PUBLIC_API_BASE_URL="https://deltazero-production.up.railway.app"
+export PAYMENT_REPLAY_DB_PATH="/data/deltazero-payment-replays.sqlite3"
 ```
 
 To enable paid verification and settlement, additionally configure the complete official facilitator credential group:

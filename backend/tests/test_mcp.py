@@ -158,6 +158,22 @@ def test_registered_mcp_payment_gate_stays_enabled_when_rest_is_free(
         assert "PAYMENT-REQUIRED" in response.headers
 
 
+def test_marketplace_mcp_price_defaults_to_registered_one_usdt(monkeypatch) -> None:
+    """A stale REST price cannot change the immutable marketplace service price."""
+
+    monkeypatch.setenv("PAYMENT_RECEIVER", "0x" + "1" * 40)
+    monkeypatch.setenv("PAYMENT_PRICE_USDT", "0.5")
+    monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
+    monkeypatch.delenv("MCP_PAYMENT_PRICE_USDT", raising=False)
+    for name in ("OKX_API_KEY", "OKX_SECRET_KEY", "OKX_PASSPHRASE"):
+        monkeypatch.delenv(name, raising=False)
+
+    settings = load_mcp_payment_settings()
+
+    assert settings is not None
+    assert settings.price_usdt == "1"
+
+
 def test_market_context_tool_is_payment_gated_on_registered_mcp_endpoint() -> None:
     call = _tool_call(
         "get_hyperliquid_market_context",
