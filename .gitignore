@@ -31,4 +31,6 @@ sdk/**/dist/
 *.temp
 .tmp_docx/
 artifacts/
+deliverables/
+CEHUA_GLAZE_HACKATHON_PROMPT.md
 .qoder/
