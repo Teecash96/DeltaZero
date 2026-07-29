@@ -132,7 +132,9 @@ def test_registered_mcp_payment_gate_stays_enabled_when_rest_is_free(
     monkeypatch.setenv("DELTAZERO_ACCESS_MODE", "free")
     for name in (
         "PAYMENT_RECEIVER",
+        "DELTAZERO_PRICE_USDT",
         "PAYMENT_PRICE_USDT",
+        "MCP_PAYMENT_PRICE_USDT",
         "PAYMENT_NETWORK",
         "OKX_API_KEY",
         "OKX_SECRET_KEY",
@@ -158,20 +160,42 @@ def test_registered_mcp_payment_gate_stays_enabled_when_rest_is_free(
         assert "PAYMENT-REQUIRED" in response.headers
 
 
-def test_marketplace_mcp_price_defaults_to_registered_one_usdt(monkeypatch) -> None:
-    """A stale REST price cannot change the immutable marketplace service price."""
+def test_rest_and_mcp_share_registered_one_usdt_price(monkeypatch) -> None:
+    """A stale legacy price cannot split REST and marketplace quotes."""
 
     monkeypatch.setenv("PAYMENT_RECEIVER", "0x" + "1" * 40)
     monkeypatch.setenv("PAYMENT_PRICE_USDT", "0.5")
     monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
+    monkeypatch.delenv("DELTAZERO_PRICE_USDT", raising=False)
     monkeypatch.delenv("MCP_PAYMENT_PRICE_USDT", raising=False)
     for name in ("OKX_API_KEY", "OKX_SECRET_KEY", "OKX_PASSPHRASE"):
         monkeypatch.delenv(name, raising=False)
 
-    settings = load_mcp_payment_settings()
+    rest_settings = PaymentSettings.from_environment()
+    mcp_settings = load_mcp_payment_settings()
 
-    assert settings is not None
-    assert settings.price_usdt == "1"
+    assert rest_settings is not None
+    assert mcp_settings is not None
+    assert rest_settings.price_usdt == "1"
+    assert mcp_settings.price_usdt == "1"
+
+
+def test_explicit_canonical_price_is_shared_by_rest_and_mcp(monkeypatch) -> None:
+    monkeypatch.setenv("PAYMENT_RECEIVER", "0x" + "1" * 40)
+    monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
+    monkeypatch.setenv("DELTAZERO_PRICE_USDT", "1")
+    monkeypatch.setenv("PAYMENT_PRICE_USDT", "0.5")
+    monkeypatch.setenv("MCP_PAYMENT_PRICE_USDT", "0.25")
+    for name in ("OKX_API_KEY", "OKX_SECRET_KEY", "OKX_PASSPHRASE"):
+        monkeypatch.delenv(name, raising=False)
+
+    rest_settings = PaymentSettings.from_environment()
+    mcp_settings = load_mcp_payment_settings()
+
+    assert rest_settings is not None
+    assert mcp_settings is not None
+    assert rest_settings.price_usdt == "1"
+    assert mcp_settings.price_usdt == "1"
 
 
 def test_market_context_tool_is_payment_gated_on_registered_mcp_endpoint() -> None:

@@ -644,7 +644,9 @@ def test_paid_empty_mcp_replay_returns_default_deliverable(
 def test_payment_configuration_is_disabled_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     for key in (
         "PAYMENT_RECEIVER",
+        "DELTAZERO_PRICE_USDT",
         "PAYMENT_PRICE_USDT",
+        "MCP_PAYMENT_PRICE_USDT",
         "PAYMENT_NETWORK",
         "OKX_API_KEY",
         "OKX_SECRET_KEY",
@@ -662,6 +664,7 @@ def test_partial_payment_configuration_fails_closed(monkeypatch: pytest.MonkeyPa
         "0x1111111111111111111111111111111111111111",
     )
     monkeypatch.delenv("PAYMENT_PRICE_USDT", raising=False)
+    monkeypatch.delenv("DELTAZERO_PRICE_USDT", raising=False)
     monkeypatch.delenv("PAYMENT_NETWORK", raising=False)
 
     with pytest.raises(RuntimeError, match="Incomplete x402 payment configuration"):
@@ -675,7 +678,7 @@ def test_three_payment_variables_enable_challenge_only_mode(
         "PAYMENT_RECEIVER",
         "0x1111111111111111111111111111111111111111",
     )
-    monkeypatch.setenv("PAYMENT_PRICE_USDT", "0.01")
+    monkeypatch.setenv("DELTAZERO_PRICE_USDT", "0.01")
     monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
     for key in ("OKX_API_KEY", "OKX_SECRET_KEY", "OKX_PASSPHRASE"):
         monkeypatch.delenv(key, raising=False)
@@ -699,7 +702,7 @@ def test_challenge_only_mode_never_releases_protected_resource(
         "PAYMENT_RECEIVER",
         "0x1111111111111111111111111111111111111111",
     )
-    monkeypatch.setenv("PAYMENT_PRICE_USDT", "0.01")
+    monkeypatch.setenv("DELTAZERO_PRICE_USDT", "0.01")
     monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
     for key in ("OKX_API_KEY", "OKX_SECRET_KEY", "OKX_PASSPHRASE"):
         monkeypatch.delenv(key, raising=False)
@@ -733,7 +736,7 @@ def test_partial_facilitator_credentials_are_rejected(
         "PAYMENT_RECEIVER",
         "0x1111111111111111111111111111111111111111",
     )
-    monkeypatch.setenv("PAYMENT_PRICE_USDT", "0.01")
+    monkeypatch.setenv("DELTAZERO_PRICE_USDT", "0.01")
     monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
     monkeypatch.setenv("OKX_API_KEY", "key")
     monkeypatch.delenv("OKX_SECRET_KEY", raising=False)
@@ -752,11 +755,28 @@ def test_invalid_payment_price_is_rejected(
         "PAYMENT_RECEIVER",
         "0x1111111111111111111111111111111111111111",
     )
-    monkeypatch.setenv("PAYMENT_PRICE_USDT", price)
+    monkeypatch.setenv("DELTAZERO_PRICE_USDT", price)
     monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
     monkeypatch.setenv("OKX_API_KEY", "key")
     monkeypatch.setenv("OKX_SECRET_KEY", "secret")
     monkeypatch.setenv("OKX_PASSPHRASE", "passphrase")
 
-    with pytest.raises(RuntimeError, match="PAYMENT_PRICE_USDT"):
+    with pytest.raises(RuntimeError, match="DELTAZERO_PRICE_USDT"):
         PaymentSettings.from_environment()
+
+
+def test_legacy_rest_price_cannot_override_canonical_price(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(
+        "PAYMENT_RECEIVER",
+        "0x1111111111111111111111111111111111111111",
+    )
+    monkeypatch.setenv("PAYMENT_NETWORK", "eip155:196")
+    monkeypatch.setenv("PAYMENT_PRICE_USDT", "0.5")
+    monkeypatch.delenv("DELTAZERO_PRICE_USDT", raising=False)
+
+    settings = PaymentSettings.from_environment()
+
+    assert settings is not None
+    assert settings.price_usdt == "1"

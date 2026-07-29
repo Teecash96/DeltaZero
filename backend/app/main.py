@@ -11,6 +11,7 @@ from x402.server import x402ResourceServer
 
 from app.models.risk_engine import RiskEnginePassRequest, RiskEnginePassResponse
 from app.payments import (
+    canonical_payment_price,
     DeltaZeroPaymentMiddleware,
     PaymentSettings,
     create_payment_server,
@@ -152,7 +153,7 @@ def load_mcp_payment_settings() -> PaymentSettings | None:
     # This guarantees the MCPToolPaymentGate is always registered.
     return PaymentSettings(
         receiver="0x0000000000000000000000000000000000000001",
-        price_usdt="1",
+        price_usdt=canonical_payment_price(),
         network="eip155:196",
     )
 

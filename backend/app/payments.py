@@ -43,6 +43,7 @@ _CAIP2_EVM_NETWORK_RE = re.compile(r"^eip155:[1-9][0-9]*$")
 _ADMIN_HEADER = b"x-deltazero-admin-key"
 _PAYMENT_HEADERS = (b"payment-signature", b"x-payment")
 _DEFAULT_PUBLIC_API_BASE_URL = "https://deltazero-production.up.railway.app"
+_DEFAULT_PRICE_USDT = "1"
 
 # USDT0 token address on XLayer (eip155:196) — the registered settlement token
 # for all x402 payments.  Must appear in every accepts array so that OKX's
@@ -72,7 +73,8 @@ class PaymentSettings:
     def from_environment(cls) -> PaymentSettings | None:
         """Load payment settings, returning ``None`` for an unconfigured local app.
 
-        The three payment variables are sufficient for safe challenge-only mode.
+        Receiver and network plus the canonical price are sufficient for safe
+        challenge-only mode. The price defaults to 1 USDT when not overridden.
         Facilitator credentials are optional as a group; when absent, no paid
         request can reach business logic. A partially configured credential group
         is rejected.
@@ -80,15 +82,25 @@ class PaymentSettings:
 
         values = {
             "PAYMENT_RECEIVER": os.getenv("PAYMENT_RECEIVER", "").strip(),
-            "PAYMENT_PRICE_USDT": os.getenv("PAYMENT_PRICE_USDT", "").strip(),
             "PAYMENT_NETWORK": os.getenv("PAYMENT_NETWORK", "").strip(),
             "OKX_API_KEY": os.getenv("OKX_API_KEY", "").strip(),
             "OKX_SECRET_KEY": os.getenv("OKX_SECRET_KEY", "").strip(),
             "OKX_PASSPHRASE": os.getenv("OKX_PASSPHRASE", "").strip(),
         }
 
-        payment_keys = ("PAYMENT_RECEIVER", "PAYMENT_PRICE_USDT", "PAYMENT_NETWORK")
-        if not any(values[key] for key in payment_keys):
+        # DELTAZERO_PRICE_USDT is the only authoritative price for every paid
+        # surface. Legacy REST/MCP price variables are considered only when
+        # detecting an existing payment configuration; their values are never
+        # allowed to override the canonical quote.
+        configured_price_values = (
+            os.getenv("DELTAZERO_PRICE_USDT", "").strip(),
+            os.getenv("PAYMENT_PRICE_USDT", "").strip(),
+            os.getenv("MCP_PAYMENT_PRICE_USDT", "").strip(),
+        )
+        payment_keys = ("PAYMENT_RECEIVER", "PAYMENT_NETWORK")
+        if not any(values[key] for key in payment_keys) and not any(
+            configured_price_values
+        ):
             return None
 
         missing_payment = [key for key in payment_keys if not values[key]]
@@ -115,7 +127,7 @@ class PaymentSettings:
         if not _CAIP2_EVM_NETWORK_RE.fullmatch(network):
             raise RuntimeError("PAYMENT_NETWORK must use CAIP-2 EVM format, such as eip155:196")
 
-        price = _normalize_price(values["PAYMENT_PRICE_USDT"])
+        price = canonical_payment_price()
         base_url = os.getenv("OKX_BASE_URL", "https://web3.okx.com").strip()
         if not base_url.startswith("https://"):
             raise RuntimeError("OKX_BASE_URL must be an HTTPS URL")
@@ -153,20 +165,32 @@ class PaymentSettings:
         return bool(self.okx_api_key and self.okx_secret_key and self.okx_passphrase)
 
 
-def _normalize_price(value: str) -> str:
+def _normalize_price(
+    value: str,
+    variable_name: str = "DELTAZERO_PRICE_USDT",
+) -> str:
     """Validate a positive USDT amount with at most six decimal places."""
 
     try:
         price = Decimal(value)
     except InvalidOperation as exc:
-        raise RuntimeError("PAYMENT_PRICE_USDT must be a positive decimal amount") from exc
+        raise RuntimeError(
+            f"{variable_name} must be a positive decimal amount"
+        ) from exc
 
     if not price.is_finite() or price <= 0:
-        raise RuntimeError("PAYMENT_PRICE_USDT must be greater than zero")
+        raise RuntimeError(f"{variable_name} must be greater than zero")
     if price.as_tuple().exponent < -6:
-        raise RuntimeError("PAYMENT_PRICE_USDT supports at most six decimal places")
+        raise RuntimeError(f"{variable_name} supports at most six decimal places")
 
     return format(price.normalize(), "f")
+
+
+def canonical_payment_price() -> str:
+    """Return the single price used by REST and MCP payment challenges."""
+
+    raw_price = os.getenv("DELTAZERO_PRICE_USDT", _DEFAULT_PRICE_USDT).strip()
+    return _normalize_price(raw_price or _DEFAULT_PRICE_USDT)
 
 
 def _positive_int_environment(name: str, default: int) -> int:
@@ -181,15 +205,9 @@ def _positive_int_environment(name: str, default: int) -> int:
 
 
 def marketplace_payment_settings(settings: PaymentSettings) -> PaymentSettings:
-    """Pin MCP pricing to the immutable OKX marketplace service price.
+    """Apply the canonical DeltaZero price to the marketplace endpoint."""
 
-    REST pricing can be changed independently for previews, but service 33993
-    is already in use and remains registered at 1 USDT. Keeping a dedicated
-    setting prevents a stale REST environment variable from breaking the
-    marketplace payment/replay contract.
-    """
-
-    price = _normalize_price(os.getenv("MCP_PAYMENT_PRICE_USDT", "1").strip() or "1")
+    price = canonical_payment_price()
     return replace(settings, price_usdt=price)
 
 

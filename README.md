@@ -549,7 +549,7 @@ request returns `HTTP 402 Payment Required` with a base64-encoded
 identifies the network, stablecoin contract, atomic amount, receiver, and
 supported payment schemes.
 
-The REST per-call price is configured with `PAYMENT_PRICE_USDT`. The registered OKX.AI MCP service is fixed at **1 USDT per call** and uses `MCP_PAYMENT_PRICE_USDT` (default `1`) so a stale REST setting cannot change its marketplace contract. The primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
+Every paid DeltaZero surface uses one canonical price: `DELTAZERO_PRICE_USDT` (default **1 USDT**). The same value drives the website REST payment challenges and the registered OKX.AI MCP service, so legacy `PAYMENT_PRICE_USDT` or `MCP_PAYMENT_PRICE_USDT` values cannot create conflicting quotes. The primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
 
 ### Agent-native payment
 
@@ -722,8 +722,7 @@ To restore paid mode later, set `DELTAZERO_ACCESS_MODE="paid"` and configure the
 
 ```bash
 export PAYMENT_RECEIVER="0xYourReceivingAddress"
-export PAYMENT_PRICE_USDT="1"
-export MCP_PAYMENT_PRICE_USDT="1"
+export DELTAZERO_PRICE_USDT="1"
 export PAYMENT_NETWORK="eip155:196"
 export PUBLIC_API_BASE_URL="https://deltazero-production.up.railway.app"
 export PAYMENT_REPLAY_DB_PATH="/data/deltazero-payment-replays.sqlite3"
