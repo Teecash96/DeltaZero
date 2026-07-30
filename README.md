@@ -849,6 +849,7 @@ The TypeScript SDK is published to [npm](https://www.npmjs.com/package/deltazero
 Planned integrations:
 
 - **Pendle** — fixed-yield, PT, YT, and maturity-risk analysis.
+- **Kimia** — Solana perp funding rate tokenization and delta-neutral vault analysis.
 - **Ethena** — synthetic-dollar and hedged-yield strategy analysis.
 - **Continuous Funding Monitoring** — persistent alerts and multi-venue funding inputs beyond the current on-demand Hyperliquid snapshot.
 

@@ -136,7 +136,7 @@ const strategyPlatforms = [
   {
     title: "Neutral Yield Carry",
     use: "Hold or earn yield on the long leg while shorting perpetual futures to reduce directional exposure.",
-    platforms: "Hyperliquid, OKX, Drift, GMX, Aave, Morpho, Kamino",
+    platforms: "Hyperliquid, OKX, Drift, GMX, Aave, Morpho, Kamino, Kimia",
   },
   {
     title: "Conservative Income",
@@ -146,7 +146,7 @@ const strategyPlatforms = [
   {
     title: "Aggressive Carry",
     use: "Higher capital deployment, higher expected carry, wider risk tolerance, smaller collateral reserve.",
-    platforms: "Hyperliquid, OKX, Drift, GMX, Ethena",
+    platforms: "Hyperliquid, OKX, Drift, GMX, Ethena, Kimia",
   },
   {
     title: "Capital Preservation",
