@@ -119,12 +119,16 @@ const liveIntegrations = [
     badge: "LIVE",
     useCase: "Read-only market and vault positions through Morpho’s supported public data API.",
   },
+  {
+    name: "Live Funding Rates",
+    badge: "LIVE",
+    useCase: "Real-time Hyperliquid funding rate data with historical lookback across supported venues.",
+  },
 ];
 
 const plannedIntegrations = [
   { name: "Pendle", badge: "PLANNED", useCase: "Fixed-yield, PT, YT, and maturity-risk analysis." },
   { name: "Ethena", badge: "PLANNED", useCase: "Synthetic-dollar and hedged-yield strategy analysis." },
-  { name: "Live Funding Rates", badge: "PLANNED", useCase: "Continuous real-time funding inputs from supported venues." },
   {
     name: "Additional Wallet and Protocol Coverage",
     badge: "PLANNED",
@@ -442,13 +446,13 @@ export default function Home() {
         <div className="integration-group">
           <div className="integration-group-head">
             <p className="kicker">Hedge Intelligence</p>
-            <span>Pro preview</span>
+            <span>Live</span>
           </div>
           <div className="integration-single">
             <article className="integration-card">
               <div className="integration-head">
                 <h3>Hedge Intelligence</h3>
-                <span>PRO PREVIEW</span>
+                <span>LIVE</span>
               </div>
               <p>Read-only wallet position discovery and portfolio risk assessment across supported integrations.</p>
             </article>
