@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from collections import OrderedDict
 from threading import Lock
 from time import time
 
@@ -15,10 +16,11 @@ TIMEOUT_SECONDS = 8.0
 MARKET_CACHE_TTL = 30.0
 HISTORY_CACHE_TTL = 300.0
 FAILURE_CACHE_TTL = 10.0
+MARKET_CACHE_MAX_ENTRIES = 256
 FUNDING_PERIODS_PER_YEAR = 24 * 365
 
 _client = httpx.Client(timeout=TIMEOUT_SECONDS)
-_cache: dict[str, tuple[float, object, bool]] = {}
+_cache: OrderedDict[str, tuple[float, object, bool]] = OrderedDict()
 _lock = Lock()
 
 
@@ -55,6 +57,7 @@ def _cached(key: str, ttl: float, loader):
     with _lock:
         item = _cache.get(key)
         if item and now - item[0] < (FAILURE_CACHE_TTL if item[2] else ttl):
+            _cache.move_to_end(key)
             if item[2]:
                 raise MarketDataError(str(item[1]))
             return item[1]
@@ -63,11 +66,17 @@ def _cached(key: str, ttl: float, loader):
     except Exception as exc:
         with _lock:
             _cache[key] = (now, f"{exc.__class__.__name__}: market data unavailable", True)
+            _cache.move_to_end(key)
+            while len(_cache) > MARKET_CACHE_MAX_ENTRIES:
+                _cache.popitem(last=False)
         if isinstance(exc, MarketDataError):
             raise
         raise MarketDataError("Hyperliquid market data unavailable") from exc
     with _lock:
         _cache[key] = (now, value, False)
+        _cache.move_to_end(key)
+        while len(_cache) > MARKET_CACHE_MAX_ENTRIES:
+            _cache.popitem(last=False)
     return value
 
 

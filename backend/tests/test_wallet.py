@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+from app.main import create_app
 from app.integrations.base import ProtocolSnapshot
 from app.models.wallet import NormalizedPosition
 from app.services.position_normalizer import (
@@ -103,6 +104,38 @@ def test_valid_wallet_request_returns_200(client: TestClient, monkeypatch: pytes
     assert data["assessment_status"] == "positions_found"
     assert data["supported_positions_found"] == 2
     assert 0 <= data["recommendation"]["confidence"] <= 100
+
+
+def test_wallet_rate_limit_is_keyed_by_caller_not_wallet_address(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(wallet_analyzer, "_select_adapters", lambda networks, protocols: [])
+    client = TestClient(create_app(payment_settings=None))
+
+    for index in range(wallet_analyzer.WALLET_RATE_LIMIT_PER_MINUTE):
+        response = client.post(
+            "/wallet/analyze",
+            json={
+                "wallet_address": f"0x{index + 1:040x}",
+                "networks": ["hyperliquid"],
+                "protocols": ["hyperliquid"],
+                "stress_profile": "standard",
+            },
+        )
+        assert response.status_code == 200
+
+    response = client.post(
+        "/wallet/analyze",
+        json={
+            "wallet_address": "0x" + "f" * 40,
+            "networks": ["hyperliquid"],
+            "protocols": ["hyperliquid"],
+            "stress_profile": "standard",
+        },
+    )
+
+    assert response.status_code == 429
+    assert len(wallet_analyzer.WALLET_REQUEST_LOG) == 1
 
 
 def test_invalid_address_is_rejected(client: TestClient) -> None:

@@ -68,6 +68,18 @@ def test_market_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     assert calls == 2  # one context and one history request, then both cached
 
 
+def test_market_cache_has_a_global_capacity_limit() -> None:
+    for index in range(market_data.MARKET_CACHE_MAX_ENTRIES + 20):
+        market_data._cached(
+            f"attacker:{index}",
+            ttl=300,
+            loader=lambda index=index: {"index": index},
+        )
+
+    assert len(market_data._cache) == market_data.MARKET_CACHE_MAX_ENTRIES
+    assert "attacker:0" not in market_data._cache
+
+
 def market(funding: float) -> HyperliquidMarketResponse:
     return HyperliquidMarketResponse(
         asset="ETH", market="ETH-PERP", mark_price_usd=2000, oracle_price_usd=2000,

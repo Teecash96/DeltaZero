@@ -37,6 +37,8 @@ from x402.mechanisms.evm.exact.server import ExactEvmScheme
 from x402.server import x402ResourceServer
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 
+from app.request_limits import RequestBodyLimitError, read_bounded_body
+
 
 _EVM_ADDRESS_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 _CAIP2_EVM_NETWORK_RE = re.compile(r"^eip155:[1-9][0-9]*$")
@@ -525,7 +527,11 @@ class DeltaZeroPaymentMiddleware:
             await self.payment_app(scope, receive, challenge_send)
             return
 
-        body, replay_receive = await self._buffer_request(receive)
+        try:
+            body, replay_receive = await self._buffer_request(receive, scope)
+        except RequestBodyLimitError as exc:
+            await _send_json_error(send, 413, str(exc))
+            return
         replay_key = self._replay_key(scope, body, proof)
         lock = self._replay_locks.setdefault(replay_key, asyncio.Lock())
         async with lock:
@@ -678,16 +684,11 @@ class DeltaZeroPaymentMiddleware:
         return uuid.uuid4().hex
 
     @staticmethod
-    async def _buffer_request(receive: Any) -> tuple[bytes, Any]:
-        chunks: list[bytes] = []
-        while True:
-            message = await receive()
-            if message.get("type") != "http.request":
-                continue
-            chunks.append(message.get("body", b""))
-            if not message.get("more_body", False):
-                break
-        body = b"".join(chunks)
+    async def _buffer_request(
+        receive: Any,
+        scope: dict[str, Any],
+    ) -> tuple[bytes, Any]:
+        body = await read_bounded_body(receive, scope=scope)
         sent = False
 
         async def replay_receive() -> dict[str, Any]:
@@ -770,3 +771,18 @@ class DeltaZeroPaymentMiddleware:
             str(settlement_receipt).lower(),
             settlement_transaction or "none",
         )
+
+
+async def _send_json_error(send: Any, status: int, message: str) -> None:
+    body = json.dumps({"error": message}).encode("utf-8")
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode("ascii")),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body})

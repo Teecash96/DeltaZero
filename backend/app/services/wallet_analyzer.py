@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
+from collections import OrderedDict, defaultdict, deque
 import os
 from threading import Lock
 from time import time
@@ -42,9 +42,35 @@ from app.services.wallet_report import build_wallet_intelligence_report
 
 WALLET_CACHE_TTL_SECONDS = 120.0
 WALLET_RATE_LIMIT_PER_MINUTE = 6
-WALLET_REQUEST_CACHE: dict[str, tuple[float, WalletPortfolioResponse]] = {}
-WALLET_REQUEST_LOG: dict[str, deque[float]] = defaultdict(deque)
+WALLET_CACHE_MAX_ENTRIES = 512
+WALLET_RATE_KEY_MAX_ENTRIES = 2048
+WALLET_REQUEST_CACHE: OrderedDict[str, tuple[float, WalletPortfolioResponse]] = OrderedDict()
+WALLET_REQUEST_LOG: OrderedDict[str, deque[float]] = OrderedDict()
 WALLET_LOCK = Lock()
+
+
+def _rate_history(caller_id: str) -> deque[float]:
+    history = WALLET_REQUEST_LOG.get(caller_id)
+    if history is not None:
+        WALLET_REQUEST_LOG.move_to_end(caller_id)
+        return history
+    while len(WALLET_REQUEST_LOG) >= WALLET_RATE_KEY_MAX_ENTRIES:
+        WALLET_REQUEST_LOG.popitem(last=False)
+    history = deque()
+    WALLET_REQUEST_LOG[caller_id] = history
+    return history
+
+
+def _store_wallet_result(
+    cache_key: str,
+    result: WalletPortfolioResponse,
+) -> None:
+    WALLET_REQUEST_CACHE[cache_key] = (time(), result)
+    WALLET_REQUEST_CACHE.move_to_end(cache_key)
+    while len(WALLET_REQUEST_CACHE) > WALLET_CACHE_MAX_ENTRIES:
+        WALLET_REQUEST_CACHE.popitem(last=False)
+
+
 def _cache_key(request: WalletAnalyzeRequest) -> str:
     return "|".join(
         [
@@ -368,15 +394,21 @@ def _build_synthetic_metrics(summary: WalletPortfolioSummary, risk_metrics: Wall
     )
 
 
-def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
+def analyze_wallet(
+    request: WalletAnalyzeRequest,
+    *,
+    caller_id: str | None = None,
+) -> WalletPortfolioResponse:
     """Analyze public wallet positions across supported protocols."""
     cache_key = _cache_key(request)
+    rate_key = (caller_id or "internal").strip() or "internal"
     now = time()
     with WALLET_LOCK:
         cached = WALLET_REQUEST_CACHE.get(cache_key)
         if cached and now - cached[0] < WALLET_CACHE_TTL_SECONDS:
+            WALLET_REQUEST_CACHE.move_to_end(cache_key)
             return cached[1]
-        request_history = WALLET_REQUEST_LOG[request.wallet_address.lower()]
+        request_history = _rate_history(rate_key)
         while request_history and now - request_history[0] > 60.0:
             request_history.popleft()
         if len(request_history) >= WALLET_RATE_LIMIT_PER_MINUTE:
@@ -755,5 +787,5 @@ def analyze_wallet(request: WalletAnalyzeRequest) -> WalletPortfolioResponse:
     )
 
     with WALLET_LOCK:
-        WALLET_REQUEST_CACHE[cache_key] = (time(), result)
+        _store_wallet_result(cache_key, result)
     return result

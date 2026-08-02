@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app, load_mcp_payment_settings
 from app.payments import PaymentSettings
+from app.mcp_server import MAX_MCP_BATCH_ITEMS
+from app.request_limits import MAX_REQUEST_BODY_BYTES
 
 
 HEADERS = {
@@ -89,6 +91,32 @@ def test_unpaid_json_only_mcp_client_receives_402_not_406() -> None:
     assert response.status_code == 402
     assert response.headers["content-type"].startswith("application/json")
     assert "PAYMENT-REQUIRED" in response.headers
+
+
+def test_oversized_mcp_body_is_rejected_before_payment_processing() -> None:
+    with TestClient(create_app(payment_settings=SETTINGS)) as client:
+        response = client.post(
+            "/mcp",
+            headers=JSON_ONLY_HEADERS,
+            content=b"x" * (MAX_REQUEST_BODY_BYTES + 1),
+        )
+
+    assert response.status_code == 413
+    assert "PAYMENT-REQUIRED" not in response.headers
+    assert "byte limit" in response.json()["error"]
+
+
+def test_mcp_batch_limit_applies_to_free_json_handler() -> None:
+    batch = [_message("ping", message_id=index) for index in range(MAX_MCP_BATCH_ITEMS + 1)]
+    with TestClient(create_app()) as client:
+        response = client.post(
+            "/mcp",
+            headers={"Accept": "*/*", "Content-Type": "application/json"},
+            json=batch,
+        )
+
+    assert response.status_code == 413
+    assert response.json()["error"].startswith("MCP batch exceeds")
 
 
 def test_free_mcp_accepts_generic_accept_header_and_returns_jsonrpc() -> None:

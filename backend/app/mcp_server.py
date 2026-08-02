@@ -20,6 +20,7 @@ from app.payments import (
     create_payment_server,
     mcp_paid_routes,
 )
+from app.request_limits import RequestBodyLimitError, read_bounded_body
 from app.services.auditor import audit_strategy
 from app.services.builder import build_strategy
 from app.services.market_data import get_hyperliquid_market
@@ -31,6 +32,7 @@ from app.services.stress_test import stress_test_strategy
 
 _JSONRPC_VERSION = "2.0"
 _JSON_CONTENT_TYPE = b"application/json"
+MAX_MCP_BATCH_ITEMS = 8
 
 
 PREMIUM_MCP_TOOLS = frozenset(
@@ -293,7 +295,10 @@ class PaidMCPHandler:
         if scope.get("type") != "http":
             return
 
-        body = await _read_body(receive)
+        try:
+            body = await _read_body(receive, scope)
+        except RequestBodyLimitError as exc:
+            return await _send_json_response(send, 413, {"error": str(exc)})
         if not body:
             # OKX task payments may replay the paid request without a business
             # body when the task itself carries the service description.  A
@@ -343,6 +348,12 @@ class PaidMCPHandler:
         messages = payload if isinstance(payload, list) else [payload]
         if not messages:
             return await _send_json_response(send, 400, {"error": "Empty request array"})
+        if len(messages) > MAX_MCP_BATCH_ITEMS:
+            return await _send_json_response(
+                send,
+                413,
+                {"error": f"MCP batch exceeds the {MAX_MCP_BATCH_ITEMS} item limit"},
+            )
 
         results: list[dict[str, Any]] = []
         for msg in messages:
@@ -439,16 +450,8 @@ class FreeMCPJSONHandler:
 
 # ─── Helpers ─────────────────────────────────────────────────────────────
 
-async def _read_body(receive: Receive) -> bytes:
-    chunks: list[bytes] = []
-    more_body = True
-    while more_body:
-        msg = await receive()
-        if msg["type"] != "http.request":
-            continue
-        chunks.append(msg.get("body", b""))
-        more_body = msg.get("more_body", False)
-    return b"".join(chunks)
+async def _read_body(receive: Receive, scope: Scope) -> bytes:
+    return await read_bounded_body(receive, scope=scope)
 
 
 def _jsonrpc_error(req_id: Any, code: int, message: str) -> dict[str, Any]:
@@ -526,7 +529,11 @@ class MCPToolPaymentGate:
             await self.app(compatible_scope, receive, send)
             return
 
-        _body, replay_receive = await self._buffer_request(receive)
+        try:
+            _body, replay_receive = await self._buffer_request(receive, compatible_scope)
+        except RequestBodyLimitError as exc:
+            await _send_json_response(send, 413, {"error": str(exc)})
+            return
         # One validator-friendly contract: every unpaid marketplace request
         # returns 402; every verified replay reaches the JSON-RPC handler.
         await self.payment_app(compatible_scope, replay_receive, send)
@@ -567,16 +574,11 @@ class MCPToolPaymentGate:
         return compatible_scope
 
     @staticmethod
-    async def _buffer_request(receive: Receive) -> tuple[bytes, Receive]:
-        chunks: list[bytes] = []
-        more_body = True
-        while more_body:
-            message = await receive()
-            if message["type"] != "http.request":
-                continue
-            chunks.append(message.get("body", b""))
-            more_body = message.get("more_body", False)
-        body = b"".join(chunks)
+    async def _buffer_request(
+        receive: Receive,
+        scope: Scope,
+    ) -> tuple[bytes, Receive]:
+        body = await read_bounded_body(receive, scope=scope)
         sent = False
 
         async def replay() -> Message:

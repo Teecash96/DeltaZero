@@ -23,6 +23,7 @@ from x402.server import x402ResourceServer
 
 from app.main import create_app, load_runtime_payment_settings
 from app.payments import PaymentSettings, create_payment_server, paid_routes
+from app.request_limits import MAX_REQUEST_BODY_BYTES
 
 
 BUILD_PAYLOAD = {
@@ -224,6 +225,24 @@ def test_required_public_routes_remain_free(
 
     assert response.status_code == 200
     assert "PAYMENT-REQUIRED" not in response.headers
+    assert facilitator.verify_calls == 0
+    assert facilitator.settle_calls == 0
+
+
+def test_oversized_payment_proof_body_is_rejected_before_replay(
+    paid_client: tuple[TestClient, FakeFacilitator],
+) -> None:
+    client, facilitator = paid_client
+
+    response = client.post(
+        "/strategy/build",
+        headers={"Payment-Signature": "not-a-real-payment"},
+        content=b"x" * (MAX_REQUEST_BODY_BYTES + 1),
+    )
+
+    assert response.status_code == 413
+    assert "PAYMENT-REQUIRED" not in response.headers
+    assert "byte limit" in response.json()["error"]
     assert facilitator.verify_calls == 0
     assert facilitator.settle_calls == 0
 
