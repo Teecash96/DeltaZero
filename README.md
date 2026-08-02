@@ -851,6 +851,8 @@ Planned integrations:
 - **Pendle** — fixed-yield, PT, YT, and maturity-risk analysis.
 - **Kimia** — Solana perp funding rate tokenization and delta-neutral vault analysis.
 - **Ethena** — synthetic-dollar and hedged-yield strategy analysis.
+- **ChatGPT MCP app** — a planned remote MCP connection for supported ChatGPT workspaces through a separate read-only client access path.
+- **Claude MCP connector** — a planned remote MCP connection for Claude.ai, Claude Code, and Claude Desktop through a separate read-only client access path.
 - **Continuous Funding Monitoring** — persistent alerts and multi-venue funding inputs beyond the current on-demand Hyperliquid snapshot.
 
 Additional planned product capabilities include broader read-only network and protocol coverage, multi-wallet monitoring, continuous risk alerts, funding alerts, Safety Buffer alerts, saved reports, and expanded ASP API access.

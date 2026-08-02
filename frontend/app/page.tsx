@@ -130,6 +130,16 @@ const plannedIntegrations = [
   { name: "Pendle", badge: "PLANNED", useCase: "Fixed-yield, PT, YT, and maturity-risk analysis." },
   { name: "Ethena", badge: "PLANNED", useCase: "Synthetic-dollar and hedged-yield strategy analysis." },
   {
+    name: "ChatGPT MCP app",
+    badge: "PLANNED",
+    useCase: "Remote MCP access for supported ChatGPT workspaces through a separate read-only client path.",
+  },
+  {
+    name: "Claude MCP connector",
+    badge: "PLANNED",
+    useCase: "Remote MCP access for Claude.ai, Claude Code, and Claude Desktop through a separate read-only client path.",
+  },
+  {
     name: "Additional Wallet and Protocol Coverage",
     badge: "PLANNED",
     useCase: "More networks, assets, protocols, LP positions, and portfolio adapters.",
