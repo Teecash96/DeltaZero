@@ -1130,7 +1130,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .payment-required-card,
 [data-theme="light"] .payment-trust-panel,
 [data-theme="light"] .mc-panel,
-[data-theme="light"] .wallet-report-section { border-color: #d3ded5; background: rgba(255,255,255,.86); box-shadow: 0 18px 50px rgba(42,63,48,.08), inset 0 1px rgba(255,255,255,.8); }
+[data-theme="light"] .wallet-report-section,
+[data-theme="light"] .provenance-methodology { border-color: #d3ded5; background: rgba(255,255,255,.86); box-shadow: 0 18px 50px rgba(42,63,48,.08), inset 0 1px rgba(255,255,255,.8); }
 [data-theme="light"] .glass-card-interactive:hover,
 [data-theme="light"] .tool-card:hover { border-color: #a8baa9; background: #fff; }
 
@@ -1205,6 +1206,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* Light-mode contrast pass. Nested report surfaces previously inherited
    dark-theme literals; these rules restore a consistent paper hierarchy. */
 [data-theme="light"] .panel-title,
+[data-theme="light"] .provenance-methodology summary b,
 [data-theme="light"] .form-section h2,
 [data-theme="light"] .field label,
 [data-theme="light"] .summary-grid strong,
@@ -1245,6 +1247,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .trust-grid h3 { color: #17231b; }
 
 [data-theme="light"] .panel-copy,
+[data-theme="light"] .provenance-methodology summary small,
+[data-theme="light"] .provenance-evidence-grid ul,
+[data-theme="light"] .provenance-panel > p,
 [data-theme="light"] .field small,
 [data-theme="light"] .form-note,
 [data-theme="light"] .empty-state p,
@@ -1489,12 +1494,25 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .provenance-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .provenance-heading .panel-title { margin-top: 7px; }
 .provenance-heading > a { color: var(--accent); font-size: 11px; }
-.provenance-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 20px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.provenance-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 20px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .provenance-grid article { min-height: 90px; padding: 15px; border-right: 1px solid var(--border); }
 .provenance-grid article:last-child { border-right: 0; }
 .provenance-grid span, .provenance-grid strong { display: block; }
 .provenance-grid span { color: var(--muted); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
 .provenance-grid strong { margin-top: 12px; color: var(--text); font: 11px var(--font-mono), monospace; line-height: 1.5; overflow-wrap: anywhere; text-transform: capitalize; }
+.provenance-methodology { margin-top: 16px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
+.provenance-methodology summary { min-height: 58px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--text); cursor: pointer; list-style: none; }
+.provenance-methodology summary::-webkit-details-marker { display: none; }
+.provenance-methodology summary > span { display: grid; gap: 5px; }
+.provenance-methodology summary b { font-size: 12px; }
+.provenance-methodology summary small { color: var(--muted); font: 10px var(--font-mono), monospace; }
+.provenance-methodology summary i { color: var(--accent); font-style: normal; font-size: 18px; transition: transform .2s ease; }
+.provenance-methodology[open] summary i { transform: rotate(180deg); }
+.provenance-evidence-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; padding: 0 1px 1px; background: var(--border); }
+.provenance-evidence-grid article { min-width: 0; min-height: 168px; padding: 16px; background: var(--panel); }
+.provenance-evidence-grid article > span { display: block; color: var(--accent); font: 700 9px var(--font-mono), monospace; letter-spacing: .1em; text-transform: uppercase; }
+.provenance-evidence-grid ul { margin: 12px 0 0; padding-left: 17px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.provenance-evidence-grid li { margin: 0 0 7px; overflow-wrap: anywhere; }
 .provenance-panel > p { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 
 /* ─── Why DeltaZero floating action button ──────────────────────────────── */
@@ -1612,6 +1630,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .support-grid { grid-template-columns: 1fr; }
   .support-grid article { min-height: 230px; }
   .provenance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .provenance-evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .provenance-grid article:nth-child(2) { border-right: 0; }
   .provenance-grid article:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
 }
@@ -1628,7 +1647,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .risk-engine-grid .tool-card > .risk-engine-action { width: 100%; white-space: normal; }
   .risk-engine-boundary .button { width: 100%; }
   .risk-engine-boundary-actions { width: 100%; flex-direction: column; }
-  .methodology-principles, .formula-grid, .provenance-grid, .model-card-grid, .validation-grid { grid-template-columns: 1fr; }
+  .methodology-principles, .formula-grid, .provenance-grid, .provenance-evidence-grid, .model-card-grid, .validation-grid { grid-template-columns: 1fr; }
   .methodology-principles article, .formula-grid article { min-height: 0; }
   .source-list article { grid-template-columns: 1fr; gap: 7px; }
   .methodology-actions { align-items: stretch; flex-direction: column; }

@@ -10,6 +10,7 @@ import { AnalysisConfidence, DeltaZeroVerdict, PaymentRequiredCard, recommendati
 import { RiskZonePanel } from "@/components/risk-zone-panel";
 import { AnalysisProvenance } from "@/components/analysis-provenance";
 import { StressTestLiquidationVisualizer } from "@/components/risk-visualizers";
+import { builderPolicy, COMMON_LIMITATIONS, CORE_FORMULAS, decisionPolicy, policyLines, STRESS_FORMULAS } from "@/lib/methodology";
 import type {
   AuditRequest,
   AuditResponse,
@@ -811,6 +812,21 @@ function Result({
   const stress = result as StressTestResponse;
   const displayedMetrics = mode === "stress-test" ? stress.scenario_result.stressed_metrics : result.metrics;
   const [monteCarloPreview, setMonteCarloPreview] = useState<MonteCarloResultHandoff | null>(null);
+  const policy = mode === "builder"
+    ? builderPolicy(request.risk_tolerance, (request as BuildRequest).target_style)
+    : decisionPolicy(request.risk_tolerance);
+  const provenanceAssumptions = mode === "stress-test"
+    ? [
+      `Deterministic scenario: ${(request as StressTestRequest).scenario.type.replaceAll("_", " ")} at ${(request as StressTestRequest).scenario.magnitude_pct}%.`,
+      "Scenario defaults are applied only when an optional scenario component is not submitted.",
+      "No Monte Carlo simulation or future price forecast is used in this report.",
+      `Impairment components are shown in the report: ${stress.impairment_breakdown ? Object.keys(stress.impairment_breakdown).length : 0} components evaluated.`,
+    ]
+    : [
+      "No simulation was used. This report is a deterministic calculation from the submitted position and carry assumptions.",
+      mode === "builder" && build.market_data_source === "hyperliquid" ? "Funding context was read from the timestamped Hyperliquid snapshot shown above." : "No live market source was used; assumptions are user supplied.",
+    ];
+  const provenanceFormulas = mode === "stress-test" ? [...CORE_FORMULAS, ...STRESS_FORMULAS] : CORE_FORMULAS;
 
   useEffect(() => {
     if (mode !== "builder") return;
@@ -877,11 +893,16 @@ function Result({
         expected_impairment_loss_pct: mode === "stress-test" ? (result as StressTestResponse).estimated_impairment_loss_pct : undefined,
       }} />
       <AnalysisProvenance
-        source={mode === "builder" && build.market_data_source === "hyperliquid" ? "Hyperliquid public market data" : "User-supplied strategy assumptions"}
+        source={mode === "builder" && build.market_data_source === "hyperliquid" ? "Hyperliquid public market data" : mode === "auditor" ? "User-submitted hedge position" : "User-supplied strategy assumptions"}
         sourceTimestamp={mode === "builder" ? build.market_data_timestamp : null}
         generatedAt={result.generated_at}
+        freshness={mode === "builder" && build.market_data_source === "hyperliquid" ? "Live snapshot timestamped by provider" : "Not applicable to user supplied inputs"}
         quality={mode === "builder" ? build.market_data_quality ?? "manual inputs" : "validated inputs"}
-        note={mode === "stress-test" ? "Stress results use the submitted scenario and deterministic impairment model; no live price forecast is applied." : "Financial outputs are computed by DeltaZero's deterministic engine."}
+        formulas={provenanceFormulas}
+        thresholds={policyLines(policy)}
+        assumptions={provenanceAssumptions}
+        limitations={COMMON_LIMITATIONS}
+        note={mode === "stress-test" ? "Stress results use the submitted scenario and deterministic impairment model. No illustrative homepage values are used." : "This evidence trail is generated from the current response only. Homepage reference visuals are never used in real reports."}
       />
       {mode === "stress-test" ? <StressTestLiquidationVisualizer result={stress} /> : null}
       <DecisionPanel result={result} request={request} mode={mode} />

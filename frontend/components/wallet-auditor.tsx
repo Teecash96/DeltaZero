@@ -7,6 +7,7 @@ import { RiskZonePanel } from "@/components/risk-zone-panel";
 import { AnalysisProvenance } from "@/components/analysis-provenance";
 import { analyzeWallet, PaymentRequiredError, type X402Challenge } from "@/lib/api";
 import { MONTE_CARLO_HANDOFF_KEY, type MonteCarloHandoff, writeWalletHandoff } from "@/lib/handoff";
+import { COMMON_LIMITATIONS, CORE_FORMULAS, policyLines, walletPolicy } from "@/lib/methodology";
 import type {
   NormalizedPosition,
   WalletAnalyzeRequest,
@@ -472,7 +473,7 @@ function ProtocolWarnings({ result }: { result: WalletPortfolioResponse }) {
   );
 }
 
-function InstitutionalReport({ result, protocols }: { result: WalletPortfolioResponse; protocols: WalletProtocol[] }) {
+function InstitutionalReport({ result, protocols, stressProfile, reportGeneratedAt }: { result: WalletPortfolioResponse; protocols: WalletProtocol[]; stressProfile: WalletStressProfile; reportGeneratedAt: string | null }) {
   function buildHedgeRecommendation() {
     const exposure = result.exposure_analysis;
     if (!exposure || !result.recommendation) return;
@@ -524,9 +525,18 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
       <AnalysisProvenance
         source={protocols.length ? protocols.join(", ") : "Supported public protocol sources"}
         sourceTimestamp={result.data_timestamp}
-        generatedAt={result.data_timestamp}
+        generatedAt={reportGeneratedAt}
+        freshness={result.data_timestamp ? "Provider snapshot timestamp returned; report time captured by client" : "Provider timestamp unavailable; report time captured by client"}
         quality={result.data_quality}
-        note="Coverage includes only supported positions returned by the selected read-only integrations."
+        formulas={CORE_FORMULAS}
+        thresholds={policyLines(walletPolicy(stressProfile))}
+        assumptions={[
+          `Read-only coverage is limited to the selected protocols: ${protocols.join(", ") || "none"}.`,
+          `Stress profile: ${stressProfile}. No execution, wallet signature, or price forecast is used.`,
+          `Positions with unavailable values remain unavailable; DeltaZero does not fill missing exposure with illustrative values.`,
+        ]}
+        limitations={[...COMMON_LIMITATIONS, "Wallet coverage is limited to supported adapters and the provider data returned at the snapshot time."]}
+        note="Coverage includes only supported positions returned by the selected read-only integrations. No homepage illustrative values are used in this report."
       />
       <ExecutiveSummary result={result} />
       <PortfolioSummaryStrip result={result} protocols={protocols} />
@@ -564,6 +574,7 @@ function InstitutionalReport({ result, protocols }: { result: WalletPortfolioRes
 export function WalletPortfolioWorkspace() {
   const [value, setValue] = useState<WalletAnalyzeRequest>(() => structuredClone(DEFAULT_REQUEST));
   const [result, setResult] = useState<WalletPortfolioResponse | null>(null);
+  const [reportGeneratedAt, setReportGeneratedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [paymentChallenge, setPaymentChallenge] = useState<X402Challenge | null | undefined>(undefined);
   const [loading, setLoading] = useState(false);
@@ -588,7 +599,9 @@ export function WalletPortfolioWorkspace() {
     setError(null);
     setPaymentChallenge(undefined);
     try {
-      setResult(await analyzeWallet(value));
+      const response = await analyzeWallet(value);
+      setReportGeneratedAt(new Date().toISOString());
+      setResult(response);
     } catch (caught) {
       setResult(null);
       if (caught instanceof PaymentRequiredError) setPaymentChallenge(caught.challenge);
@@ -613,7 +626,7 @@ export function WalletPortfolioWorkspace() {
         <div className="wallet-page-side"><span className="endpoint">POST /wallet/analyze</span><p className="wallet-readonly-note">DeltaZero only reads public wallet and protocol data. It never requests signatures, private keys, or transaction permissions.</p></div>
       </header>
       <div className="workspace-grid wallet-workspace-grid">
-        <WalletRequestForm value={value} setValue={setValue} submit={submit} loading={loading} loadDemo={() => { setValue(structuredClone(DEMO_WALLET_REQUEST)); setResult(null); setError(null); }} />
+        <WalletRequestForm value={value} setValue={setValue} submit={submit} loading={loading} loadDemo={() => { setValue(structuredClone(DEMO_WALLET_REQUEST)); setResult(null); setReportGeneratedAt(null); setError(null); }} />
         <div className="result-region">
           {paymentChallenge !== undefined ? (
             <PaymentRequiredCard challenge={paymentChallenge} />
@@ -638,7 +651,7 @@ export function WalletPortfolioWorkspace() {
                   <button className="button button-primary form-submit" type="button" onClick={() => void runAnalysis()}>Retry Analysis <span>→</span></button>
                 </section>
               ) : (
-                <InstitutionalReport result={result} protocols={value.protocols} />
+                <InstitutionalReport result={result} protocols={value.protocols} stressProfile={value.stress_profile} reportGeneratedAt={reportGeneratedAt} />
               )}
             </div>
           ) : (

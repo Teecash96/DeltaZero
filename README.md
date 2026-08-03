@@ -36,7 +36,7 @@ DeltaZero is an open-source, production-oriented ASP for deterministic risk gati
 
 ## Methodology, provenance, and support
 
-The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, worked Safety Buffer calculation, threshold provenance, model card, impairment model, Monte Carlo assumptions, reproducibility requirements, validation status, data sources, and limitations. Completed Strategy Build, Funding Stress Testing, and Wallet Auditor reports include a visible provenance panel with the source, source snapshot, report time, and data-quality context when available. DeltaZero does not claim historical validation or empirical threshold calibration until a versioned, time-aligned replay dataset is published.
+The live [Methodology](https://delta-zero-alpha.vercel.app/methodology) page documents DeltaZero's formulas, worked Safety Buffer calculation, threshold provenance, model card, impairment model, Monte Carlo assumptions, reproducibility requirements, validation status, data sources, and limitations. Completed Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, Monte Carlo, Wallet, and Risk Engine Pass reports include a visible evidence trail with the source, source snapshot, report time, freshness, data quality, formula basis, active thresholds, simulation assumptions, and known limitations. User supplied inputs are labelled as such, and homepage illustrative values are never reused in real reports. DeltaZero does not claim historical validation or empirical threshold calibration until a versioned, time-aligned replay dataset is published.
 
 ## Live MCP server
 

@@ -4,7 +4,13 @@ type AnalysisProvenanceProps = {
   source: string;
   sourceTimestamp?: string | null;
   generatedAt?: string | null;
+  freshness?: string;
   quality?: string | null;
+  methodologyVersion?: string;
+  formulas?: string[];
+  thresholds?: string[];
+  assumptions?: string[];
+  limitations?: string[];
   note?: string;
 };
 
@@ -18,7 +24,13 @@ export function AnalysisProvenance({
   source,
   sourceTimestamp,
   generatedAt,
+  freshness,
   quality,
+  methodologyVersion = "deltazero-v1",
+  formulas = [],
+  thresholds = [],
+  assumptions = [],
+  limitations = [],
   note,
 }: AnalysisProvenanceProps) {
   return (
@@ -34,8 +46,18 @@ export function AnalysisProvenance({
         <article><span>Source</span><strong>{source}</strong></article>
         <article><span>Source snapshot</span><strong>{formatTimestamp(sourceTimestamp)}</strong></article>
         <article><span>Report generated</span><strong>{formatTimestamp(generatedAt)}</strong></article>
+        <article><span>Data freshness</span><strong>{freshness ?? (sourceTimestamp ? "Timestamped source snapshot" : "Not applicable")}</strong></article>
         <article><span>Data quality</span><strong>{quality ?? "User supplied"}</strong></article>
       </div>
+      <details className="provenance-methodology" open>
+        <summary><span><b>Methodology and assumptions</b><small>{methodologyVersion} · values shown are from this report</small></span><i aria-hidden="true">⌄</i></summary>
+        <div className="provenance-evidence-grid">
+          <article><span>Formula used</span><ul>{formulas.length ? formulas.map((item) => <li key={item}>{item}</li>) : <li>See the linked methodology record.</li>}</ul></article>
+          <article><span>Threshold used</span><ul>{thresholds.length ? thresholds.map((item) => <li key={item}>{item}</li>) : <li>No threshold detail was returned.</li>}</ul></article>
+          <article><span>Simulation assumptions</span><ul>{assumptions.length ? assumptions.map((item) => <li key={item}>{item}</li>) : <li>No simulation was used for this report.</li>}</ul></article>
+          <article><span>Known limitations</span><ul>{limitations.length ? limitations.map((item) => <li key={item}>{item}</li>) : <li>Review the methodology page before acting.</li>}</ul></article>
+        </div>
+      </details>
       {note ? <p>{note}</p> : null}
     </section>
   );

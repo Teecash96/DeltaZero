@@ -4,8 +4,10 @@ import { useState } from "react";
 
 import { PaymentRequiredCard } from "@/components/report-polish";
 import { PaymentReceiptCard } from "@/components/payment-receipt-card";
+import { AnalysisProvenance } from "@/components/analysis-provenance";
 import { PaymentRequiredError, runRiskEnginePass, type X402Challenge } from "@/lib/api";
 import { appendReportHistory } from "@/lib/report-history";
+import { builderPolicy, COMMON_LIMITATIONS, CORE_FORMULAS, decisionPolicy, policyLines, STRESS_FORMULAS } from "@/lib/methodology";
 import type { Asset, RiskEnginePassRequest, RiskEnginePassResponse, RiskTolerance, TargetStyle } from "@/lib/types";
 
 const initial: RiskEnginePassRequest = {
@@ -25,6 +27,39 @@ const initial: RiskEnginePassRequest = {
 
 const pct = (value: number) => `${value.toFixed(2)}%`;
 const usd = (value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
+function RiskEngineEvidence({ result, request }: { result: RiskEnginePassResponse; request: RiskEnginePassRequest }) {
+  const buildThresholds = policyLines(builderPolicy(request.risk_tolerance, request.target_style));
+  const decisionThresholds = policyLines(decisionPolicy(request.risk_tolerance));
+  const mc = result.monte_carlo_sensitivity;
+  return <AnalysisProvenance
+    source={result.strategy_build.market_data_source === "hyperliquid" ? "Hyperliquid public market snapshot plus submitted assumptions" : "Shared submitted strategy assumptions"}
+    sourceTimestamp={result.strategy_build.market_data_timestamp ?? null}
+    generatedAt={result.generated_at}
+    freshness={result.strategy_build.market_data_source === "hyperliquid" ? "Market snapshot timestamp returned by Hyperliquid" : "Not applicable to submitted assumptions"}
+    quality={result.strategy_build.market_data_quality ?? "complete four report pass"}
+    formulas={[
+      ...CORE_FORMULAS,
+      ...STRESS_FORMULAS,
+      "Monte Carlo percentiles are calculated from the seeded impairment-loss distribution returned in report 04.",
+      "The consolidated risk zone uses the worst triggered condition across Strategy Build, Hedge-Drift, Funding Stress, and Monte Carlo evidence.",
+    ]}
+    thresholds={[
+      `Strategy Build policy: ${buildThresholds.join(" ")}`,
+      `Hedge and Funding Stress policy: ${decisionThresholds.join(" ")}`,
+      `Monte Carlo breach rules: Safety Buffer < 50; hedge drift > ${decisionPolicy(request.risk_tolerance).hedgeDriftWarning}%; capital impairment when post-stress equity < 80% of starting capital.`,
+      `Monte Carlo recommendation uses P95 impairment (${mc.summary.p95_impairment_loss_pct.toFixed(2)}% observed), breach probabilities, and risk-tolerance thresholds.`,
+    ]}
+    assumptions={[
+      `One shared input set: ${request.asset}, ${request.risk_tolerance} risk tolerance, ${request.target_style.replaceAll("_", " ")} target style.`,
+      `Funding stress scenario magnitude: ${request.stress_magnitude_pct ?? 4}%; Monte Carlo paths: ${(request.simulation_count ?? 1000).toLocaleString()}; horizon: ${request.time_horizon_days ?? 30} days.`,
+      `Monte Carlo seed: ${request.seed ?? mc.seed ?? "not supplied"}; systemic model: ${mc.systemic_risk_model.distribution.replaceAll("_", " ")}.`,
+      "No execution, wallet permissions, or homepage reference metrics are used in the four-report pass.",
+    ]}
+    limitations={[...COMMON_LIMITATIONS, "The pass coordinates four deterministic reports; it does not guarantee venue execution, liquidity, or profitability."]}
+    note="This evidence trail is tied to the completed pass and its shared inputs. Real report values never read the homepage illustrative dashboard."
+  />;
+}
 
 export function RiskEnginePass() {
   const [value, setValue] = useState(initial);
@@ -95,6 +130,7 @@ export function RiskEnginePass() {
       {result ? <PaymentReceiptCard /> : null}
       {result ? <div className="risk-pass-results">
         <header className="panel"><span className="decision-eyebrow">Risk Engine Pass complete</span><h2>Four reports. One shared input set.</h2><p>Generated {new Date(result.generated_at).toLocaleString()} from a shared set of assumptions.</p></header>
+        <RiskEngineEvidence result={result} request={value} />
         <div className="risk-pass-result-grid">
           <article className="panel"><span>01 · Strategy Build</span><h3>{result.strategy_build.recommendation.action}</h3><strong>{pct(result.strategy_build.metrics.estimated_net_carry_apy)} net carry</strong><p>{usd(result.strategy_build.recommended_structure.long_notional_usd)} long · {usd(result.strategy_build.recommended_structure.short_notional_usd)} short</p></article>
           <article className="panel"><span>02 · Hedge-Drift Auditing</span><h3>{result.hedge_drift_audit.recommendation.action}</h3><strong>{pct(result.hedge_drift_audit.metrics.hedge_drift_pct)} hedge drift</strong><p>Safety Buffer {result.hedge_drift_audit.metrics.safety_buffer_score.toFixed(1)}</p></article>
