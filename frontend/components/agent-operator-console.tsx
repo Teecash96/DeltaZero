@@ -342,7 +342,7 @@ export function AgentOperatorConsole() {
 
       {/* ─── Proof Strip ──────────────────────────────────────────── */}
       <section className="agent-proof-strip">
-        <article><span>MCP</span><strong>Streamable HTTP</strong><p>tools/list → 9 tools discovered</p></article>
+        <article><span>MCP</span><strong>Streamable HTTP</strong><p>10 tools · canonical risk engine</p></article>
         <article><span>x402</span><strong>HTTP 402</strong><p>USDT₀ · X Layer · exact + aggr_deferred</p></article>
         <article><span>ENGINE</span><strong>4 Reports</strong><p>Strategy · Audit · Stress · Monte Carlo</p></article>
         <article><span>AGENT</span><strong>Autonomous</strong><p>Detect → Pay → Analyze → Recommend</p></article>

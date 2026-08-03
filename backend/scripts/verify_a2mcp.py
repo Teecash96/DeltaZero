@@ -81,7 +81,7 @@ def main() -> None:
         "jsonrpc": "2.0",
         "id": 3,
         "method": "tools/call",
-        "params": {"name": "run_complete_risk_engine", "arguments": {}},
+        "params": {"name": "delta_zero_risk_engine", "arguments": {}},
     }
 
     checks = {

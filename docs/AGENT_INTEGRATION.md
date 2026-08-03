@@ -134,13 +134,17 @@ The first unpaid call returns HTTP 402 with `PAYMENT-REQUIRED`. An
 x402-compatible client authorizes the selected option and replays the same
 request to receive the tool list. Available tools include:
 
+- `delta_zero_risk_engine` — canonical entry point returning all four reports
 - `build_neutral_strategy`
 - `audit_hedge_drift`
 - `run_funding_stress`
 - `run_monte_carlo`
-- `run_complete_risk_engine`
 - `evaluate_risk_envelope`
 - `explain_risk_recommendation`
+
+`run_complete_risk_engine` remains available as a backward-compatible alias.
+The canonical tool accepts flat typed arguments and returns the four coordinated
+reports in one structured result.
 
 **Calling a tool:**
 
@@ -148,7 +152,7 @@ request to receive the tool list. Available tools include:
 curl -i -X POST https://deltazero-production.up.railway.app/mcp/call \
   -H "Content-Type: application/json" \
   -d '{
-    "tool": "run_complete_risk_engine",
+    "tool": "delta_zero_risk_engine",
     "arguments": {
       "asset": "SOL",
       "capital_usd": 5000,
@@ -181,7 +185,7 @@ const client = new OkxA2AClient();
 // Create task
 const jobId = await client.createTask({
   title: "DeFi Risk Analysis",
-  description: "Run complete risk engine pass for SOL position",
+  description: "Run the canonical DeltaZero risk engine for a SOL position",
   budget: 1,
   currency: "USDT",
   provider: "5739", // DeltaZero ASP ID
@@ -212,7 +216,7 @@ struct AgentExecutor {
 
 impl AgentExecutor {
     async fn run_guard_loop(&self) -> Result<()> {
-        let risk_report = self.delta_client.run_complete_risk_engine(...).await?;
+        let risk_report = self.delta_client.delta_zero_risk_engine(...).await?;
         
         match risk_report.recommendation.action {
             Action::REBALANCE | Action::REDUCE => {

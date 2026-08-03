@@ -13,7 +13,14 @@ from app.models.monte_carlo import MonteCarloRequest
 from app.models.interoperability import RiskEnvelopeV1
 from app.models.risk_engine import RiskEnginePassRequest
 from app.models.registry import RegistryEvaluationRequest
-from app.models.schemas import AuditRequest, BuildRequest, StressTestRequest
+from app.models.schemas import (
+    Asset,
+    AuditRequest,
+    BuildRequest,
+    RiskTolerance,
+    StressTestRequest,
+    TargetStyle,
+)
 from app.payments import (
     DeltaZeroPaymentMiddleware,
     PaymentSettings,
@@ -33,6 +40,8 @@ from app.services.stress_test import stress_test_strategy
 _JSONRPC_VERSION = "2.0"
 _JSON_CONTENT_TYPE = b"application/json"
 MAX_MCP_BATCH_ITEMS = 8
+CANONICAL_MCP_TOOL = "delta_zero_risk_engine"
+LEGACY_RISK_ENGINE_TOOL = "run_complete_risk_engine"
 
 
 PREMIUM_MCP_TOOLS = frozenset(
@@ -41,7 +50,8 @@ PREMIUM_MCP_TOOLS = frozenset(
         "audit_hedge_drift",
         "run_funding_stress",
         "run_monte_carlo",
-        "run_complete_risk_engine",
+        CANONICAL_MCP_TOOL,
+        LEGACY_RISK_ENGINE_TOOL,
         "evaluate_risk_envelope",
         "explain_risk_recommendation",
     }
@@ -54,7 +64,9 @@ def create_mcp_server() -> FastMCP:
         "DeltaZero",
         instructions=(
             "Deterministic DeFi risk intelligence for pseudo-delta-neutral "
-            "strategies. Calculations are decision support, not profit forecasts."
+            "strategies. Use delta_zero_risk_engine as the canonical entry point "
+            "for one coordinated four-report analysis. Calculations are decision "
+            "support, not profit forecasts."
         ),
         website_url="https://delta-zero-alpha.vercel.app",
         stateless_http=True,
@@ -113,8 +125,46 @@ def create_mcp_server() -> FastMCP:
         return run_monte_carlo_analysis(request).model_dump(mode="json", exclude_none=True)
 
     @server.tool(structured_output=True)
+    def delta_zero_risk_engine(
+        asset: Asset,
+        capital_usd: float,
+        risk_tolerance: RiskTolerance,
+        target_style: TargetStyle,
+        long_yield_apy: float,
+        short_funding_apy: float,
+        fee_drag_apy: float,
+        stress_magnitude_pct: float = 4,
+        simulation_count: int = 1000,
+        time_horizon_days: int = 30,
+        seed: int | None = 42,
+        include_ai_explanation: bool = False,
+    ) -> dict[str, Any]:
+        """Canonical DeltaZero tool returning all four coordinated risk views.
+
+        Pass the strategy assumptions directly as tool arguments. The result
+        contains Strategy Build, Hedge-Drift Auditing, Funding Stress Testing,
+        and Monte Carlo Sensitivity using one shared deterministic request.
+        """
+
+        request = RiskEnginePassRequest(
+            asset=asset,
+            capital_usd=capital_usd,
+            risk_tolerance=risk_tolerance,
+            target_style=target_style,
+            long_yield_apy=long_yield_apy,
+            short_funding_apy=short_funding_apy,
+            fee_drag_apy=fee_drag_apy,
+            stress_magnitude_pct=stress_magnitude_pct,
+            simulation_count=simulation_count,
+            time_horizon_days=time_horizon_days,
+            seed=seed,
+            include_ai_explanation=include_ai_explanation,
+        )
+        return run_risk_engine_pass(request).model_dump(mode="json", exclude_none=True)
+
+    @server.tool(structured_output=True)
     def run_complete_risk_engine(request: RiskEnginePassRequest) -> dict[str, Any]:
-        """Return Strategy Build, Hedge-Drift, Funding Stress, and Monte Carlo in one pass."""
+        """Legacy alias for delta_zero_risk_engine kept for existing clients."""
 
         return run_risk_engine_pass(request).model_dump(mode="json", exclude_none=True)
 
@@ -267,7 +317,8 @@ def _call_risk_envelope(args: dict[str, Any]) -> dict[str, Any]:
 
 
 _PAID_MCP_DISPATCH: dict[str, Any] = {
-    "run_complete_risk_engine": _call_risk_engine,
+    CANONICAL_MCP_TOOL: _call_risk_engine,
+    LEGACY_RISK_ENGINE_TOOL: _call_risk_engine,
     "build_neutral_strategy": _call_build,
     "audit_hedge_drift": _call_audit,
     "run_funding_stress": _call_stress,
@@ -307,7 +358,7 @@ class PaidMCPHandler:
             # Return the complete engine's documented SOL reference analysis
             # as a standard JSON-RPC tool result. Clients that need custom
             # assumptions should send a normal ``tools/call`` payload.
-            dispatched = self._dispatch_tool("run_complete_risk_engine", {})
+            dispatched = self._dispatch_tool(CANONICAL_MCP_TOOL, {})
             return await _send_json_response(
                 send,
                 200,

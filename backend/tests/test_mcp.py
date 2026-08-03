@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app, load_mcp_payment_settings
 from app.payments import PaymentSettings
-from app.mcp_server import MAX_MCP_BATCH_ITEMS
+from app.mcp_server import CANONICAL_MCP_TOOL, MAX_MCP_BATCH_ITEMS, create_mcp_server
 from app.request_limits import MAX_REQUEST_BODY_BYTES
 
 
@@ -52,6 +52,103 @@ def test_service_root_advertises_the_mcp_transport_as_a2mcp_endpoint() -> None:
     assert response.json()["a2mcp_endpoint"] == (
         "https://deltazero-production.up.railway.app/mcp"
     )
+    assert response.json()["canonical_tool"] == CANONICAL_MCP_TOOL
+
+
+def test_canonical_risk_engine_tool_is_flat_and_returns_all_four_views() -> None:
+    server = create_mcp_server()
+    tool = server._tool_manager.get_tool(CANONICAL_MCP_TOOL)
+
+    assert tool is not None
+    assert set(tool.parameters["required"]) >= {
+        "asset",
+        "capital_usd",
+        "risk_tolerance",
+        "target_style",
+        "long_yield_apy",
+        "short_funding_apy",
+        "fee_drag_apy",
+    }
+    assert "request" not in tool.parameters["properties"]
+    assert "canonical" in tool.description.lower()
+
+
+def test_canonical_risk_engine_mcp_call_returns_all_four_views_without_payment() -> None:
+    call = _tool_call(
+        CANONICAL_MCP_TOOL,
+        {
+            "asset": "SOL",
+            "capital_usd": 5000,
+            "risk_tolerance": "medium",
+            "target_style": "neutral_yield",
+            "long_yield_apy": 14,
+            "short_funding_apy": 3,
+            "fee_drag_apy": 1,
+            "simulation_count": 100,
+            "seed": 42,
+        },
+    )
+    settings = PaymentSettings(
+        receiver=SETTINGS.receiver,
+        price_usdt="1",
+        network=SETTINGS.network,
+        admin_key="test-admin-key",
+    )
+    with TestClient(create_app(payment_settings=settings)) as client:
+        response = client.post(
+            "/mcp",
+            headers={**HEADERS, "X-DeltaZero-Admin-Key": "test-admin-key"},
+            json=call,
+        )
+
+    assert response.status_code == 200
+    result = response.json()["result"]["structuredContent"]
+    assert result["pass_scope"] == "one_strategy_analysis"
+    assert set(result) >= {
+        "strategy_build",
+        "hedge_drift_audit",
+        "funding_stress_test",
+        "monte_carlo_sensitivity",
+    }
+
+
+def test_canonical_direct_a2mcp_call_endpoint_returns_all_four_views() -> None:
+    settings = PaymentSettings(
+        receiver=SETTINGS.receiver,
+        price_usdt="1",
+        network=SETTINGS.network,
+        admin_key="test-admin-key",
+    )
+    payload = {
+        "tool": CANONICAL_MCP_TOOL,
+        "arguments": {
+            "asset": "SOL",
+            "capital_usd": 5000,
+            "risk_tolerance": "medium",
+            "target_style": "neutral_yield",
+            "long_yield_apy": 14,
+            "short_funding_apy": 3,
+            "fee_drag_apy": 1,
+            "simulation_count": 100,
+            "seed": 42,
+        },
+    }
+    with TestClient(create_app(payment_settings=settings)) as client:
+        response = client.post(
+            "/mcp/call",
+            headers={"Content-Type": "application/json", "X-DeltaZero-Admin-Key": "test-admin-key"},
+            json=payload,
+        )
+
+    assert response.status_code == 200
+    result = response.json()["result"]
+    assert result["pass_scope"] == "one_strategy_analysis"
+    assert set(result) >= {
+        "strategy_build",
+        "hedge_drift_audit",
+        "funding_stress_test",
+        "monte_carlo_sensitivity",
+    }
 
 
 def test_every_unpaid_mcp_operation_returns_standard_x402_challenge() -> None:

@@ -53,13 +53,17 @@ market and position routes.
 
 Paid MCP tools include:
 
+- `delta_zero_risk_engine` — canonical entry point; one invocation returns all four coordinated reports
 - `build_neutral_strategy`
 - `audit_hedge_drift`
 - `run_funding_stress`
 - `run_monte_carlo`
-- `run_complete_risk_engine` — all four coordinated reports in one invocation
 - `evaluate_risk_envelope` — portable Risk Envelope v1 decision contract
 - `explain_risk_recommendation` — grounded natural-language brief over verified Risk Envelope evidence
+
+`run_complete_risk_engine` remains available as a backward-compatible legacy
+alias. New agents should call `delta_zero_risk_engine` so they do not need to
+choose between separate strategy, audit, stress, and sensitivity tools.
 
 Agents can also discover `deltazero://schemas/risk-envelope-v1` as an MCP resource. It exposes the same JSON Schema available over REST.
 
@@ -67,6 +71,10 @@ The registered OKX.AI service is an A2MCP API service whose public Streamable
 HTTP transport is `/mcp`, billed at the registered 1 USD₮0 per call on X Layer.
 
 The MCP tools call the same Python service functions used by the REST API; formulas and recommendation logic are not duplicated. Tool inputs and structured outputs are generated from the same Pydantic contracts, so compatible agents do not need endpoint-specific response parsers.
+
+The canonical `delta_zero_risk_engine` tool accepts the strategy assumptions as
+flat typed arguments and returns one structured pass containing Strategy Build,
+Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity.
 
 Connect locally with MCP Inspector:
 

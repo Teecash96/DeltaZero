@@ -26,7 +26,13 @@ from app.routers.preview import router as preview_router
 from app.routers.standards import evaluation_router as envelope_router, router as standards_router
 from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
-from app.mcp_server import FreeMCPJSONHandler, MCPToolPaymentGate, create_mcp_server
+from app.mcp_server import (
+    CANONICAL_MCP_TOOL,
+    LEGACY_RISK_ENGINE_TOOL,
+    FreeMCPJSONHandler,
+    MCPToolPaymentGate,
+    create_mcp_server,
+)
 from app.services.risk_engine import run_risk_engine_pass
 from app.services.builder import build_strategy
 from app.services.auditor import audit_strategy
@@ -95,7 +101,8 @@ def _call_risk_envelope(args: dict[str, Any]) -> dict[str, Any]:
 
 
 _MCP_TOOL_DISPATCH: dict[str, Any] = {
-    "run_complete_risk_engine": _call_risk_engine,
+    CANONICAL_MCP_TOOL: _call_risk_engine,
+    LEGACY_RISK_ENGINE_TOOL: _call_risk_engine,
     "build_neutral_strategy": _call_build,
     "audit_hedge_drift": _call_audit,
     "run_funding_stress": _call_stress,
@@ -260,6 +267,7 @@ def create_app(
             "service_type": "A2MCP",
             "a2mcp_endpoint": f"{public_base_url}/mcp",
             "mcp_endpoint": f"{public_base_url}/mcp",
+            "canonical_tool": CANONICAL_MCP_TOOL,
         }
 
     @application.post(
@@ -287,7 +295,7 @@ def create_app(
 
     # ─── A2MCP direct tool-call endpoint ────────────────────────────────
     # OKX's A2MCP client POSTs to /mcp/call with a simplified body:
-    #   {"tool": "run_complete_risk_engine", "arguments": {...}}
+    #   {"tool": "delta_zero_risk_engine", "arguments": {...}}
     # This is protected by the MCPToolPaymentGate (x402 402 for unpaid).
     @application.post("/mcp/call", tags=["a2mcp"])
     async def mcp_call(request: Request) -> JSONResponse:
