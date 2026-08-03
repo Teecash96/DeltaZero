@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from dataclasses import replace
 import json
+import time
 
 from fastapi.testclient import TestClient
 import pytest
@@ -615,6 +616,135 @@ def test_paid_mcp_initialize_replay_returns_jsonrpc_200(
     assert response.json()["jsonrpc"] == "2.0"
     assert response.json()["result"]["serverInfo"]["name"] == "DeltaZero"
     assert "PAYMENT-RESPONSE" in response.headers
+    assert facilitator.verify_calls == 1
+    assert facilitator.settle_calls == 1
+
+
+@pytest.mark.parametrize("accept_header", [None, "*/*", "application/json"])
+def test_paid_mcp_discovery_replay_accepts_json_clients_without_406(
+    payment_settings: PaymentSettings,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    accept_header: str | None,
+) -> None:
+    """Marketplace discovery must return JSON-RPC 200 for every JSON Accept variant."""
+
+    settings = replace(
+        payment_settings,
+        replay_db_path=str(tmp_path / f"discovery-{accept_header or 'missing'}.sqlite3"),
+    )
+    server, facilitator = fake_payment_server(settings)
+    monkeypatch.setattr("app.mcp_server.create_payment_server", lambda _: server)
+    app = create_app(settings, server)
+    request = {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "method": "tools/list",
+        "params": {},
+    }
+    headers = {"Content-Type": "application/json"}
+    if accept_header is not None:
+        headers["Accept"] = accept_header
+
+    with TestClient(app) as client:
+        challenge_response = client.post("/mcp", json=request, headers=headers)
+        assert challenge_response.status_code == 402
+        challenge = json.loads(
+            base64.b64decode(challenge_response.headers["PAYMENT-REQUIRED"])
+        )
+        payment_payload = PaymentPayload(
+            payload={"signature": f"discovery-{accept_header or 'missing'}"},
+            accepted=PaymentRequirements.model_validate(challenge["accepts"][0]),
+        )
+        paid_headers = {
+            **headers,
+            "PAYMENT-SIGNATURE": encode_payment_signature_header(payment_payload),
+        }
+        started = time.perf_counter()
+        response = client.post("/mcp", json=request, headers=paid_headers)
+        elapsed = time.perf_counter() - started
+
+    assert response.status_code == 200
+    assert elapsed < 10
+    assert response.headers["content-type"].startswith("application/json")
+    payload = response.json()
+    assert payload["jsonrpc"] == "2.0"
+    assert payload["id"] == 7
+    assert "result" in payload
+    assert "tools" in payload["result"]
+    assert "PAYMENT-RESPONSE" in response.headers
+    assert facilitator.verify_calls == 1
+    assert facilitator.settle_calls == 1
+
+
+def test_paid_mcp_tool_replay_is_fast_and_proof_hash_is_stable(
+    payment_settings: PaymentSettings,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """A paid canonical call returns all four views quickly and keeps its proof stable."""
+
+    settings = replace(
+        payment_settings,
+        replay_db_path=str(tmp_path / "canonical-fast.sqlite3"),
+    )
+    server, facilitator = fake_payment_server(settings)
+    monkeypatch.setattr("app.mcp_server.create_payment_server", lambda _: server)
+    app = create_app(settings, server)
+    request = {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "method": "tools/call",
+        "params": {
+            "name": "delta_zero_risk_engine",
+            "arguments": {
+                "asset": "SOL",
+                "capital_usd": 5000,
+                "risk_tolerance": "medium",
+                "target_style": "neutral_yield",
+                "long_yield_apy": 14,
+                "short_funding_apy": 3,
+                "fee_drag_apy": 1,
+                "simulation_count": 100,
+                "time_horizon_days": 30,
+                "seed": 42,
+            },
+        },
+    }
+    headers = {"Accept": "*/*", "Content-Type": "application/json"}
+
+    with TestClient(app) as client:
+        challenge_response = client.post("/mcp", json=request, headers=headers)
+        assert challenge_response.status_code == 402
+        challenge = json.loads(
+            base64.b64decode(challenge_response.headers["PAYMENT-REQUIRED"])
+        )
+        payment_payload = PaymentPayload(
+            payload={"signature": "canonical-fast-proof"},
+            accepted=PaymentRequirements.model_validate(challenge["accepts"][0]),
+        )
+        paid_headers = {
+            **headers,
+            "PAYMENT-SIGNATURE": encode_payment_signature_header(payment_payload),
+        }
+        started = time.perf_counter()
+        first = client.post("/mcp", json=request, headers=paid_headers)
+        elapsed = time.perf_counter() - started
+        retry = client.post("/mcp", json=request, headers=paid_headers)
+
+    assert first.status_code == 200
+    assert elapsed < 10
+    assert retry.status_code == 200
+    assert retry.headers["X-DeltaZero-Replay"] == "recovered"
+    first_result = first.json()["result"]["structuredContent"]
+    retry_result = retry.json()["result"]["structuredContent"]
+    assert first_result["risk_envelope"]["proof"]["output_hash"] == retry_result["risk_envelope"]["proof"]["output_hash"]
+    assert set(first_result) >= {
+        "strategy_build",
+        "hedge_drift_audit",
+        "funding_stress_test",
+        "monte_carlo_sensitivity",
+    }
     assert facilitator.verify_calls == 1
     assert facilitator.settle_calls == 1
 

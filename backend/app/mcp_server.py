@@ -393,9 +393,14 @@ class PaidMCPHandler:
 
         # --- Custom /mcp/call format: {"tool": "...", "arguments": {...}} ---
         if path == "/mcp/call":
+            if not isinstance(payload, dict):
+                return await _send_json_response(send, 400, {"error": "Expected a JSON object"})
+            arguments = payload.get("arguments") or payload.get("params") or {}
+            if not isinstance(arguments, dict):
+                return await _send_json_response(send, 400, {"error": "Expected arguments to be an object"})
             result = self._dispatch_tool(
                 payload.get("tool") or payload.get("name") or "",
-                payload.get("arguments") or payload.get("params") or {},
+                arguments,
             )
             if result is None:
                 return await _send_json_response(send, 400, {
@@ -426,13 +431,19 @@ class PaidMCPHandler:
 
             if method == "tools/call":
                 params = msg.get("params", {})
-                tool_name = (params.get("name", "") if isinstance(params, dict) else "")
-                tool_args = (params.get("arguments", {}) if isinstance(params, dict) else {})
+                if not isinstance(params, dict):
+                    results.append(_jsonrpc_error(req_id, -32602, "Invalid tools/call params"))
+                    continue
+                tool_name = params.get("name", "")
+                tool_args = params.get("arguments", {})
                 # MCP SDK sends typed-parameter arguments wrapped in a dict
                 # keyed by the parameter name (e.g. {"request": {...}}).
                 # Unwrap single-key wrappers so dispatch gets flat fields.
                 if isinstance(tool_args, dict) and len(tool_args) == 1 and "request" in tool_args:
                     tool_args = tool_args["request"]
+                if not isinstance(tool_args, dict):
+                    results.append(_jsonrpc_error(req_id, -32602, "Invalid tools/call arguments"))
+                    continue
                 dispatched = self._dispatch_tool(tool_name, tool_args)
                 if dispatched is None:
                     results.append(_jsonrpc_error(req_id, -32601, f"Unknown tool: {tool_name}"))
@@ -618,9 +629,12 @@ class MCPToolPaymentGate:
             value for name, value in headers if name.lower() == b"accept"
         ]
         combined = b", ".join(accept_values).lower()
+        # The MCP SDK requires text/event-stream in Accept even when the
+        # server is configured for JSON responses. Marketplace clients may
+        # send application/json, */*, or omit Accept entirely. All three are
+        # valid JSON-RPC replay variants and must not reach the SDK unchanged,
+        # otherwise discovery can fail with HTTP 406 after payment settles.
         if b"text/event-stream" in combined:
-            return scope
-        if accept_values and b"application/json" not in combined:
             return scope
 
         compatible_headers = [

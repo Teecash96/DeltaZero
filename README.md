@@ -642,6 +642,33 @@ curl --include \
 
 Never construct a payment credential by hand or treat the presence of a header as proof of payment. In challenge-only mode all paid replays fail closed. In settlement mode DeltaZero forwards credentials to the OKX facilitator for cryptographic verification and settlement before returning the protected resource.
 
+### Marketplace sequence verifier
+
+Run the same unpaid probes used by an OKX review client:
+
+```bash
+python3 backend/scripts/verify_a2mcp.py
+```
+
+The verifier checks bare POST, initialize, tools/list, and tools/call with
+`Accept: application/json`, `Accept: */*`, and no `Accept` header. Every probe
+must return an application/json HTTP 402 challenge in under 10 seconds. It
+also rejects a missing X Layer asset, receiver, resource URL, or registered
+1 USD₮0 amount.
+
+To verify a real paid replay and its idempotent retry, provide the
+`PAYMENT_SIGNATURE` returned by an x402-compatible client without committing
+or logging it:
+
+```bash
+PAYMENT_SIGNATURE="$PAYMENT_SIGNATURE" \
+  python3 backend/scripts/verify_a2mcp.py
+```
+
+That check requires HTTP 200 JSON-RPC, a `PAYMENT-RESPONSE` receipt, a
+deterministic Risk Envelope output hash, and `X-DeltaZero-Replay: recovered`
+on the identical retry. A payment signature is never constructed by hand.
+
 ### Paid replay reliability
 
 Successful paid responses are saved against a one-way digest of the payment proof, HTTP method, route, query, and exact request body. If an agent retries that identical request with the same proof, DeltaZero returns the original JSON-RPC deliverable and `PAYMENT-RESPONSE` receipt with `X-DeltaZero-Replay: recovered`; it does not ask the facilitator to settle again.
