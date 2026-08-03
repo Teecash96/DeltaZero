@@ -373,11 +373,11 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
     return {
         "POST /": route(
             "",
-            "Run the complete four-module DeltaZero Risk Engine pass",
+            "Run the complete four-module DeltaZero deterministic risk gate",
         ),
         "POST /risk-engine/analyze": route(
             "/risk-engine/analyze",
-            "Run the complete four-module DeltaZero Risk Engine pass",
+            "Run the complete four-module DeltaZero deterministic risk gate",
         ),
         "POST /risk-envelope/evaluate": route(
             "/risk-envelope/evaluate",
@@ -405,7 +405,7 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
         ),
         "POST /preview/compare": route(
             "/preview/compare",
-            "Compare conservative and aggressive strategy styles",
+            "Compare two hedge policy configurations through the deterministic risk gate",
         ),
     }
 
@@ -428,7 +428,7 @@ def mcp_paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
         _make_option("exact"),
         _make_option("aggr_deferred"),
     ]
-    description = "Run a premium deterministic DeltaZero MCP risk tool"
+    description = "Run the DeltaZero deterministic risk gate for pseudo delta neutral DeFi positions"
     resource = f"{settings.public_api_base_url}/mcp"
     mcp_route = RouteConfig(
         accepts=options,

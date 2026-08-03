@@ -1,8 +1,8 @@
 # Δ DeltaZero
 
-## Deterministic risk intelligence for pseudo delta neutral DeFi strategies
+## The deterministic risk gate for pseudo delta neutral DeFi positions
 
-Build strategies, analyze hedge drift, simulate economic impairment, and assess supported public wallet portfolios through one transparent risk engine.
+DeltaZero gives agents and users one decision boundary before capital is deployed. It measures hedge drift, net carry deterioration, funding stress, Safety Buffer breach probability, Monte Carlo impairment, and whether to rebalance, reduce, or exit.
 
 <div align="center">
 
@@ -22,7 +22,9 @@ Build strategies, analyze hedge drift, simulate economic impairment, and assess 
 
 </div>
 
-DeltaZero is an open-source, production-oriented ASP for deterministic DeFi risk analysis. It converts strategy assumptions and supported public wallet data into structured metrics, strategy health, recommended actions, risk notes, and decision confidence without claiming to predict markets. An optional grounded LLM layer explains those computed results in plain language; it cannot change the underlying numbers or recommendation.
+DeltaZero is an open-source, production-oriented ASP for deterministic risk gating of pseudo delta neutral DeFi positions. It converts strategy assumptions and supported read-only protocol data into four coordinated reports, a versioned Risk Envelope, and an explicit operator action without claiming to predict markets. An optional grounded LLM layer explains those computed results in plain language; it cannot change the underlying numbers or recommendation.
+
+> **Category boundary:** DeltaZero is not a prediction market, charting terminal, general token intelligence dashboard, or trade executor. Its category is the deterministic risk gate for pseudo delta neutral positions.
 
 > **🔍 Judge's shortcut — live API docs:** [`https://deltazero-production.up.railway.app/docs`](https://deltazero-production.up.railway.app/docs) — inspect every endpoint, schema, and response model in real time. The deterministic risk engine is not a mock frontend.
 
@@ -75,6 +77,11 @@ The MCP tools call the same Python service functions used by the REST API; formu
 The canonical `delta_zero_risk_engine` tool accepts the strategy assumptions as
 flat typed arguments and returns one structured pass containing Strategy Build,
 Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity.
+This is the canonical category contract: one pseudo delta neutral position in,
+one deterministic risk gate out. The gate reports hedge drift, carry
+deterioration, funding stress, Safety Buffer breach probability, impairment,
+and the operator action. Live protocol context is an input, not a separate
+token or market intelligence product.
 
 Connect locally with MCP Inspector:
 
@@ -94,7 +101,7 @@ DeltaZero classifies completed Strategy Build, Wallet Auditor, Funding Stress Te
 
 Risk zones are deterministic interpretations of existing report metrics. They are not trading instructions and do not predict profitability.
 
-The current product includes Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, read-only Wallet Auditor, Agent Operator Console, an opt-in Strategy Registry, and a no-wallet live strategy comparison. It never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The registered MCP endpoint keeps its production payment boundary active for OKX validation; payment credentials remain separate from any trading or protocol permission.
+The current product includes four coordinated risk reports: Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity. Read-only protocol data, Hedge Intelligence, the Agent Operator Console, and the opt-in Strategy Registry support that gate; they are not separate product categories. DeltaZero never requests private keys, seed phrases, trading signatures, approvals, or transaction permissions, and it does not execute trades. The registered MCP endpoint keeps its production payment boundary active for OKX validation; payment credentials remain separate from any trading or protocol permission.
 
 ## Why DeltaZero?
 
@@ -103,7 +110,7 @@ Pseudo delta-neutral strategies can look attractive while hiding hedge drift, we
 DeltaZero is differentiated by:
 
 - **Deterministic decisions** — recommendations come from documented rules and evaluated thresholds rather than opaque generated calculations.
-- **One risk language** — Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Wallet Auditor consistently report health, action, Safety Buffer, risk notes, and Decision Confidence.
+- **One risk gate** — Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo Sensitivity consistently report hedge drift, carry deterioration, Safety Buffer, impairment, and the next action.
 - **Read-only portfolio analysis** — supported public protocol data is analyzed without custody or wallet permissions.
 - **Agent-ready contracts** — FastAPI schemas and local TypeScript and Python SDK packages expose structured responses for dashboards and automated workflows.
 - **Portable Risk Envelope** — every complete analysis includes a versioned decision artifact that is identical across REST, MCP, and JSON export.
@@ -166,7 +173,7 @@ Hyperliquid accounts.
 | Grounded Risk Explanation | Live · Optional | Uses OpenAI Structured Outputs to explain verified Risk Envelope evidence without recalculating metrics, inventing market causes, or changing the deterministic action. Falls back safely when unavailable. |
 | Economic Impairment Engine | Live | Estimates impairment loss, post-impairment equity, and a non-overlapping loss breakdown. |
 | Marketplace API service | Live · Temporarily Free | The MCP endpoint is reachable at `/mcp` for OKX.AI review. Marketplace A2MCP access is free or paid per call using x402 micropayments. |
-| Interactive Strategy Preview | Live · Pay per use | Compares Conservative Income and Aggressive Carry through the production deterministic builder. |
+| Risk Gate Preview | Live · Pay per use | Compares two hedge policy configurations through the production deterministic builder. |
 | TypeScript SDK | Published · npm | Supplies a typed client through [`deltazero-core`](https://www.npmjs.com/package/deltazero-core). |
 | Python SDK | Published · PyPI | Supplies a typed client through [`deltazero-core`](https://pypi.org/project/deltazero-core/). |
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |

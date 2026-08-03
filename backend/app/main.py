@@ -187,7 +187,11 @@ def create_app(
 
     application = FastAPI(
         title="DeltaZero",
-        description="Pseudo-delta-neutral DeFi risk management API",
+        description=(
+            "Deterministic risk gate for pseudo delta neutral DeFi positions. "
+            "Measures hedge drift, carry deterioration, funding stress, Safety "
+            "Buffer breach probability, and Monte Carlo impairment."
+        ),
         version="0.1.0",
         lifespan=lifespan,
     )
@@ -262,9 +266,10 @@ def create_app(
             else "https://deltazero-production.up.railway.app"
         )
         return {
-            "service": "DeltaZero Risk Engine",
+            "service": "DeltaZero Deterministic Risk Gate",
             "status": "ok",
             "service_type": "A2MCP",
+            "category": "deterministic_risk_gate_pseudo_delta_neutral_defi",
             "a2mcp_endpoint": f"{public_base_url}/mcp",
             "mcp_endpoint": f"{public_base_url}/mcp",
             "canonical_tool": CANONICAL_MCP_TOOL,
@@ -274,7 +279,7 @@ def create_app(
         "/",
         response_model=RiskEnginePassResponse,
         tags=["risk-engine"],
-        summary="Run the complete DeltaZero Risk Engine pass",
+        summary="Run the complete DeltaZero deterministic risk gate",
     )
     def a2mcp_risk_engine(
         request: RiskEnginePassRequest | None = None,

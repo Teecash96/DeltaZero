@@ -63,10 +63,15 @@ def create_mcp_server() -> FastMCP:
     server = FastMCP(
         "DeltaZero",
         instructions=(
-            "Deterministic DeFi risk intelligence for pseudo-delta-neutral "
-            "strategies. Use delta_zero_risk_engine as the canonical entry point "
-            "for one coordinated four-report analysis. Calculations are decision "
-            "support, not profit forecasts."
+            "DeltaZero is the deterministic risk gate for pseudo delta neutral "
+            "DeFi positions. Use delta_zero_risk_engine as the canonical entry "
+            "point for one coordinated four-report decision: Strategy Build, "
+            "Hedge-Drift Auditing, Funding Stress Testing, and Monte Carlo "
+            "Sensitivity. The gate evaluates hedge drift, net carry deterioration, "
+            "funding stress, Safety Buffer breach probability, Monte Carlo "
+            "impairment, and rebalance or exit recommendations. Outputs are read "
+            "only decision support, not price predictions, trading authorization, "
+            "or profit forecasts."
         ),
         website_url="https://delta-zero-alpha.vercel.app",
         stateless_http=True,
@@ -94,7 +99,7 @@ def create_mcp_server() -> FastMCP:
         lookback_hours: int = 24,
         dex: str | None = None,
     ) -> dict[str, Any]:
-        """Read free live Hyperliquid price, funding, volume, and open-interest context."""
+        """Read free live Hyperliquid context used as an input to the risk gate."""
 
         return get_hyperliquid_market(asset, dex, lookback_hours).model_dump(
             mode="json", exclude_none=True
@@ -102,25 +107,25 @@ def create_mcp_server() -> FastMCP:
 
     @server.tool(structured_output=True)
     def build_neutral_strategy(request: BuildRequest) -> dict[str, Any]:
-        """Build a deterministic pseudo-delta-neutral strategy from validated assumptions."""
+        """Build the first view of the deterministic risk gate from validated assumptions."""
 
         return build_strategy(request).model_dump(mode="json", exclude_none=True)
 
     @server.tool(structured_output=True)
     def audit_hedge_drift(request: AuditRequest) -> dict[str, Any]:
-        """Audit hedge drift, net delta, carry, collateral resilience, and corrective action."""
+        """Measure hedge drift, net delta, carry deterioration, and corrective action."""
 
         return audit_strategy(request).model_dump(mode="json", exclude_none=True)
 
     @server.tool(structured_output=True)
     def run_funding_stress(request: StressTestRequest) -> dict[str, Any]:
-        """Apply deterministic funding and portfolio shocks to an existing structure."""
+        """Measure funding stress and portfolio impairment under deterministic shocks."""
 
         return stress_test_strategy(request).model_dump(mode="json", exclude_none=True)
 
     @server.tool(structured_output=True)
     def run_monte_carlo(request: MonteCarloRequest) -> dict[str, Any]:
-        """Run seeded sensitivity paths and return impairment and breach distributions."""
+        """Measure Monte Carlo impairment and Safety Buffer breach probability."""
 
         return run_monte_carlo_analysis(request).model_dump(mode="json", exclude_none=True)
 
@@ -139,11 +144,15 @@ def create_mcp_server() -> FastMCP:
         seed: int | None = 42,
         include_ai_explanation: bool = False,
     ) -> dict[str, Any]:
-        """Canonical DeltaZero tool returning all four coordinated risk views.
+        """Canonical deterministic risk gate for pseudo-delta-neutral DeFi positions.
+
+        Return all four coordinated views.
 
         Pass the strategy assumptions directly as tool arguments. The result
         contains Strategy Build, Hedge-Drift Auditing, Funding Stress Testing,
-        and Monte Carlo Sensitivity using one shared deterministic request.
+        and Monte Carlo Sensitivity using one shared deterministic request. Use
+        the returned action to decide whether an operator should rebalance,
+        reduce, or exit. The result never authorizes execution.
         """
 
         request = RiskEnginePassRequest(
@@ -170,7 +179,7 @@ def create_mcp_server() -> FastMCP:
 
     @server.tool(structured_output=True)
     def evaluate_risk_envelope(request: RiskEnginePassRequest) -> dict[str, Any]:
-        """Return the portable Risk Envelope v1 without endpoint-specific parsing."""
+        """Return the portable Risk Envelope v1 for the deterministic risk gate."""
 
         return run_risk_engine_pass(request).risk_envelope.model_dump(mode="json", exclude_none=True)
 

@@ -4,7 +4,10 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WhyDeltaZeroButton } from "@/components/why-deltazero-button";
 
-export const metadata: Metadata = { title: "DeltaZero — Neutral Carry Intelligence", description: "Deterministic risk analysis for pseudo-delta-neutral DeFi strategies." };
+export const metadata: Metadata = {
+  title: "DeltaZero | Deterministic Risk Gate for Pseudo Delta Neutral DeFi",
+  description: "DeltaZero is the deterministic risk gate for pseudo delta neutral DeFi positions. Measure hedge drift, carry deterioration, funding stress, Safety Buffer breach probability, and Monte Carlo impairment.",
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

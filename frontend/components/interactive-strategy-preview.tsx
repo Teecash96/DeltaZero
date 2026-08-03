@@ -84,7 +84,7 @@ export function InteractiveStrategyPreview() {
   }
 
   return <section id="interactive-preview" className="section-wrap interactive-preview-section anchor-section" aria-labelledby="interactive-preview-title">
-    <div className="section-heading"><div><p className="kicker">x402 protected · 1 USDT · live engine</p><h2 id="interactive-preview-title">Build and compare a strategy in 60 seconds.</h2></div><p>Submit assumptions to the same deterministic builder used by DeltaZero&apos;s API, then compare Conservative Income with Aggressive Carry. Payment settled on X Layer via x402.</p></div>
+    <div className="section-heading"><div><p className="kicker">Deterministic risk gate · x402 · live engine</p><h2 id="interactive-preview-title">Test the risk gate in 60 seconds.</h2></div><p>Submit one pseudo delta neutral position to the same engine used by DeltaZero&apos;s API. Compare a tighter hedge policy with a higher carry policy, then inspect the signals that decide whether to rebalance or exit. Payment settles on X Layer via x402.</p></div>
     <div className="interactive-preview-shell glass-card">
       <div className="preview-input-panel">
         <div className="preview-input-grid">
@@ -95,16 +95,16 @@ export function InteractiveStrategyPreview() {
           <label><span>Short funding APY</span><input inputMode="decimal" type="number" value={value.short_funding_apy} onChange={(event) => setValue({ ...value, short_funding_apy: Number(event.target.value) })} /></label>
           <label><span>Fee drag APY</span><input inputMode="decimal" type="number" min="0" value={value.fee_drag_apy} onChange={(event) => setValue({ ...value, fee_drag_apy: Number(event.target.value) })} /></label>
         </div>
-        <button className="button button-primary preview-run" type="button" disabled={!valid || loading} onClick={() => void run()}>{loading ? "Comparing strategies…" : "Compare strategies"}<span>→</span></button>
+        <button className="button button-primary preview-run" type="button" disabled={!valid || loading} onClick={() => void run()}>{loading ? "Evaluating risk gate…" : "Evaluate risk gate"}<span>→</span></button>
         <small>Manual assumptions · DeltaZero v1 methodology · Results are decision support, not profit forecasts.</small>
       </div>
       <div className="preview-output-panel" aria-live="polite">
         {loading ? <div className="preview-progress" role="status"><div><strong>{steps[activeStep]}</strong><span>{activeStep + 1}/{steps.length}</span></div><i><b style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }} /></i><ol>{steps.map((step, index) => <li className={index <= activeStep ? "active" : ""} key={step}>{index < activeStep ? "✓" : index + 1} {step}</li>)}</ol></div>
         : error ? <div className="preview-error" role="alert"><span>Service interruption</span><h3>The strategy preview could not respond.</h3><p>{error}</p><div><button className="button button-primary" onClick={() => void run()}>Retry analysis</button><a className="button button-secondary" href="https://deltazero-production.up.railway.app/health" target="_blank" rel="noreferrer">Check API health</a></div></div>
-        : result ? <><div className="preview-results-head"><div><span>Live deterministic comparison</span><strong>{value.asset} · ${value.capital_usd.toLocaleString()}</strong></div><button type="button" onClick={() => void share()}>{copied ? "Link copied" : "Share comparison"}</button></div><div className="preview-comparison-grid"><ResultColumn title="Conservative Income" result={result.conservative} /><ResultColumn title="Aggressive Carry" result={result.aggressive} /></div><p className="preview-limitation">{result.limitation}</p></>
-        : <div className="preview-empty"><span>ΔZ</span><h3>One input set. Two policy outcomes.</h3><p>Run the comparison to experience risk zones, hedge policy, carry, collateral, and operator recommendations—without connecting a wallet.</p></div>}
+        : result ? <><div className="preview-results-head"><div><span>Live deterministic risk gate</span><strong>{value.asset} · ${value.capital_usd.toLocaleString()}</strong></div><button type="button" onClick={() => void share()}>{copied ? "Link copied" : "Share risk gate"}</button></div><div className="preview-comparison-grid"><ResultColumn title="Tighter hedge policy" result={result.conservative} /><ResultColumn title="Higher carry policy" result={result.aggressive} /></div><p className="preview-limitation">{result.limitation}</p></>
+        : <div className="preview-empty"><span>ΔZ</span><h3>One position. Two policy outcomes.</h3><p>Run the risk gate to inspect hedge drift, carry, collateral, and operator recommendations without connecting a wallet.</p></div>}
       </div>
     </div>
-    <div className="preview-followup"><span>Need the complete four-module report?</span><Link className="button button-secondary" href="/risk-engine">Launch Risk Engine <b>→</b></Link></div>
+    <div className="preview-followup"><span>Need the complete four-module risk gate?</span><Link className="button button-secondary" href="/risk-engine">Launch Risk Engine <b>→</b></Link></div>
   </section>;
 }

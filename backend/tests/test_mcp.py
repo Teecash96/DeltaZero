@@ -48,7 +48,9 @@ def test_service_root_advertises_the_mcp_transport_as_a2mcp_endpoint() -> None:
         response = client.get("/")
 
     assert response.status_code == 200
+    assert response.json()["service"] == "DeltaZero Deterministic Risk Gate"
     assert response.json()["service_type"] == "A2MCP"
+    assert response.json()["category"] == "deterministic_risk_gate_pseudo_delta_neutral_defi"
     assert response.json()["a2mcp_endpoint"] == (
         "https://deltazero-production.up.railway.app/mcp"
     )
@@ -71,6 +73,8 @@ def test_canonical_risk_engine_tool_is_flat_and_returns_all_four_views() -> None
     }
     assert "request" not in tool.parameters["properties"]
     assert "canonical" in tool.description.lower()
+    assert "risk gate" in tool.description.lower()
+    assert "pseudo-delta-neutral" in tool.description.lower()
 
 
 def test_canonical_risk_engine_mcp_call_returns_all_four_views_without_payment() -> None:

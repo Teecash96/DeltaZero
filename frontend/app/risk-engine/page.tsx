@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Risk Engine — DeltaZero",
-  description: "Access DeltaZero's four deterministic DeFi risk-analysis modules.",
+  description: "The deterministic risk gate for pseudo delta neutral DeFi positions.",
 };
 
 const modules = [
@@ -46,11 +46,12 @@ export default function RiskEnginePage() {
     <main className="workspace risk-engine-page">
       <header className="page-intro">
         <div>
-          <p className="kicker">DeltaZero Risk Engine</p>
-          <h1>Four risk views. One engine.</h1>
+          <p className="kicker">Deterministic risk gate</p>
+          <h1>Four risk views. One decision boundary.</h1>
           <p>
-            Four connected modules use the same deterministic methodology to build a hedge, audit its drift,
-            test funding pressure, and measure sensitivity across thousands of bounded scenarios.
+            DeltaZero evaluates pseudo delta neutral DeFi positions through Strategy Build, Hedge-Drift Auditing,
+            Funding Stress Testing, and Monte Carlo Sensitivity. The result is a reproducible recommendation to
+            rebalance, reduce, or exit before capital is deployed.
           </p>
         </div>
         <span className="endpoint">4 RISK MODULES</span>
@@ -74,7 +75,7 @@ export default function RiskEnginePage() {
 
       <aside className="panel risk-engine-boundary">
         <div><span>Shared methodology</span><strong>One engine, four decision views</strong></div>
-        <p>Choose a module above, or run all four reports from the same assumptions with one Risk Engine Pass. Outputs remain deterministic and read-only.</p>
+        <p>Choose a module above, or run all four reports from the same assumptions with one Risk Engine Pass. Outputs remain deterministic and read-only. DeltaZero is not a price predictor, prediction market, charting terminal, token intelligence service, or trade executor.</p>
         <div className="risk-engine-boundary-actions"><Link href="/risk-engine/pass" className="button button-primary">Complete four-report pass</Link><Link href="/methodology" className="button button-secondary">Review methodology</Link></div>
       </aside>
     </main>

@@ -135,7 +135,7 @@ The first unpaid call returns HTTP 402 with `PAYMENT-REQUIRED`. An
 x402-compatible client authorizes the selected option and replays the same
 request to receive the tool list. Available tools include:
 
-- `delta_zero_risk_engine` — canonical entry point returning all four reports
+- `delta_zero_risk_engine` — canonical deterministic risk gate returning all four reports
 - `build_neutral_strategy`
 - `audit_hedge_drift`
 - `run_funding_stress`
@@ -145,7 +145,11 @@ request to receive the tool list. Available tools include:
 
 `run_complete_risk_engine` remains available as a backward-compatible alias.
 The canonical tool accepts flat typed arguments and returns the four coordinated
-reports in one structured result.
+reports in one structured result. DeltaZero's category is intentionally narrow:
+it gates pseudo delta neutral positions using hedge drift, carry deterioration,
+funding stress, Safety Buffer breach probability, Monte Carlo impairment, and
+rebalance or exit recommendations. It is not a prediction market, charting
+terminal, general token intelligence service, or trade executor.
 
 Every Risk Envelope includes a deterministic SHA-256 proof commitment. The input
 hash excludes the optional explanation flag and the output hash excludes the

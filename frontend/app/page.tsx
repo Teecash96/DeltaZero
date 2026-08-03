@@ -4,9 +4,9 @@ import { InteractiveStrategyPreview } from "@/components/interactive-strategy-pr
 
 const quickLinks = [
   { label: "Home", href: "#home", note: "Hero and product summary" },
-  { label: "Live Preview", href: "#interactive-preview", note: "No-wallet strategy comparison" },
+  { label: "Risk Gate Preview", href: "#interactive-preview", note: "No-wallet risk gate walkthrough" },
   { label: "How It Works", href: "#how-it-works", note: "The five-step workflow" },
-  { label: "Products", href: "#products", note: "Five connected risk services" },
+  { label: "Products", href: "#products", note: "Four risk reports and support surfaces" },
   { label: "Integrations", href: "#integrations", note: "Live and planned read-only coverage" },
   { label: "Docs", href: "#docs", note: "Repository and API references" },
   { label: "Why Agents", href: "#why-agents", note: "Measured latency and repeatability" },
@@ -88,7 +88,7 @@ const products = [
     number: "04",
     title: "Hedge Intelligence",
     description:
-      "Discovers supported public positions and converts portfolio exposure into an explainable risk assessment.",
+      "Supplies read-only public position context to the risk gate so hedge drift and capital exposure can be assessed without wallet permissions.",
     bullets: ["Public position discovery", "Net exposure", "Hedge ratio", "Protocol allocation", "Portfolio verdict"],
     action: "Open Hedge Intelligence",
   },
@@ -266,14 +266,15 @@ export default function Home() {
     <>
       <section id="home" className="hero-shell hero-marketing anchor-section">
         <div className="hero-marketing-copy">
+          <p className="kicker">Deterministic risk gate</p>
           <h1>Know your hedge.<br /><span>Protect your capital.</span></h1>
-          <p className="hero-copy">DeltaZero helps agents and users build strategies, analyze hedge drift, and test funding stress for pseudo delta neutral DeFi positions using deterministic risk analysis, supported read-only protocol data, and Monte Carlo sensitivity.</p>
-          <p className="hero-positioning">A versioned portable Risk Envelope, live x402 payment on X Layer, and a production MCP endpoint — all deterministic, all auditable. No custody, no signatures, 18ms.</p>
+          <p className="hero-copy">DeltaZero is the deterministic risk gate for pseudo delta neutral DeFi positions. It measures hedge drift, net carry deterioration, funding stress, Safety Buffer breach probability, Monte Carlo impairment, and the next action: rebalance, reduce, or exit.</p>
+          <p className="hero-positioning">One typed request returns four coordinated reports and a verifiable Risk Envelope. Read only. No price predictions, prediction markets, charting terminal, token intelligence, or trade execution.</p>
           <div className="hero-actions">
             <a href="https://drive.google.com/file/d/10FnOtqaoEykPCZ3PklQyNNml_Kfh7Lnk/view" target="_blank" rel="noreferrer" className="button button-primary">Watch Demo <span>▶</span></a>
             <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/agent" className="button button-secondary">Agent Console <span>◎</span></Link>
-            <Link href="/wallet" className="button button-secondary">Hedge Intelligence <span>◇</span></Link>
+            <Link href="/auditor" className="button button-secondary">Hedge-Drift Auditing <span>◇</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
             {['Read only', 'No signatures', 'Deterministic engine', 'Agent payment ready'].map((badge) => <span key={badge}>✓ {badge}</span>)}
@@ -312,9 +313,9 @@ export default function Home() {
         <div className="section-heading">
           <div>
             <p className="kicker">Deterministic interpretation</p>
-            <h2 id="risk-zones-home-title">Risk zones that agents can understand</h2>
+          <h2 id="risk-zones-home-title">The deterministic risk gate for pseudo delta neutral DeFi</h2>
           </div>
-          <p>DeltaZero translates complex hedge, carry, impairment, and stress metrics into clear operator zones.</p>
+          <p>Every supported position passes through the same gate: hedge drift, net carry deterioration, funding stress, Safety Buffer breach probability, Monte Carlo impairment, and a clear rebalance or exit recommendation.</p>
         </div>
         <div className="risk-zones-home-grid">
           {[
@@ -334,10 +335,10 @@ export default function Home() {
       </section>
 
       <section className="section-wrap action-demo-section anchor-section" aria-labelledby="action-demo-title">
-        <div className="section-heading"><div><p className="kicker">Live product workflow</p><h2 id="action-demo-title">Run DeltaZero end to end.</h2></div><p>Use the full analysis suite across one connected risk workflow.</p></div>
+        <div className="section-heading"><div><p className="kicker">Live product workflow</p><h2 id="action-demo-title">One risk gate. Four coordinated views.</h2></div><p>Use the same deterministic decision boundary before a user or agent deploys capital.</p></div>
         <div className="action-demo-shell glass-card">
           <div className="action-demo-track">
-            {[['01', 'Build Hedge Recommendation', 'Convert exposure into a proposed adjustment.'], ['02', 'Strategy Build', 'Evaluate carry, hedge quality, and resilience.'], ['03', 'Monte Carlo Sensitivity', 'Measure impairment across bounded stress paths.'], ['04', 'Funding Stress Testing', 'Apply a deterministic funding scenario.'], ['05', 'Hedge Intelligence', 'Read supported public positions.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
+            {[['01', 'Strategy Build', 'Construct the pseudo delta neutral position and target hedge.'], ['02', 'Hedge-Drift Auditing', 'Measure drift, net delta, carry deterioration, and capital at risk.'], ['03', 'Funding Stress Testing', 'Apply funding, yield, price, collateral, and liquidity shocks.'], ['04', 'Monte Carlo Sensitivity', 'Quantify impairment and Safety Buffer breach probability across seeded paths.']].map(([step, title, copy]) => <article key={step}><span>{step}</span><div><strong>{title}</strong><p>{copy}</p></div></article>)}
           </div>
           <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
         </div>
@@ -407,9 +408,9 @@ export default function Home() {
         <div className="section-heading">
           <div>
             <p className="kicker">What DeltaZero does</p>
-            <h2>Five connected services, one coherent risk workflow.</h2>
+            <h2>Four risk reports, one deterministic gate.</h2>
           </div>
-          <p>Each product is a focused view of the same underlying strategy engine, tuned for a different question.</p>
+          <p>The four reports are the product. Read-only protocol data, the operator console, and the registry are supporting inputs and controls around that decision boundary.</p>
         </div>
         <div className="tool-grid product-grid">
           {products.map((tool) => (
@@ -431,8 +432,8 @@ export default function Home() {
       <section id="integrations" className="section-wrap anchor-section">
         <div className="section-heading">
           <div>
-            <p className="kicker">Integrations</p>
-            <h2>Supported read-only integrations and roadmap coverage.</h2>
+          <p className="kicker">Read-only inputs</p>
+            <h2>Protocol data that feeds the risk gate.</h2>
           </div>
           <p>Live integrations are read-only. DeltaZero does not request signatures, private keys, approvals, or transaction permissions.</p>
         </div>
@@ -455,7 +456,7 @@ export default function Home() {
         </div>
         <div className="integration-group">
           <div className="integration-group-head">
-            <p className="kicker">Hedge Intelligence</p>
+            <p className="kicker">Supporting position input</p>
             <span>Live</span>
           </div>
           <div className="integration-single">
@@ -494,11 +495,10 @@ export default function Home() {
         <div className="section-heading">
           <div>
             <p className="kicker">Where these strategies can be used</p>
-            <h2>Strategy styles and the platforms they map to.</h2>
+            <h2>Risk gate policies and supported position contexts.</h2>
           </div>
           <p>
-            DeltaZero currently analyzes user supplied assumptions and does not execute trades or connect directly to
-            these protocols.
+            These are input policies and read-only position contexts for the risk gate, not separate trading products. DeltaZero does not execute trades or connect with transaction permissions.
           </p>
         </div>
         <div className="strategy-grid">

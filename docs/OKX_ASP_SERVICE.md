@@ -2,10 +2,10 @@
 
 ## Closed-loop agent workflow
 
-The executable example in `examples/agent-bot` demonstrates:
+The executable example in `examples/agent-bot` demonstrates the canonical risk gate:
 
 1. Detect hedge drift in a simulated position.
-2. Call the paid DeltaZero Position Auditor.
+2. Call the paid DeltaZero risk gate.
 3. Authorize and replay an x402 request through Onchain OS.
 4. Generate an exact rebalance intent.
 5. Simulate the proposed adjustment and require approval.
@@ -22,35 +22,42 @@ only deployments do not fabricate a receipt.
 
 ## Service Name
 
-DeltaZero Wallet Auditor
+DeltaZero Deterministic Risk Gate
 
 ## Purpose
 
-This document describes the live Wallet Auditor callable capability. DeltaZero identity `#5739` has been registered and submitted for OKX listing review. Registration and review submission are not represented as marketplace approval until OKX accepts the listing.
+This document describes the canonical A2MCP capability. DeltaZero identity `#5739` has been registered and submitted for OKX listing review. Registration and review submission are not represented as marketplace approval until OKX accepts the listing. The service is a deterministic risk gate for pseudo delta neutral DeFi positions, not a general market or token intelligence service.
 
 ## Request Schema
 
+The canonical request runs all four coordinated risk views in one call:
+
 ```json
 {
-  "wallet_address": "0x...",
-  "networks": ["ethereum", "arbitrum", "hyperliquid"],
-  "protocols": ["hyperliquid", "aave", "morpho"],
-  "stress_profile": "standard"
+  "asset": "SOL",
+  "capital_usd": 5000,
+  "risk_tolerance": "medium",
+  "target_style": "neutral_yield",
+  "long_yield_apy": 14,
+  "short_funding_apy": 3,
+  "fee_drag_apy": 1,
+  "stress_magnitude_pct": 4,
+  "simulation_count": 1000,
+  "time_horizon_days": 30,
+  "seed": 42
 }
 ```
 
 ## Response Schema
 
-The service returns a deterministic JSON report with:
+The canonical service returns a deterministic JSON report with:
 
-- portfolio summary
-- risk metrics
-- strategy health
-- recommendation
-- corrective actions
-- detected positions
-- protocol warnings
-- raw structured notes
+- `strategy_build`
+- `hedge_drift_audit`
+- `funding_stress_test`
+- `monte_carlo_sensitivity`
+- `risk_envelope`
+- one operator action and supporting evidence
 
 ## Supported Networks
 
@@ -84,7 +91,10 @@ The service returns a deterministic JSON report with:
 - Partial protocol failures are surfaced instead of hidden.
 - Missing data is treated cautiously rather than as zero risk.
 
-## Example Request
+## Supporting wallet input
+
+Read-only public wallet data is an optional input to the risk gate. It is not
+the marketplace category and does not replace the canonical strategy request.
 
 ```json
 {
@@ -95,11 +105,11 @@ The service returns a deterministic JSON report with:
 }
 ```
 
-## Example Response
+## Example wallet input response
 
 ```json
 {
-  "service": "wallet_portfolio_auditor",
+  "service": "read_only_protocol_exposure",
   "wallet_address": "0x1234567890abcdef1234567890abcdef12345678",
   "data_quality": "partial",
   "strategy_health": "warning",
