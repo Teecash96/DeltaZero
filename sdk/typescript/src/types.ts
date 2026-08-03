@@ -229,7 +229,31 @@ export interface RiskEnvelopeV1 {
   measures: { safety_buffer_score: number; hedge_drift_pct: number; net_carry_apy: number; p95_impairment_pct: number; probability_capital_impairment_pct: number; decision_confidence: number };
   evidence: { strategy_build_action: string; hedge_audit_action: string; funding_stress_action: string; monte_carlo_action: string; simulation_count: number; seed: number | null };
   constraints: string[];
+  proof: RiskEnvelopeProof;
   compatible_transports: Array<"REST" | "MCP" | "JSON">;
+}
+
+export interface RiskEnvelopeProof {
+  schema_id: "https://deltazero.dev/schemas/risk-proof/v1";
+  algorithm: "sha256";
+  canonicalization: "json_sort_keys_compact_utf8";
+  input_hash: string;
+  output_hash: string;
+  deterministic: true;
+}
+
+export interface RiskEnvelopeVerificationRequest {
+  request: RiskEnvelopeRequest;
+  envelope: RiskEnvelopeV1;
+}
+
+export interface RiskEnvelopeProofVerification {
+  valid: boolean;
+  input_hash_matches: boolean;
+  output_hash_matches: boolean;
+  analysis_id_matches: boolean;
+  expected_input_hash: string;
+  expected_output_hash: string;
 }
 
 export interface NormalizedPosition {

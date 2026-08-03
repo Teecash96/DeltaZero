@@ -2140,6 +2140,17 @@ pre, .json-box pre, .methodology-worked-example code {
 .risk-envelope-result dl div { min-width: 0; padding: 11px; border: 1px solid var(--border); border-radius: 9px; }
 .risk-envelope-result dt { color: var(--subtle); font: 700 8px var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
 .risk-envelope-result dd { margin: 6px 0 0; color: var(--text); font: 650 10px var(--font-geist-mono); overflow-wrap: anywhere; }
+.risk-proof-card { border-color: color-mix(in srgb, var(--accent) 28%, var(--border)); }
+.risk-proof-card header, .risk-proof-card footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.risk-proof-card h3 { margin: 10px 0 0; color: var(--text); font-size: 22px; }
+.risk-proof-card p { max-width: 900px; color: var(--muted); line-height: 1.6; }
+.risk-proof-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border)); border-radius: 999px; color: var(--accent); font: 700 9px var(--font-geist-mono); letter-spacing: .06em; text-transform: uppercase; }
+.risk-proof-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.risk-proof-grid div { min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 9px; }
+.risk-proof-grid dt { color: var(--subtle); font: 700 8px var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
+.risk-proof-grid dd { margin: 7px 0 0; color: var(--text); font: 650 10px/1.5 var(--font-geist-mono); overflow-wrap: anywhere; word-break: break-word; }
+.risk-proof-card footer { margin-top: 14px; }
+.risk-proof-card footer > span { color: var(--muted); font: 650 9px var(--font-geist-mono); }
 .ai-risk-brief { border-color: color-mix(in srgb, var(--accent) 32%, var(--border)); }
 .ai-risk-brief header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .ai-risk-brief h3 { margin: 10px 0 0; color: var(--text); font-size: 24px; }
@@ -2154,11 +2165,13 @@ pre, .json-box pre, .methodology-worked-example code {
 .ai-risk-brief footer span { padding: 6px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font: 650 8px var(--font-geist-mono); text-transform: uppercase; }
 
 @media (max-width: 760px) {
-  .mc-systemic-grid, .history-card, .registry-home-grid, .composability-grid, .composability-contract, .risk-envelope-result, .ai-risk-brief-grid { grid-template-columns: 1fr; }
+  .mc-systemic-grid, .history-card, .registry-home-grid, .composability-grid, .composability-contract, .risk-envelope-result, .risk-proof-grid, .ai-risk-brief-grid { grid-template-columns: 1fr; }
   .ai-risk-brief header { display: grid; }
   .ai-risk-brief header > small { width: fit-content; }
   .composability-contract div { border-right: 0; border-bottom: 1px solid var(--border); }
   .composability-contract div:last-child { border-bottom: 0; }
+  .risk-proof-card header, .risk-proof-card footer { align-items: flex-start; flex-direction: column; }
+  .risk-proof-card footer .button { width: 100%; }
   .registry-home-contract .button { margin-top: 26px; }
   .history-metrics { display: grid; grid-template-columns: 1fr 1fr; }
   .history-actions { display: grid; grid-template-columns: 1fr; }

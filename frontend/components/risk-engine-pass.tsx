@@ -32,6 +32,7 @@ export function RiskEnginePass() {
   const [payment, setPayment] = useState<X402Challenge | null | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [proofCopied, setProofCopied] = useState(false);
 
   async function submit(event?: React.FormEvent) {
     event?.preventDefault();
@@ -47,6 +48,17 @@ export function RiskEnginePass() {
       else setError(caught instanceof Error ? caught.message : "Risk Engine Pass could not be completed.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function copyProof() {
+    if (!result || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(result.risk_envelope.proof, null, 2));
+      setProofCopied(true);
+      window.setTimeout(() => setProofCopied(false), 1800);
+    } catch {
+      setProofCopied(false);
     }
   }
 
@@ -100,6 +112,24 @@ export function RiskEnginePass() {
             <div><dt>Transports</dt><dd>{result.risk_envelope.compatible_transports.join(" · ")}</dd></div>
             <div><dt>Approval</dt><dd>{result.risk_envelope.decision.human_approval_required ? "Human required" : "Not required"}</dd></div>
           </dl>
+        </article>
+        <article className="panel risk-proof-card">
+          <header>
+            <div>
+              <span className="decision-eyebrow">Verifiable proof envelope</span>
+              <h3>Reproducible by any client</h3>
+            </div>
+            <span className="risk-proof-badge">SHA-256 · deterministic</span>
+          </header>
+          <p>These commitments let an agent recompute the input and output hashes independently. They prove reproducibility and response integrity, not server identity or profitability.</p>
+          <div className="risk-proof-grid">
+            <div><dt>Input commitment</dt><dd>{result.risk_envelope.proof.input_hash}</dd></div>
+            <div><dt>Output commitment</dt><dd>{result.risk_envelope.proof.output_hash}</dd></div>
+          </div>
+          <footer>
+            <span>Canonical JSON · sorted keys · compact UTF-8</span>
+            <button className="button button-secondary" type="button" onClick={() => void copyProof()}>{proofCopied ? "Proof copied" : "Copy proof"}</button>
+          </footer>
         </article>
         {result.narrative_explanation ? <article className="panel ai-risk-brief">
           <header>

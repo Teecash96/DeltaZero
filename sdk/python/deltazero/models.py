@@ -180,7 +180,31 @@ class RiskEnvelopeV1(TypedDict):
     measures: dict[str, float | int]
     evidence: dict[str, object]
     constraints: list[str]
+    proof: "RiskEnvelopeProof"
     compatible_transports: list[Literal["REST", "MCP", "JSON"]]
+
+
+class RiskEnvelopeProof(TypedDict):
+    schema_id: Literal["https://deltazero.dev/schemas/risk-proof/v1"]
+    algorithm: Literal["sha256"]
+    canonicalization: Literal["json_sort_keys_compact_utf8"]
+    input_hash: str
+    output_hash: str
+    deterministic: Literal[True]
+
+
+class RiskEnvelopeVerificationRequest(TypedDict):
+    request: RiskEnvelopeRequest
+    envelope: RiskEnvelopeV1
+
+
+class RiskEnvelopeProofVerification(TypedDict):
+    valid: bool
+    input_hash_matches: bool
+    output_hash_matches: bool
+    analysis_id_matches: bool
+    expected_input_hash: str
+    expected_output_hash: str
 
 
 class RiskExplanation(TypedDict):

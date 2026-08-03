@@ -180,11 +180,21 @@ Hyperliquid accounts.
 DeltaZero is composable at the decision boundary while remaining deliberately read-only. A complete Risk Engine call embeds `risk_envelope`, and clients can request the same portable artifact directly through:
 
 - `POST /risk-envelope/evaluate` over REST;
+- `POST /risk-envelope/verify` over REST for independent proof verification;
 - `evaluate_risk_envelope` over MCP;
 - `GET /standards/risk-envelope/v1` for the public JSON Schema; and
 - `deltazero://schemas/risk-envelope-v1` for MCP schema discovery.
 
 Risk Envelope v1 includes a deterministic analysis ID, normalized action, risk zone, core measures, evidence from all four analysis modules, known constraints, and `human_approval_required: true`. It is available in the published TypeScript and Python SDKs.
+
+Each envelope also includes a verifiable proof commitment. It contains a
+SHA-256 hash of the original analysis inputs, excluding the optional explanation
+flag, and a SHA-256 hash of the envelope body excluding the proof itself. Both
+values use sorted-key compact UTF-8 JSON. Clients can submit the original
+request and envelope to `POST /risk-envelope/verify` or recompute the hashes
+locally. A valid proof confirms deterministic reproducibility and response
+integrity; it does not claim a server signature, on-chain attestation, or
+profitability guarantee.
 
 Protocol ingestion is independently extensible through `ProtocolAdapterRegistry`:
 
@@ -521,6 +531,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `GET` | `/docs` | Open Swagger UI. Free. |
 | `GET` | `/openapi.json` | Read the OpenAPI contract. Free. |
 | `GET` | `/standards/risk-envelope/v1` | Discover the public Risk Envelope v1 JSON Schema. Free. |
+| `POST` | `/risk-envelope/verify` | Verify a Risk Envelope proof against the original request. Free. |
 | `POST` | `/strategy/build` | Build and evaluate a proposed strategy. Temporarily free. |
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |

@@ -88,6 +88,56 @@ def test_risk_envelope_json_schema_is_public() -> None:
     schema = response.json()
     assert schema["title"] == "RiskEnvelopeV1"
     assert "decision" in schema["properties"]
+    assert "proof" in schema["properties"]
+
+
+def test_risk_envelope_contains_recomputable_proof() -> None:
+    first = TestClient(create_app()).post("/risk-engine/analyze", json=PAYLOAD).json()
+    second = TestClient(create_app()).post("/risk-engine/analyze", json=PAYLOAD).json()
+
+    proof = first["risk_envelope"]["proof"]
+    assert proof["algorithm"] == "sha256"
+    assert proof["canonicalization"] == "json_sort_keys_compact_utf8"
+    assert len(proof["input_hash"]) == 64
+    assert len(proof["output_hash"]) == 64
+    assert proof == second["risk_envelope"]["proof"]
+
+
+def test_risk_envelope_proof_verification_detects_tampering() -> None:
+    client = TestClient(create_app())
+    response = client.post("/risk-engine/analyze", json=PAYLOAD)
+    body = response.json()
+
+    valid = client.post(
+        "/risk-envelope/verify",
+        json={"request": PAYLOAD, "envelope": body["risk_envelope"]},
+    )
+    assert valid.status_code == 200
+    assert valid.json()["valid"] is True
+    assert valid.json()["input_hash_matches"] is True
+    assert valid.json()["output_hash_matches"] is True
+    assert valid.json()["analysis_id_matches"] is True
+
+    tampered_envelope = body["risk_envelope"]
+    tampered_envelope["decision"]["risk_zone"] = "critical"
+    tampered = client.post(
+        "/risk-envelope/verify",
+        json={"request": PAYLOAD, "envelope": tampered_envelope},
+    )
+    assert tampered.status_code == 200
+    assert tampered.json()["valid"] is False
+    assert tampered.json()["input_hash_matches"] is True
+    assert tampered.json()["output_hash_matches"] is False
+
+    changed_request = {**PAYLOAD, "capital_usd": 5001}
+    request_tampered = client.post(
+        "/risk-envelope/verify",
+        json={"request": changed_request, "envelope": body["risk_envelope"]},
+    )
+    assert request_tampered.status_code == 200
+    assert request_tampered.json()["valid"] is False
+    assert request_tampered.json()["input_hash_matches"] is False
+    assert request_tampered.json()["analysis_id_matches"] is False
 
 
 def test_risk_engine_can_include_grounded_narrative(monkeypatch) -> None:

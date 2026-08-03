@@ -47,6 +47,7 @@ if (report.decision_confidence! < 70) {
 // Render recommendation safely
 console.log(`Action: ${report.recommendation.action}`);
 console.log(`Risk zone: ${report.risk_envelope.decision.risk_zone}`);
+console.log(`Proof: ${report.risk_envelope.proof.output_hash}`);
 console.log(`Summary: ${report.recommendation.summary}`);
 ```
 
@@ -145,6 +146,12 @@ request to receive the tool list. Available tools include:
 `run_complete_risk_engine` remains available as a backward-compatible alias.
 The canonical tool accepts flat typed arguments and returns the four coordinated
 reports in one structured result.
+
+Every Risk Envelope includes a deterministic SHA-256 proof commitment. The input
+hash excludes the optional explanation flag and the output hash excludes the
+proof itself. Verify the envelope against the original request with
+`POST /risk-envelope/verify`. The proof confirms reproducibility and response
+integrity, not server identity or profitability.
 
 **Calling a tool:**
 

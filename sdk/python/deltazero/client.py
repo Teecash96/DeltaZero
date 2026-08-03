@@ -13,7 +13,9 @@ from .models import (
     BuildResponse,
     StressTestRequest,
     StressTestResponse,
+    RiskEnvelopeProofVerification,
     RiskEnvelopeRequest,
+    RiskEnvelopeVerificationRequest,
     RiskEnvelopeV1,
     WalletAnalyzeRequest,
     WalletPortfolioResponse,
@@ -132,3 +134,9 @@ class DeltaZeroClient:
 
     def evaluate_risk_envelope(self, request_body: RiskEnvelopeRequest) -> RiskEnvelopeV1:
         return self._request("/risk-envelope/evaluate", request_body)  # type: ignore[return-value]
+
+    def verify_risk_envelope(
+        self,
+        request_body: RiskEnvelopeVerificationRequest,
+    ) -> RiskEnvelopeProofVerification:
+        return self._request("/risk-envelope/verify", request_body)  # type: ignore[return-value]

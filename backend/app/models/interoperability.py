@@ -40,6 +40,21 @@ class RiskEnvelopeEvidence(BaseModel):
     seed: int | None
 
 
+class RiskEnvelopeProof(BaseModel):
+    """Deterministic commitment that clients can recompute independently."""
+
+    schema_id: Literal["https://deltazero.dev/schemas/risk-proof/v1"] = (
+        "https://deltazero.dev/schemas/risk-proof/v1"
+    )
+    algorithm: Literal["sha256"] = "sha256"
+    canonicalization: Literal["json_sort_keys_compact_utf8"] = (
+        "json_sort_keys_compact_utf8"
+    )
+    input_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    output_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    deterministic: Literal[True] = True
+
+
 class RiskEnvelopeV1(BaseModel):
     """Portable decision artifact embedded in a complete Risk Engine response."""
 
@@ -52,6 +67,18 @@ class RiskEnvelopeV1(BaseModel):
     measures: RiskEnvelopeMeasures
     evidence: RiskEnvelopeEvidence
     constraints: list[str]
+    proof: RiskEnvelopeProof
     compatible_transports: list[Literal["REST", "MCP", "JSON"]] = Field(
         default_factory=lambda: ["REST", "MCP", "JSON"]
     )
+
+
+class RiskEnvelopeProofVerification(BaseModel):
+    """Result of checking a proof against the original request and envelope."""
+
+    valid: bool
+    input_hash_matches: bool
+    output_hash_matches: bool
+    analysis_id_matches: bool
+    expected_input_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    expected_output_hash: str = Field(pattern=r"^[0-9a-f]{64}$")

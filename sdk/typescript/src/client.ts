@@ -7,6 +7,8 @@ import type {
   StressTestRequest,
   StressTestResponse,
   RiskEnvelopeRequest,
+  RiskEnvelopeProofVerification,
+  RiskEnvelopeVerificationRequest,
   RiskEnvelopeV1,
   WalletAnalyzeRequest,
   WalletPortfolioResponse,
@@ -139,5 +141,9 @@ export class DeltaZeroClient {
 
   evaluateRiskEnvelope(body: RiskEnvelopeRequest): Promise<RiskEnvelopeV1> {
     return this.request<RiskEnvelopeV1>("/risk-envelope/evaluate", body);
+  }
+
+  verifyRiskEnvelope(body: RiskEnvelopeVerificationRequest): Promise<RiskEnvelopeProofVerification> {
+    return this.request<RiskEnvelopeProofVerification>("/risk-envelope/verify", body);
   }
 }

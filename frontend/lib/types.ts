@@ -344,7 +344,17 @@ export interface RiskEnvelopeV1 {
   };
   evidence: Record<string, string | number | null>;
   constraints: string[];
+  proof: RiskEnvelopeProof;
   compatible_transports: Array<"REST" | "MCP" | "JSON">;
+}
+
+export interface RiskEnvelopeProof {
+  schema_id: "https://deltazero.dev/schemas/risk-proof/v1";
+  algorithm: "sha256";
+  canonicalization: "json_sort_keys_compact_utf8";
+  input_hash: string;
+  output_hash: string;
+  deterministic: true;
 }
 
 export interface RiskEnginePassResponse {

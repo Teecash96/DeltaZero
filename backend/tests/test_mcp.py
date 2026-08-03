@@ -109,7 +109,9 @@ def test_canonical_risk_engine_mcp_call_returns_all_four_views_without_payment()
         "hedge_drift_audit",
         "funding_stress_test",
         "monte_carlo_sensitivity",
+        "risk_envelope",
     }
+    assert result["risk_envelope"]["proof"]["algorithm"] == "sha256"
 
 
 def test_canonical_direct_a2mcp_call_endpoint_returns_all_four_views() -> None:
@@ -148,7 +150,9 @@ def test_canonical_direct_a2mcp_call_endpoint_returns_all_four_views() -> None:
         "hedge_drift_audit",
         "funding_stress_test",
         "monte_carlo_sensitivity",
+        "risk_envelope",
     }
+    assert result["risk_envelope"]["proof"]["deterministic"] is True
 
 
 def test_every_unpaid_mcp_operation_returns_standard_x402_challenge() -> None:
