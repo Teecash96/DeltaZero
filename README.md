@@ -92,6 +92,66 @@ PYTHONPATH=. python benchmarks/safety_buffer_reference.py
 
 > **🔍 Judge's shortcut — live API docs:** [`https://deltazero-production.up.railway.app/docs`](https://deltazero-production.up.railway.app/docs) — inspect every endpoint, schema, and response model in real time. The deterministic risk engine is not a mock frontend.
 
+## 🏗️ Architecture: OKX x402 Payment Flow
+
+The diagram below shows how DeltaZero integrates the **OKX Agent Payments Protocol (x402)** to create a pay-per-use risk gate for AI agents:
+
+```mermaid
+sequenceDiagram
+    participant Agent as AI Agent
+    participant Wallet as OKX Wallet
+    participant DeltaZero as DeltaZero Risk Engine
+    participant XLayer as X Layer Blockchain
+
+    Note over Agent,XLayer: Step 1: Initial Request (Unpaid)
+    Agent->>DeltaZero: POST /mcp (risk analysis request)
+    DeltaZero-->>Agent: HTTP 402 Payment Required
+    Note right of DeltaZero: Headers:<br/>Pay-URL, Pay-Amount,<br/>Pay-Recipient (X Layer)
+
+    Note over Agent,XLayer: Step 2: Payment Authorization
+    Agent->>Wallet: Request payment signature
+    Wallet->>Wallet: Sign payment header<br/>(Authorization + Pay-*)
+    Wallet-->>Agent: Signed payment credentials
+
+    Note over Agent,XLayer: Step 3: Paid Request
+    Agent->>DeltaZero: POST /mcp + Payment Headers
+    DeltaZero->>DeltaZero: Verify payment signature
+    DeltaZero->>XLayer: Validate payment on-chain
+    XLayer-->>DeltaZero: Payment confirmed ✓
+
+    Note over Agent,XLayer: Step 4: Risk Analysis & Response
+    DeltaZero->>DeltaZero: Execute deterministic risk engine
+    DeltaZero-->>Agent: JSON-RPC 200<br/>{action, risk_zone, evidence}
+    
+    Note over Agent,XLayer: Step 5: Agent Decision
+    Agent->>Agent: Evaluate risk recommendation
+    alt ALLOW
+        Agent->>Agent: Execute trade strategy
+    else DENY
+        Agent->>Agent: Abort or rebalance position
+    end
+```
+
+### Key Components:
+
+| Component | Role in Payment Flow |
+|-----------|---------------------|
+| **AI Agent** | Initiates risk analysis requests and responds to 402 challenges |
+| **OKX Wallet** | Signs payment headers cryptographically for micropayments |
+| **DeltaZero** | Issues 402 challenges, verifies payments, executes risk engine |
+| **X Layer** | Settlement layer for USDT₀ micropayments (1 USD₮0 per call) |
+| **Payment Headers** | `Authorization`, `Pay-URL`, `Pay-Amount`, `Pay-Recipient` |
+
+### Why This Matters:
+
+- **No Mock Payments**: Every unpaid MCP request returns HTTP 402 with real x402 challenge headers
+- **Agent-Native**: Agents automatically handle 402 responses without user intervention
+- **Micropayment Economics**: $0.001-0.01 per risk analysis enables sustainable API business model
+- **Trustless Verification**: Payments verified on-chain before releasing valuable risk intelligence
+- **Production Ready**: Registered OKX.AI A2MCP service with live payment boundary at `/mcp`
+
+> **💡 Try it yourself:** Run the Minute 3 commands above to see the 402 challenge headers in real-time from the production endpoint.
+
 ## Product screenshots
 
 ### Live risk-intelligence interface
