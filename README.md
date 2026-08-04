@@ -2,8 +2,6 @@
 
 ## The deterministic risk gate for pseudo delta neutral DeFi positions
 
-DeltaZero gives agents and users one decision boundary before capital is deployed. It measures hedge drift, net carry deterioration, funding stress, Safety Buffer breach probability, Monte Carlo impairment, and whether to rebalance, reduce, or exit.
-
 <div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -13,6 +11,13 @@ DeltaZero gives agents and users one decision boundary before capital is deploye
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-84CC16.svg)](LICENSE)
 [![OKX AI Hackathon](https://img.shields.io/badge/OKX_AI-Hackathon-000000)](https://www.okx.com/)
+[![⚡ Median Latency](https://img.shields.io/badge/⚡_median_latency-18ms-brightgreen)](#performance-benchmarks)
+
+</div>
+
+DeltaZero gives agents and users one decision boundary before capital is deployed. It measures hedge drift, net carry deterioration, funding stress, Safety Buffer breach probability, Monte Carlo impairment, and whether to rebalance, reduce, or exit.
+
+<div align="center">
 
 [🎬 Watch the 2-minute demo →](https://drive.google.com/file/d/10FnOtqaoEykPCZ3PklQyNNml_Kfh7Lnk/view) ·
 [Live Application](https://delta-zero-alpha.vercel.app) ·
@@ -247,13 +252,17 @@ risk-engine project. One typed API or MCP request returns four coordinated
 views—Strategy Build, Hedge-Drift Auditing, Funding Stress Testing, and Monte
 Carlo Sensitivity—with validated structured output and shared policy rules.
 
+## ⚡ Performance Benchmarks
+
+DeltaZero achieves **sub-20ms median latency** for deterministic risk decisions, enabling high-frequency trading strategies and real-time agent automation.
+
 The reproducible local benchmark in [`backend/benchmarks`](backend/benchmarks)
 measured the complete four-report FastAPI pass with 1,000 seeded Monte Carlo
 paths after five warmups:
 
 | Evidence | Result |
 | --- | ---: |
-| Median local decision latency | 18.09 ms |
+| **Median local decision latency** | **18.09 ms** ⚡ |
 | P95 local decision latency | 19.48 ms |
 | Identical normalized outputs | 50 / 50 |
 | Schema-valid responses | 50 / 50 |
