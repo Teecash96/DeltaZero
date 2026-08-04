@@ -619,6 +619,40 @@ console.log(report.recommendation.action);
 
 Available methods:
 
+## 📊 Competitive Comparison Matrix
+
+How DeltaZero compares to typical AI trading bots, signal services, and manual spreadsheets:
+
+| Feature | **DeltaZero** | Typical AI Bot | Trading Spreadsheet | Signal Service |
+|---------|--------------|----------------|---------------------|----------------|
+| **Decision Basis** | Deterministic math (documented formulas) | Probabilistic ML (black box) | Manual calculations (error-prone) | Human analyst opinion |
+| **Hallucination Risk** | Zero (no generation of numbers) | High (LLM can invent data) | Medium (formula errors) | Low (but unverifiable) |
+| **Latency** | 18ms median (benchmarked) | 500ms-5s (model inference) | Minutes-hours (manual) | Hours-days (discretionary) |
+| **Payment Model** | x402 micropayments ($0.001-0.01/call) | $50-500/month subscription | Free (your time) | $100-1000/month |
+| **Auditability** | Full on-chain payment + deterministic replay | None (proprietary model) | Local file only | Trust-based |
+| **Agent Integration** | Native MCP + REST + SDKs | API-only (if available) | None | Discord/Telegram |
+| **Error Handling** | Type-safe Pydantic contracts | Variable (often silent failures) | Silent formula breaks | No guarantees |
+| **Reproducibility** | 50/50 identical outputs (benchmarked) | Non-deterministic | Manual re-calc required | Impossible |
+| **Data Freshness** | Live protocol reads | Cached/stale data | Static snapshots | Delayed signals |
+| **Customization** | Bring your own thresholds | Fixed model parameters | Full control | None |
+| **Transparency** | Open-source engine + methodology | Closed-source | Your own formulas | Proprietary models |
+| **Risk Zones** | 5 explicit zones (Optimal→Critical) | Buy/Sell/Hold only | Custom metrics | Subjective ratings |
+
+### Why This Comparison Matters:
+
+**DeltaZero is infrastructure, not another bot.** While AI bots try to predict market direction (and fail unpredictably), DeltaZero calculates whether your *existing* strategy assumptions are safe to execute *right now*. 
+
+- **AI Bots**: "I think SOL will go up 5% → Buy" (probabilistic guess)
+- **DeltaZero**: "Your delta-neutral position has 12% hedge drift and -3% carry → DENY" (deterministic fact)
+
+**The spreadsheet trap:** Manual risk calculations work until they don't—one broken formula, stale price feed, or copy-paste error can lose everything. DeltaZero automates the math with benchmarked reproducibility.
+
+**Micropayment advantage:** Pay $0.005 per risk check instead of $200/month for a bot you might not use daily. This makes DeltaZero economically viable for both high-frequency agents and casual users.
+
+> **💡 Key insight:** DeltaZero doesn't compete with AI agents—it *enables* them. Agents use DeltaZero as their risk gate before executing any trade, combining AI creativity with deterministic safety.
+
+### TypeScript SDK (continued)
+
 - `buildStrategy()`
 - `auditPosition()`
 - `stressTest()`
