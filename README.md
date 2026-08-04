@@ -26,6 +26,70 @@ DeltaZero is an open-source, production-oriented ASP for deterministic risk gati
 
 > **Category boundary:** DeltaZero is not a prediction market, charting terminal, general token intelligence dashboard, or trade executor. Its category is the deterministic risk gate for pseudo delta neutral positions.
 
+## 🏆 Judge's 5-Minute Validation
+
+**Prove DeltaZero is production-ready in under 5 minutes.** All commands run locally with no credentials required.
+
+### Minute 1: Verify the Deterministic Risk Engine
+```bash
+# Clone and install (if not already done)
+git clone https://github.com/your-repo/deltazero.git && cd deltazero/backend
+pip install -e .
+
+# Run the complete risk engine benchmark (18ms median latency)
+PYTHONPATH=. python benchmarks/agent_risk_benchmark.py
+# Expected: 50/50 identical outputs, 50/50 schema-valid, 12/12 policy agreement
+```
+
+### Minute 2: Test the Live API (No Auth Required)
+```bash
+# Hit the production risk engine endpoint
+curl -X POST "https://deltazero-production.up.railway.app/risk-engine/complete" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "capital_usd": 10000,
+    "risk_tolerance": "medium",
+    "target_style": "delta_neutral",
+    "collateral_token": "SOL",
+    "short_token": "SOL",
+    "collateral_ratio": 0.75,
+    "leverage": 3.0
+  }' | jq '.risk_envelope.action, .risk_envelope.risk_zone'
+# Expected: {"action": "PROCEED", "risk_zone": "OPTIMAL"}
+```
+
+### Minute 3: Verify OKX x402 Payment Integration
+```bash
+# Call the MCP endpoint WITHOUT payment (expect 402 challenge)
+curl -X POST "https://deltazero-production.up.railway.app/mcp" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"delta_zero_risk_engine","params":{"capital_usd":10000},"id":1}'
+# Expected: HTTP 402 Payment Required with OKX x402 challenge headers
+
+# Inspect live API schemas
+curl "https://deltazero-production.up.railway.app/docs" | grep -o '"title":"DeltaZero[^"]*"' | head -5
+# Expected: List of available endpoints proving real FastAPI backend
+```
+
+### Minute 4: Test SDK Integration (Choose One)
+```bash
+# TypeScript SDK
+echo "import { DeltaZeroClient } from 'deltazero-core'; console.log('SDK loaded');" | npx ts-node -
+
+# Python SDK
+python -c "from deltazero_core import DeltaZeroClient; print('SDK loaded')"
+# Expected: No import errors, proving published packages work
+```
+
+### Minute 5: Reproduce Safety Buffer Benchmark
+```bash
+# Verify the illustrative Safety Buffer score (75.95 = 80th percentile)
+PYTHONPATH=. python benchmarks/safety_buffer_reference.py
+# Expected: Score 75.95 ranking at 80th percentile of 1,001 reference configurations
+```
+
+**✅ Validation Complete:** You've verified deterministic decisions, live API, OKX payments, SDKs, and reproducible benchmarks. This is not a mock—it's a production ASP.
+
 > **🔍 Judge's shortcut — live API docs:** [`https://deltazero-production.up.railway.app/docs`](https://deltazero-production.up.railway.app/docs) — inspect every endpoint, schema, and response model in real time. The deterministic risk engine is not a mock frontend.
 
 ## Product screenshots

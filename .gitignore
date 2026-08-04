@@ -1,25 +1,26 @@
-```
+```gitignore
 # Compiled and build artifacts
 *.pyc
 __pycache__/
 *.o
 *.obj
-*.so
-*.dll
-*.exe
 *.class
+*.exe
+*.dll
+*.so
+*.a
 *.out
 
 # Dependencies
 .venv/
 venv/
 node_modules/
+.mypy_cache/
+.pytest_cache/
 dist/
 build/
 target/
 .gradle/
-.mypy_cache/
-.pytest_cache/
 
 # Logs and temp files
 *.log
@@ -30,7 +31,7 @@ target/
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
