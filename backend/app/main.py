@@ -313,8 +313,20 @@ def create_app(
                 content={"error": "Invalid JSON body"},
             )
 
+        if not isinstance(body, dict):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Request body must be a JSON object"},
+            )
+
         tool_name = body.get("tool") or body.get("name") or ""
         arguments = body.get("arguments") or body.get("params") or {}
+
+        if not isinstance(arguments, dict):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Arguments must be a JSON object"},
+            )
 
         # Dispatch to the appropriate service function.
         result = _dispatch_mcp_tool(tool_name, arguments)

@@ -120,23 +120,41 @@ class DeltaZeroClient:
                 raise DeltaZeroTimeoutError(url, self.timeout_s) from exc
             raise DeltaZeroError(str(reason)) from exc
 
+    def _deserialize_model(self, data: dict[str, Any], model_cls: type[Any]) -> Any:
+        """Deserialize a dict response into the appropriate model class."""
+        if hasattr(model_cls, "model_validate"):
+            # Pydantic v2
+            return model_cls.model_validate(data)
+        elif hasattr(model_cls, "parse_obj"):
+            # Pydantic v1
+            return model_cls.parse_obj(data)
+        else:
+            # Fallback: try direct instantiation
+            return model_cls(**data)
+
     def build_strategy(self, request_body: BuildRequest) -> BuildResponse:
-        return self._request("/strategy/build", request_body)  # type: ignore[return-value]
+        data = self._request("/strategy/build", request_body)
+        return self._deserialize_model(data, BuildResponse)
 
     def audit_position(self, request_body: AuditRequest) -> AuditResponse:
-        return self._request("/strategy/audit", request_body)  # type: ignore[return-value]
+        data = self._request("/strategy/audit", request_body)
+        return self._deserialize_model(data, AuditResponse)
 
     def stress_test(self, request_body: StressTestRequest) -> StressTestResponse:
-        return self._request("/strategy/stress-test", request_body)  # type: ignore[return-value]
+        data = self._request("/strategy/stress-test", request_body)
+        return self._deserialize_model(data, StressTestResponse)
 
     def audit_wallet(self, request_body: WalletAnalyzeRequest) -> WalletPortfolioResponse:
-        return self._request("/wallet/analyze", request_body)  # type: ignore[return-value]
+        data = self._request("/wallet/analyze", request_body)
+        return self._deserialize_model(data, WalletPortfolioResponse)
 
     def evaluate_risk_envelope(self, request_body: RiskEnvelopeRequest) -> RiskEnvelopeV1:
-        return self._request("/risk-envelope/evaluate", request_body)  # type: ignore[return-value]
+        data = self._request("/risk-envelope/evaluate", request_body)
+        return self._deserialize_model(data, RiskEnvelopeV1)
 
     def verify_risk_envelope(
         self,
         request_body: RiskEnvelopeVerificationRequest,
     ) -> RiskEnvelopeProofVerification:
-        return self._request("/risk-envelope/verify", request_body)  # type: ignore[return-value]
+        data = self._request("/risk-envelope/verify", request_body)
+        return self._deserialize_model(data, RiskEnvelopeProofVerification)

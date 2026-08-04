@@ -99,11 +99,31 @@ export async function verifyPaymentReceiptOnChain(receipt: PaymentReceipt): Prom
     const onchainStatus = result.status === "0x1" ? "confirmed" : result.status === "0x0" ? "failed" : "unavailable";
     const expectedAsset = receipt.asset?.toLowerCase();
     const expectedReceiver = receipt.receiver?.toLowerCase();
-    const expectedAmount = receipt.amountAtomic ? BigInt(receipt.amountAtomic) : null;
+    let expectedAmount: bigint | null = null;
+    if (receipt.amountAtomic && /^\d+$/.test(receipt.amountAtomic)) {
+      try {
+        expectedAmount = BigInt(receipt.amountAtomic);
+      } catch {
+        // Invalid amount format, skip verification
+        return {
+          ...receipt,
+          blockNumber: result.blockNumber ? Number.parseInt(result.blockNumber, 16) : null,
+          onchainStatus,
+          transferVerified: null,
+        };
+      }
+    }
     const matchingTransfer = result.logs?.some((log) => {
       if (log.address?.toLowerCase() !== expectedAsset || String(log.topics?.[0]).toLowerCase() !== TRANSFER_TOPIC) return false;
       const to = topicAddress(log.topics?.[2]);
-      const amount = typeof log.data === "string" ? BigInt(log.data) : null;
+      let amount: bigint | null = null;
+      if (typeof log.data === "string") {
+        try {
+          amount = BigInt(log.data);
+        } catch {
+          return false;
+        }
+      }
       return to === expectedReceiver && amount === expectedAmount;
     });
     return {
