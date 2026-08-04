@@ -86,7 +86,15 @@ export class DeltaZeroClient {
   private async request<T>(path: string, body: unknown): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const controller = new AbortController();
-    const timeout = globalThis.setTimeout(() => controller.abort(), this.timeoutMs);
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+    let isSettled = false;
+
+    const abortOnTimeout = () => {
+      if (!isSettled) {
+        controller.abort();
+      }
+    };
+    timeoutId = globalThis.setTimeout(abortOnTimeout, this.timeoutMs);
 
     try {
       const response = await fetch(url, {
@@ -96,6 +104,7 @@ export class DeltaZeroClient {
         signal: controller.signal,
       });
 
+      isSettled = true;
       const parsed = await parseJsonBody(response, url);
 
       if (!response.ok) {
@@ -113,13 +122,17 @@ export class DeltaZeroClient {
 
       return parsed as T;
     } catch (error) {
+      isSettled = true;
       if (error instanceof DeltaZeroError) throw error;
       if (error instanceof DOMException && error.name === "AbortError") {
         throw new DeltaZeroTimeoutError(`Request to ${url} timed out after ${this.timeoutMs}ms.`, url);
       }
       throw new DeltaZeroError(error instanceof Error ? error.message : `Request to ${url} failed.`);
     } finally {
-      globalThis.clearTimeout(timeout);
+      isSettled = true;
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
     }
   }
 

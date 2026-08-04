@@ -27,7 +27,7 @@ def strategy_audit(request: AuditRequest) -> AuditResponse:
     return audit_strategy(request)
 
 
+# Single route definition to avoid duplicate OpenAPI schema entries
 @router.post("/stress-test", response_model=StressTestResponse)
-@stress_router.post("/run", response_model=StressTestResponse)
 def strategy_stress_test(request: StressTestRequest) -> StressTestResponse:
     return stress_test_strategy(request)
