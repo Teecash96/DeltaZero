@@ -392,6 +392,44 @@ Live integrations are read-only. DeltaZero does not request signatures, private 
 
 ## Architecture
 
+### x402 Payment Flow
+
+```mermaid
+sequenceDiagram
+    participant User as User/AI Agent
+    participant DZ as DeltaZero API
+    participant OKX as OKX Wallet/Facilitator
+    participant XLAYER as X Layer (USDT)
+
+    Note over User,XLAYER: Step 1: User initiates trade request
+    User->>DZ: POST /risk-engine/analyze<br/>(Strategy params)
+    
+    Note over DZ: No payment header detected
+    
+    DZ-->>User: HTTP 402 Payment Required<br/>Headers:<br/>- Pay-URL: /pay/x402<br/>- Pay-Amount: 1 USDT<br/>- Authorization: Bearer <challenge>
+    
+    Note over User,OKX: Step 2: User signs payment via OKX Wallet
+    User->>OKX: Sign x402 payment (1 USDT)
+    OKX-->>User: Signed payment header
+    
+    Note over User,DZ: Step 3: Retry with payment
+    User->>DZ: POST /risk-engine/analyze<br/>+ x402-Authorization header
+    
+    Note over DZ: Verify payment signature<br/>with OKX Facilitator
+    
+    DZ->>OKX: Verify payment validity
+    OKX-->>DZ: Payment verified ✓
+    
+    Note over DZ: Run deterministic risk engine
+    
+    DZ-->>User: HTTP 200 OK<br/>{<br/>  "action": "ALLOW/DENY",<br/>  "risk_zone": "OPTIMAL/CRITICAL",<br/>  "hedge_drift": 0.023,<br/>  "safety_buffer": 75.95<br/>}
+    
+    Note over User,XLAYER: Settlement occurs on X Layer
+    DZ->>XLAYER: Claim 1 USDT settlement
+```
+
+### System Architecture
+
 ```mermaid
 flowchart LR
     subgraph Clients
