@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { PaymentRequiredError, runRiskEnginePass } from "@/lib/api";
+import { PaymentRequiredError, probeMcpRiskEngine, runRiskEnginePass, type McpProbeResult } from "@/lib/api";
 import type { RiskTolerance, TargetStyle } from "@/lib/types";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
@@ -20,6 +20,7 @@ type PipelineStep = {
 
 type LogTone = "neutral" | "positive" | "warning" | "critical";
 type TerminalLine = { id: number; time: string; text: string; tone: LogTone };
+type PaymentDisplayState = "simulation" | "challenge";
 
 /* ─── Constants ─────────────────────────────────────────────────────── */
 
@@ -35,9 +36,9 @@ const thresholds: Record<RiskTolerance, number> = { low: 4, medium: 6, high: 8 }
 const INITIAL_STEPS: PipelineStep[] = [
   { id: "scan", label: "Scanning simulated wallet", detail: "Reading SOL neutral-carry position…", status: "pending" },
   { id: "drift", label: "Evaluating hedge drift", detail: "Computing net delta against policy boundary…", status: "pending" },
-  { id: "api", label: "Calling Risk Engine API", detail: "POST /risk-engine/analyze", status: "pending" },
-  { id: "payment", label: "x402 payment gate", detail: "1 USDT · X Layer · USD₮0", status: "pending" },
-  { id: "verdict", label: "Recommendation", detail: "Awaiting engine verdict…", status: "pending" },
+  { id: "api", label: "Calling Risk Engine API", detail: "REST /risk-engine/analyze · demo response", status: "pending" },
+  { id: "payment", label: "x402 payment boundary", detail: "402 challenge · no browser settlement", status: "pending" },
+  { id: "verdict", label: "Simulated recommendation", detail: "Awaiting engine verdict…", status: "pending" },
 ];
 
 /* ─── Helpers ───────────────────────────────────────────────────────── */
@@ -61,7 +62,9 @@ export function AgentOperatorConsole() {
   const [steps, setSteps] = useState<PipelineStep[]>(INITIAL_STEPS);
   const [terminal, setTerminal] = useState<TerminalLine[]>([]);
   const [recommendation, setRecommendation] = useState<string | null>(null);
-  const [paymentInfo, setPaymentInfo] = useState<string | null>(null);
+  const [paymentState, setPaymentState] = useState<PaymentDisplayState>("simulation");
+  const [mcpProbe, setMcpProbe] = useState<McpProbeResult | null>(null);
+  const [mcpProbeLoading, setMcpProbeLoading] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const driftTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const breachFired = useRef(false);
@@ -109,8 +112,8 @@ export function AgentOperatorConsole() {
 
     // Step 3: API call
     setTimeout(() => {
-      setStep("api", { status: "active", detail: "POST /risk-engine/analyze …" });
-      pushLine("Calling DeltaZero Risk Engine Pass (4 coordinated reports)…", "neutral");
+      setStep("api", { status: "active", detail: "REST /risk-engine/analyze · simulation …" });
+      pushLine("Running the deterministic Risk Engine simulation (REST fallback)…", "neutral");
 
       void runRiskEnginePass({
         asset: "SOL",
@@ -126,10 +129,11 @@ export function AgentOperatorConsole() {
         setStep("api", { status: "success", detail: "4 reports · 200 OK · 1.2s" });
         pushLine(`Risk Engine responded: strategy_build + hedge_drift_audit + funding_stress + monte_carlo.`, "positive");
 
-        // Step 4: Payment (x402 settlement)
+        // This browser loop is intentionally a simulation. A successful REST
+        // response is not evidence of a payment or an on-chain settlement.
         setTimeout(() => {
-          setStep("payment", { status: "success", detail: "1 USDT settled on X Layer", meta: "x402" });
-          pushLine("x402 gate: payment verified and settled. 1 USDT → receiver on eip155:196.", "positive");
+          setStep("payment", { status: "skipped", detail: "Simulation only · no settlement", meta: "NO PAYMENT" });
+          pushLine("Simulation response received. No payment or receipt was created in this browser loop.", "neutral");
 
           // Step 5: Verdict
           setTimeout(() => {
@@ -148,23 +152,13 @@ export function AgentOperatorConsole() {
           const opt = error.challenge?.accepts?.[0];
           const amt = opt?.amount ? `${Number(opt.amount) / 1e6} USDT` : "1 USDT";
           const net = opt?.network ?? "eip155:196";
+          setPaymentState("challenge");
           setStep("api", { status: "success", detail: "402 → x402 challenge received" });
-          setStep("payment", { status: "active", detail: `${amt} · ${net} · USD₮0`, meta: "402" });
-          setPaymentInfo(`${amt} on ${net} → ${opt?.payTo ?? "receiver"}`);
-          pushLine(`x402 PAYMENT REQUIRED: ${amt} on ${net}. Awaiting agent wallet signature…`, "warning");
-          pushLine("Browser does not sign transactions. Connect a compatible agent client to settle.", "neutral");
-
-          setTimeout(() => {
-            setStep("payment", { status: "success", detail: `${amt} settled · tx 0x8f2a…7c41`, meta: "PAID" });
-            pushLine(`✓ Payment settled on X Layer. Receipt verified.`, "positive");
-
-            setTimeout(() => {
-              setStep("verdict", { status: "success", detail: "REBALANCE — Safety Buffer 7.2%" });
-              setRecommendation("REBALANCE");
-              pushLine("■ VERDICT: REBALANCE. Proposal generated (not broadcast). Agent loop complete.", "warning");
-              setPhase("done");
-            }, 700);
-          }, 2200);
+          setStep("payment", { status: "error", detail: `${amt} · ${net} · compatible client required`, meta: "402" });
+          setStep("verdict", { status: "skipped", detail: "Awaiting paid replay from an agent client" });
+          pushLine(`x402 challenge received: ${amt} on ${net}. No browser payment was attempted.`, "warning");
+          pushLine("Use POST /mcp with delta_zero_risk_engine from a compatible agent payment client.", "neutral");
+          setPhase("done");
         } else {
           setStep("api", { status: "error", detail: error instanceof Error ? error.message : "Request failed" });
           pushLine(`API ERROR: ${error instanceof Error ? error.message : "Unknown failure"}`, "critical");
@@ -182,7 +176,7 @@ export function AgentOperatorConsole() {
     setSteps(INITIAL_STEPS.map((s) => ({ ...s })));
     setTerminal([]);
     setRecommendation(null);
-    setPaymentInfo(null);
+    setPaymentState("simulation");
     setPhase("running");
     setStep("scan", { status: "active" });
     pushLine("DeltaZero Guard spawned. Simulation mode — no wallet permissions granted.", "neutral");
@@ -200,6 +194,20 @@ export function AgentOperatorConsole() {
     pushLine("Agent stopped. No funds moved. No transaction broadcast.", "neutral");
   }
 
+  async function probeMcp() {
+    setMcpProbeLoading(true);
+    const result = await probeMcpRiskEngine();
+    setMcpProbe(result);
+    setMcpProbeLoading(false);
+    if (result.status === "challenge") {
+      pushLine("Live MCP probe: HTTP 402 challenge received. No payment attempted.", "positive");
+    } else if (result.status === "ok") {
+      pushLine("Live MCP probe: HTTP 200 response received from the canonical tool.", "positive");
+    } else {
+      pushLine(`Live MCP probe failed: ${result.detail ?? "unknown error"}`, "critical");
+    }
+  }
+
   const driftPct = Math.min((drift / (thresholds[riskTolerance] * 1.6)) * 100, 100);
   const breached = drift >= thresholds[riskTolerance];
 
@@ -209,9 +217,9 @@ export function AgentOperatorConsole() {
         <div>
           <p className="kicker">Agent-in-a-Box</p>
           <h1>Watch the agent loop run.</h1>
-          <p>A live visualization of the full MCP → x402 → Risk Engine pipeline. The agent scans, detects drift, pays, and recommends — all in real time.</p>
+          <p>A safe simulation of the agent loop. The live MCP probe verifies the canonical endpoint, while this browser never signs or settles a payment.</p>
         </div>
-        <span className="endpoint">LIVE PIPELINE</span>
+        <span className="endpoint">SIMULATION + LIVE MCP</span>
       </header>
 
       {/* ─── Pipeline + Terminal Grid ─────────────────────────────── */}
@@ -286,7 +294,7 @@ export function AgentOperatorConsole() {
               <div className="agent-terminal-empty">
                 <div className="terminal-idle-art">
                   <span>┌─────────────────────────┐</span>
-                  <span>│&nbsp;&nbsp;AGENT OFFLINE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</span>
+                  <span>│&nbsp;&nbsp;SIMULATION IDLE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│</span>
                   <span>│&nbsp;&nbsp;spawn to begin loop&nbsp;&nbsp;&nbsp;│</span>
                   <span>└─────────────────────────┘</span>
                 </div>
@@ -303,10 +311,30 @@ export function AgentOperatorConsole() {
           <div className="agent-terminal-footer">
             <span>Execution authority</span><strong>Not granted</strong>
             <span>Wallet access</span><strong>None</strong>
-            <span>Payment</span><strong>{paymentInfo ? "x402 · X Layer" : "Simulated"}</strong>
+            <span>Payment</span><strong>{paymentState === "challenge" ? "402 challenge" : "Simulation only"}</strong>
           </div>
         </section>
       </div>
+
+      <section className="panel agent-mcp-probe" aria-labelledby="agent-mcp-probe-title">
+        <div>
+          <span className="decision-eyebrow">Live transport check</span>
+          <h2 id="agent-mcp-probe-title" className="panel-title">Verify the canonical MCP boundary.</h2>
+          <p>Probe the production `/mcp` endpoint with the `delta_zero_risk_engine` JSON-RPC tool. This verifies reachability and the x402 challenge without attempting a browser payment.</p>
+          <code>POST /mcp · tools/call · delta_zero_risk_engine</code>
+        </div>
+        <div className="agent-mcp-probe-actions">
+          <button className="button button-secondary" type="button" onClick={() => void probeMcp()} disabled={mcpProbeLoading}>
+            {mcpProbeLoading ? "Probing MCP…" : "Probe live MCP"} <span>↗</span>
+          </button>
+          {mcpProbe && (
+            <div className={`agent-mcp-probe-result probe-${mcpProbe.status}`} role="status">
+              <strong>{mcpProbe.status === "challenge" ? "HTTP 402 challenge received" : mcpProbe.status === "ok" ? "HTTP 200 response received" : "MCP probe failed"}</strong>
+              <span>{mcpProbe.detail}</span>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ─── Policy Config ────────────────────────────────────────── */}
       <section className="panel agent-policy-panel">
@@ -342,10 +370,10 @@ export function AgentOperatorConsole() {
 
       {/* ─── Proof Strip ──────────────────────────────────────────── */}
       <section className="agent-proof-strip">
-        <article><span>MCP</span><strong>Streamable HTTP</strong><p>10 tools · canonical risk engine</p></article>
-        <article><span>x402</span><strong>HTTP 402</strong><p>USDT₀ · X Layer · exact + aggr_deferred</p></article>
+        <article><span>MCP</span><strong>POST /mcp</strong><p>delta_zero_risk_engine · 10 tools</p></article>
+        <article><span>x402</span><strong>HTTP 402</strong><p>Browser probe only · no settlement</p></article>
         <article><span>ENGINE</span><strong>4 Reports</strong><p>Strategy · Audit · Stress · Monte Carlo</p></article>
-        <article><span>AGENT</span><strong>Autonomous</strong><p>Detect → Pay → Analyze → Recommend</p></article>
+        <article><span>AGENT</span><strong>Guarded simulation</strong><p>Detect → Challenge → Recommend</p></article>
       </section>
     </div>
   );

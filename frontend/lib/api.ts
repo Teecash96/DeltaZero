@@ -33,6 +33,15 @@ export type X402Challenge = {
   accepts?: X402PaymentOption[];
 };
 
+export type McpProbeResult = {
+  status: "challenge" | "ok" | "error";
+  httpStatus: number;
+  endpoint: string;
+  tool: "delta_zero_risk_engine";
+  challenge?: X402Challenge | null;
+  detail?: string;
+};
+
 function decodePaymentChallenge(value: string | null): X402Challenge | null {
   if (!value) return null;
   try {
@@ -53,6 +62,88 @@ export class PaymentRequiredError extends Error {
     super(challengeHeader ? "Payment is required to access this endpoint." : "Protected endpoint returned HTTP 402.");
     this.name = "PaymentRequiredError";
     this.challenge = decodePaymentChallenge(challengeHeader);
+  }
+}
+
+/**
+ * Probe the canonical marketplace MCP surface without attempting payment.
+ *
+ * This is intentionally a probe, not a browser payment client. A compatible
+ * agent client must handle the returned x402 challenge and replay the same
+ * JSON-RPC call. Keeping that boundary explicit prevents the UI from ever
+ * presenting a simulated settlement as a real receipt.
+ */
+export async function probeMcpRiskEngine(): Promise<McpProbeResult> {
+  const endpoint = `${API_BASE}/mcp`;
+  const body = {
+    jsonrpc: "2.0",
+    id: `probe-${Date.now()}`,
+    method: "tools/call",
+    params: {
+      name: "delta_zero_risk_engine",
+      arguments: {
+        asset: "SOL",
+        capital_usd: 5000,
+        risk_tolerance: "medium",
+        target_style: "neutral_yield",
+        long_yield_apy: 14,
+        short_funding_apy: 3,
+        fee_drag_apy: 1,
+        stress_magnitude_pct: 4,
+        simulation_count: 1000,
+        time_horizon_days: 30,
+        seed: 42,
+      },
+    },
+  };
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const challenge = decodePaymentChallenge(response.headers.get("PAYMENT-REQUIRED"));
+    if (response.status === 402) {
+      return {
+        status: "challenge",
+        httpStatus: response.status,
+        endpoint,
+        tool: "delta_zero_risk_engine",
+        challenge,
+        detail: "x402 challenge received. No browser payment was attempted.",
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        status: "error",
+        httpStatus: response.status,
+        endpoint,
+        tool: "delta_zero_risk_engine",
+        detail: `MCP returned HTTP ${response.status}.`,
+      };
+    }
+
+    return {
+      status: "ok",
+      httpStatus: response.status,
+      endpoint,
+      tool: "delta_zero_risk_engine",
+      detail: "MCP returned a response without a payment challenge.",
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      httpStatus: 0,
+      endpoint,
+      tool: "delta_zero_risk_engine",
+      detail: error instanceof Error ? error.message : "MCP probe failed.",
+    };
   }
 }
 
