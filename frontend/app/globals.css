@@ -946,7 +946,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sdk-code-head span { color: #8f998f; font: 10px var(--font-geist-mono); letter-spacing: .12em; text-transform: uppercase; }
 .sdk-copy-button { min-height: 34px; padding: 0 12px; border: 1px solid #334335; border-radius: 8px; color: #dbe4dd; background: rgba(255,255,255,.02); cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
 .sdk-copy-button:hover { border-color: #516747; background: rgba(185,246,90,.04); }
-.sdk-code-block { max-width: 100%; margin: 12px 0 0; padding: 18px; overflow: auto; border: 1px solid #243226; border-radius: 12px; background: #070b08; color: #9fcf82; font: 11px/1.65 var(--font-geist-mono); white-space: pre; }
+.sdk-code-block { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; margin: 12px 0 0; padding: 18px; overflow-x: auto; overflow-y: auto; overflow-wrap: anywhere; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; border: 1px solid #243226; border-radius: 12px; background: #070b08; color: #9fcf82; font: 11px/1.65 var(--font-geist-mono); white-space: pre-wrap; }
+.sdk-code-block code { display: block; min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: inherit; }
 .sdk-links h3 { margin: 0 0 14px; font-size: 18px; letter-spacing: -.03em; }
 .sdk-links ul { margin: 0 0 16px; padding-left: 18px; color: #a8b2aa; line-height: 1.6; }
 .sdk-links li + li { margin-top: 8px; }
