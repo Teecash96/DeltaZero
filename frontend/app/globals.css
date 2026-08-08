@@ -938,11 +938,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sdk-status { color: #859188; font: 10px var(--font-geist-mono); letter-spacing: .1em; text-transform: uppercase; }
 .sdk-copy { max-width: 740px; margin: -24px 0 24px; color: #a6b0a8; line-height: 1.65; }
 .sdk-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 16px; }
-.sdk-panel { padding: 20px; border-color: #304133; }
+.sdk-grid > * { min-width: 0; max-width: 100%; }
+.sdk-panel { min-width: 0; padding: 20px; border-color: #304133; }
 .sdk-tabs { display: inline-flex; gap: 6px; padding: 4px; border: 1px solid #253226; border-radius: 999px; background: rgba(255,255,255,.02); }
 .sdk-tab { min-height: 34px; padding: 0 12px; border: 0; border-radius: 999px; color: #a7b1a9; background: transparent; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
 .sdk-tab-active { color: #102011; background: var(--green); }
-.sdk-code-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; }
+.sdk-code-head { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; }
 .sdk-code-head span { color: #8f998f; font: 10px var(--font-geist-mono); letter-spacing: .12em; text-transform: uppercase; }
 .sdk-copy-button { min-height: 34px; padding: 0 12px; border: 1px solid #334335; border-radius: 8px; color: #dbe4dd; background: rgba(255,255,255,.02); cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
 .sdk-copy-button:hover { border-color: #516747; background: rgba(185,246,90,.04); }
