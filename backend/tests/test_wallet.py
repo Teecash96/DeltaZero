@@ -164,6 +164,33 @@ def test_empty_wallet_is_rejected(client: TestClient) -> None:
     assert response.status_code == 422
 
 
+def test_hylo_request_accepts_solana_public_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(wallet_analyzer, "_select_adapters", lambda networks, protocols: [])
+    response = client.post(
+        "/wallet/analyze",
+        json={
+            "wallet_address": "8xKJ8YvM3cSgQxv8g7f3pQ9zvQkJ4JrV2aY3hB6cD7eF",
+            "networks": ["solana"],
+            "protocols": ["hylo"],
+            "stress_profile": "standard",
+        },
+    )
+    assert response.status_code == 200
+
+
+def test_hylo_request_rejects_mixed_evm_and_solana_sources(client: TestClient) -> None:
+    response = client.post(
+        "/wallet/analyze",
+        json={
+            "wallet_address": "8xKJ8YvM3cSgQxv8g7f3pQ9zvQkJ4JrV2aY3hB6cD7eF",
+            "networks": ["solana", "ethereum"],
+            "protocols": ["hylo", "aave"],
+            "stress_profile": "standard",
+        },
+    )
+    assert response.status_code == 422
+
+
 def test_hyperliquid_normalization() -> None:
     raw = {
         "positions": [

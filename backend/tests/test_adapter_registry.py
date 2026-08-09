@@ -37,4 +37,11 @@ def test_duplicate_registration_requires_explicit_replace() -> None:
 
 
 def test_default_registry_exposes_supported_protocols() -> None:
-    assert create_default_adapter_registry().protocols == ("aave", "hyperliquid", "morpho", "okx-earn")
+    assert create_default_adapter_registry().protocols == ("aave", "hylo", "hyperliquid", "morpho", "okx-earn")
+
+
+def test_default_registry_resolves_hylo_on_solana() -> None:
+    adapters = create_default_adapter_registry().resolve(["solana"], ["hylo"])
+    assert len(adapters) == 1
+    assert adapters[0].protocol == "hylo"
+    assert adapters[0].network == "solana"

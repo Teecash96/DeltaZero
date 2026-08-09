@@ -30,7 +30,9 @@ It does not request:
 
 ### Validation Rules
 
-- `wallet_address` must be a `0x`-prefixed 40-character hexadecimal address.
+- EVM and Hyperliquid requests use a `0x`-prefixed 40-character hexadecimal address.
+- Solana and Hylo requests use a base58 Solana public key.
+- One request cannot mix Solana/Hylo sources with EVM/Hyperliquid sources.
 - `networks` must contain at least one supported network.
 - `protocols` must contain at least one supported protocol.
 - Duplicate network values are rejected.
@@ -73,12 +75,14 @@ When `WALLET_DEBUG_MODE=true` is set in a development environment, the response 
 - `ethereum`
 - `arbitrum`
 - `hyperliquid`
+- `solana`
 
 ## Supported Protocols
 
 - `hyperliquid`
 - `aave`
 - `morpho`
+- `hylo`
 
 ## Read-Only Security Model
 
@@ -91,6 +95,21 @@ RPC access is used only where public read calls are required. Missing RPC config
 - Hyperliquid public Info API for read-only account and position data.
 - Aave read-only RPC patterns using configured RPC endpoints.
 - Morpho GraphQL API for market and vault position data.
+- Solana public JSON-RPC `getTokenAccountsByOwner` for supported Hylo SPL token balances.
+
+### Hylo read-only discovery
+
+Hylo discovery is deliberately conservative. The adapter reads supported token
+quantities and records the Solana RPC slot, official Hylo mint metadata, and
+source timestamp. It does not invent USD values, collateral ratios, liquidation
+prices, or pool state. Those fields remain unavailable until an official Hylo
+state API or an IDL-backed decoder is configured.
+
+Official Hylo references:
+
+- [Developer resources](https://docs.hylo.so/developer-resources)
+- [Onchain addresses](https://docs.hylo.so/security/onchain-addresses)
+- [Risk management](https://docs.hylo.so/protocol-overview/risk-management)
 
 ### Hyperliquid Account Discovery
 

@@ -31,3 +31,10 @@ def strategy_audit(request: AuditRequest) -> AuditResponse:
 @router.post("/stress-test", response_model=StressTestResponse)
 def strategy_stress_test(request: StressTestRequest) -> StressTestResponse:
     return stress_test_strategy(request)
+
+
+@stress_router.post("/run", response_model=StressTestResponse)
+def canonical_stress_test(request: StressTestRequest) -> StressTestResponse:
+    """Canonical funding stress route; keep the legacy strategy alias stable."""
+
+    return stress_test_strategy(request)

@@ -36,6 +36,7 @@ const NETWORK_OPTIONS: Array<{ value: WalletNetwork; label: string; note: string
   { value: "ethereum", label: "Ethereum", note: "Aave and Morpho coverage" },
   { value: "arbitrum", label: "Arbitrum", note: "Aave and Morpho coverage" },
   { value: "hyperliquid", label: "Hyperliquid", note: "Perpetual hedge data" },
+  { value: "solana", label: "Solana", note: "Hylo public token positions" },
   { value: "okx-earn", label: "OKX Earn", note: "Yield positions (demo mode)" },
 ];
 
@@ -43,6 +44,7 @@ const PROTOCOL_OPTIONS: Array<{ value: WalletProtocol; label: string; note: stri
   { value: "hyperliquid", label: "Hyperliquid", note: "Perpetual positions and margin" },
   { value: "aave", label: "Aave", note: "Supply, borrow, and health factor" },
   { value: "morpho", label: "Morpho", note: "Market and vault positions" },
+  { value: "hylo", label: "Hylo", note: "Read-only Solana token positions" },
   { value: "okx-earn", label: "OKX Earn", note: "Flexible savings and liquid staking" },
 ];
 
@@ -101,6 +103,8 @@ function WalletRequestForm({
   loading: boolean;
   loadDemo: () => void;
 }) {
+  const solanaMode = value.networks.includes("solana") || value.protocols.includes("hylo");
+
   return (
     <form className="panel wallet-form" onSubmit={submit}>
       {fieldGroups.map((group) => (
@@ -115,12 +119,12 @@ function WalletRequestForm({
                   id="wallet_address"
                   type="text"
                   autoComplete="off"
-                  placeholder="0x..."
+                  placeholder={solanaMode ? "Solana public address" : "0x..."}
                   value={value.wallet_address}
                   onChange={(event) => setValue({ ...value, wallet_address: event.target.value })}
                   required
                 />
-                <small>Public address only. DeltaZero never asks for signatures or private keys.</small>
+                <small>{solanaMode ? "Public Solana address only. Hylo valuation is partial until official pool state is available." : "Public address only. DeltaZero never asks for signatures or private keys."}</small>
               </div>
               <div className="field">
                 <label htmlFor="stress_profile">Stress profile</label>
@@ -142,7 +146,22 @@ function WalletRequestForm({
                   <input
                     type="checkbox"
                     checked={value.networks.includes(option.value)}
-                    onChange={() => setValue({ ...value, networks: toggleValue(value.networks, option.value) })}
+                    onChange={() => {
+                      if (option.value === "solana") {
+                        const enabled = value.networks.includes("solana");
+                        setValue({
+                          ...value,
+                          networks: enabled ? [] : ["solana"],
+                          protocols: enabled ? value.protocols.filter((protocol) => protocol !== "hylo") : ["hylo"],
+                        });
+                        return;
+                      }
+                      setValue({
+                        ...value,
+                        networks: toggleValue(value.networks.filter((network) => network !== "solana"), option.value),
+                        protocols: value.protocols.filter((protocol) => protocol !== "hylo"),
+                      });
+                    }}
                   />
                   <span><strong>{option.label}</strong><small>{option.note}</small></span>
                 </label>
@@ -156,7 +175,22 @@ function WalletRequestForm({
                   <input
                     type="checkbox"
                     checked={value.protocols.includes(option.value)}
-                    onChange={() => setValue({ ...value, protocols: toggleValue(value.protocols, option.value) })}
+                    onChange={() => {
+                      if (option.value === "hylo") {
+                        const enabled = value.protocols.includes("hylo");
+                        setValue({
+                          ...value,
+                          networks: enabled ? [] : ["solana"],
+                          protocols: enabled ? [] : ["hylo"],
+                        });
+                        return;
+                      }
+                      setValue({
+                        ...value,
+                        networks: value.networks.filter((network) => network !== "solana"),
+                        protocols: toggleValue(value.protocols.filter((protocol) => protocol !== "hylo"), option.value),
+                      });
+                    }}
                   />
                   <span><strong>{option.label}</strong><small>{option.note}</small></span>
                 </label>
@@ -169,7 +203,7 @@ function WalletRequestForm({
         {loading ? "Auditing wallet..." : <>Audit Wallet or Positions <span>→</span></>}
       </button>
       <button className="button wallet-demo-button" type="button" onClick={loadDemo} disabled={loading}>Demo Wallet <span>↗</span></button>
-      <p className="wallet-demo-note">Loads a predefined public Hyperliquid address. Submit normally to retrieve live supported positions—no sample results are injected.</p>
+      <p className="wallet-demo-note">Loads a predefined public Hyperliquid address. Submit normally to retrieve live supported positions. No sample results are injected.</p>
       <p className="form-note">Read-only analysis · no transaction permissions</p>
     </form>
   );
@@ -581,12 +615,12 @@ export function WalletPortfolioWorkspace() {
 
   useEffect(() => {
     const requestedProtocol = new URLSearchParams(window.location.search).get("protocol");
-    if (requestedProtocol !== "hyperliquid" && requestedProtocol !== "aave" && requestedProtocol !== "morpho") return;
+    if (requestedProtocol !== "hyperliquid" && requestedProtocol !== "aave" && requestedProtocol !== "morpho" && requestedProtocol !== "hylo") return;
 
     const timer = window.setTimeout(() => {
       setValue((current) => ({
         ...current,
-        networks: requestedProtocol === "hyperliquid" ? ["hyperliquid"] : ["ethereum", "arbitrum"],
+        networks: requestedProtocol === "hyperliquid" ? ["hyperliquid"] : requestedProtocol === "hylo" ? ["solana"] : ["ethereum", "arbitrum"],
         protocols: [requestedProtocol],
       }));
     }, 0);

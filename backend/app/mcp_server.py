@@ -235,7 +235,11 @@ def create_mcp_server() -> FastMCP:
         return json.dumps(
             {
                 "market_context": ["Hyperliquid"],
-                "wallet_positions": ["Hyperliquid", "Aave", "Morpho"],
+                "wallet_positions": ["Hyperliquid", "Aave", "Morpho", "Hylo"],
+                "wallet_position_networks": {"Hylo": "Solana"},
+                "wallet_position_boundaries": {
+                    "Hylo": "Solana public RPC token quantities and mint metadata only; USD valuation and pool state are unavailable.",
+                },
                 "supported_assets": ["SOL", "ETH"],
                 "access": "read_only",
                 "custody": False,

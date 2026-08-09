@@ -259,3 +259,54 @@ def normalize_morpho_positions(snapshot: dict[str, object]) -> list[NormalizedPo
         )
 
     return positions
+
+
+def normalize_hylo_positions(snapshot: dict[str, object]) -> list[NormalizedPosition]:
+    """Normalize read-only Hylo SPL token balances discovered on Solana.
+
+    Hylo's public API is still evolving, so the first adapter intentionally
+    reports token quantities and protocol metadata without inventing USD prices
+    or pool state. Missing valuation keeps the position marked partial.
+    """
+
+    positions: list[NormalizedPosition] = []
+    timestamp = _timestamp(snapshot.get("data_timestamp"))
+    market_context = snapshot.get("market_context") if isinstance(snapshot.get("market_context"), dict) else None
+
+    for raw in snapshot.get("positions", []) or []:
+        if not isinstance(raw, dict):
+            continue
+        quantity = _coerce_float(raw.get("quantity"))
+        if quantity is None or quantity <= 0:
+            continue
+        value = _coerce_float(raw.get("current_value_usd") or raw.get("notional_usd"))
+        mint = str(raw.get("mint") or "")
+        asset = str(raw.get("asset") or "HYLO_ASSET")
+        positions.append(
+            NormalizedPosition(
+                protocol="hylo",
+                network="solana",
+                position_type="spot",
+                asset=asset,
+                quantity=quantity,
+                notional_usd=value,
+                current_value_usd=value,
+                entry_value_usd=None,
+                unrealized_pnl_usd=None,
+                collateral_usd=value if raw.get("is_collateral") and value is not None else 0.0,
+                debt_usd=0.0,
+                funding_apy=None,
+                liquidation_price=None,
+                health_factor=None,
+                data_timestamp=_timestamp(raw.get("data_timestamp") or timestamp),
+                data_quality=_quality_from_fields([quantity, mint, value]),
+                market_context=(
+                    {**market_context, "mint": mint}
+                    if market_context is not None
+                    else {"mint": mint}
+                ),
+                side="long",
+            )
+        )
+
+    return positions

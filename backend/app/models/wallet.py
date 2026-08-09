@@ -4,8 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-WalletNetwork = Literal["ethereum", "arbitrum", "hyperliquid", "okx-earn"]
-WalletProtocol = Literal["hyperliquid", "aave", "morpho", "okx-earn"]
+WalletNetwork = Literal["ethereum", "arbitrum", "hyperliquid", "solana", "okx-earn"]
+WalletProtocol = Literal["hyperliquid", "aave", "morpho", "hylo", "okx-earn"]
 WalletStressProfile = Literal["standard", "elevated", "strict"]
 WalletAction = Literal["HOLD", "REBALANCE", "REDUCE", "CLOSE"]
 WalletStrategyHealth = Literal["healthy", "warning", "fragile", "critical"]
@@ -125,12 +125,6 @@ class WalletAnalyzeRequest(BaseModel):
         value = value.strip()
         if not value:
             raise ValueError("Wallet address is required.")
-        if not value.startswith("0x") or len(value) != 42:
-            raise ValueError("Wallet address must be a 0x-prefixed 40-character hex string.")
-        try:
-            int(value[2:], 16)
-        except ValueError as exc:  # pragma: no cover - defensive validation
-            raise ValueError("Wallet address must contain hexadecimal characters only.") from exc
         return value
 
     @model_validator(mode="after")
@@ -139,7 +133,30 @@ class WalletAnalyzeRequest(BaseModel):
             raise ValueError("Duplicate network values are not allowed.")
         if len(set(self.protocols)) != len(self.protocols):
             raise ValueError("Duplicate protocol values are not allowed.")
+        solana_requested = "solana" in self.networks or "hylo" in self.protocols
+        evm_requested = any(network in {"ethereum", "arbitrum", "hyperliquid", "okx-earn"} for network in self.networks) or any(
+            protocol in {"hyperliquid", "aave", "morpho", "okx-earn"} for protocol in self.protocols
+        )
+        if solana_requested and evm_requested:
+            raise ValueError("Select either Solana/Hylo or EVM/Hyperliquid sources for one wallet address.")
+        if solana_requested:
+            if not _is_solana_address(self.wallet_address):
+                raise ValueError("Solana wallet address must be a base58 public key between 32 and 44 characters.")
+        else:
+            if not self.wallet_address.startswith("0x") or len(self.wallet_address) != 42:
+                raise ValueError("Wallet address must be a 0x-prefixed 40-character hex string.")
+            try:
+                int(self.wallet_address[2:], 16)
+            except ValueError as exc:  # pragma: no cover - defensive validation
+                raise ValueError("Wallet address must contain hexadecimal characters only.") from exc
         return self
+
+
+def _is_solana_address(value: str) -> bool:
+    """Validate the base58 shape of a Solana public key without claiming ownership."""
+
+    alphabet = set("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
+    return 32 <= len(value) <= 44 and all(character in alphabet for character in value)
 
 
 class WalletPortfolioSummary(BaseModel):

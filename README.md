@@ -179,7 +179,7 @@ The marketplace-listed `/mcp` resource is protected end to end by the
 **OKX Agent Payments Protocol**. Every unpaid request—including initialization,
 discovery, and tool invocation—returns the same standards-compliant HTTP 402
 challenge. A verified paid replay receives a JSON-RPC 200 response. Public
-Hyperliquid, Aave, and Morpho data remains free through the separate REST
+Hyperliquid, Aave, Morpho, and Hylo data remains free through the separate REST
 market and position routes.
 
 Paid MCP tools include:
@@ -243,7 +243,7 @@ DeltaZero is differentiated by:
 - **Read-only portfolio analysis** — supported public protocol data is analyzed without custody or wallet permissions.
 - **Agent-ready contracts** — FastAPI schemas and local TypeScript and Python SDK packages expose structured responses for dashboards and automated workflows.
 - **Portable Risk Envelope** — every complete analysis includes a versioned decision artifact that is identical across REST, MCP, and JSON export.
-- **Extensible protocol adapters** — Hyperliquid, Aave, and Morpho are resolved through a registry so additional read-only sources can be added without changing the decision engine.
+- **Extensible protocol adapters** — Hyperliquid, Aave, Morpho, and Hylo are resolved through a registry so additional read-only sources can be added without changing the decision engine.
 
 ## Why Agents Integrate DeltaZero
 
@@ -312,6 +312,7 @@ Hyperliquid accounts.
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
 | Aave | Live with RPC | Reads supported lending and collateral data when an RPC endpoint is configured. |
 | Morpho | Live | Reads supported market and vault positions from Morpho's public API. |
+| Hylo | Live · Solana read only | Reads supported Hylo SPL token quantities through Solana public RPC. USD valuation and pool collateral state remain unavailable until an official Hylo state source is configured. |
 
 ## Products
 
@@ -457,6 +458,17 @@ Set `ETHEREUM_RPC_URL` and `ARBITRUM_RPC_URL` in the backend environment to enab
 
 Read-only market and vault position analysis through Morpho's supported public API.
 
+### Hylo — LIVE · SOLANA READ ONLY
+
+The Hylo adapter discovers supported `hyUSD`, `eHYUSD`, `xSOL`, `hyloSOL`, and
+`hyloSOL+` SPL token balances through Solana public JSON-RPC. It records the
+source slot, timestamp, mint, and token quantity. It does not claim USD
+valuation, collateral ratios, liquidation prices, or pool health because Hylo's
+official public state API or IDL-backed decoder is not configured yet.
+
+See the official [Hylo developer resources](https://docs.hylo.so/developer-resources)
+and [onchain addresses](https://docs.hylo.so/security/onchain-addresses).
+
 Live integrations are read-only. DeltaZero does not request signatures, private keys, approvals, or transaction permissions. Unsupported positions and unavailable data sources are reported explicitly and are not treated as zero risk.
 
 ## Architecture
@@ -522,6 +534,7 @@ flowchart LR
         HL[Hyperliquid]
         AAVE[Aave via RPC]
         MORPHO[Morpho Public API]
+        HYLO[Hylo via Solana RPC]
     end
 
     subgraph Payments[OKX Agent Payments]
@@ -547,6 +560,7 @@ flowchart LR
     WALLET --> HL
     WALLET --> AAVE
     WALLET --> MORPHO
+    WALLET --> HYLO
 ```
 
 ### Frontend
@@ -748,7 +762,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |
 | `POST` | `/strategy/stress-test` | Legacy alias retained for SDK compatibility. Temporarily free. |
-| `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, and Morpho positions and generate a read-only hedge-intelligence report. Permanently free. |
+| `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, Morpho, and Hylo positions and generate a read-only hedge-intelligence report. Permanently free. |
 | `POST` | `/strategy-registry/evaluate` | Evaluate a client-owned recommendation and observed-outcome registry without server persistence or silent retraining. Free. |
 | `POST` | `/preview/compare` | Compare Conservative Income and Aggressive Carry through the production strategy engine. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
@@ -780,7 +794,7 @@ request returns `HTTP 402 Payment Required` with a base64-encoded
 identifies the network, stablecoin contract, atomic amount, receiver, and
 supported payment schemes.
 
-Every paid DeltaZero surface uses one canonical price: `DELTAZERO_PRICE_USDT` (default **1 USDT**). The same value drives the website REST payment challenges and the registered OKX.AI MCP service, so legacy `PAYMENT_PRICE_USDT` or `MCP_PAYMENT_PRICE_USDT` values cannot create conflicting quotes. The primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho public-position data, health, documentation, and OpenAPI remain free.
+Every paid DeltaZero surface uses one canonical price: `DELTAZERO_PRICE_USDT` (default **1 USDT**). The same value drives the website REST payment challenges and the registered OKX.AI MCP service, so legacy `PAYMENT_PRICE_USDT` or `MCP_PAYMENT_PRICE_USDT` values cannot create conflicting quotes. The primary product flow calls `/risk-engine/analyze`: one payment returns all four coordinated Risk Engine reports for one submitted strategy. A new analysis is a new paid call. Agent Console, all read-only Hyperliquid/Aave/Morpho/Hylo public-position data, health, documentation, and OpenAPI remain free.
 
 ### Agent-native payment
 
@@ -926,6 +940,17 @@ curl --request POST \
 }
 ```
 
+For Hylo, use a Solana public key and request only the Solana and Hylo source:
+
+```json
+{
+  "wallet_address": "8xKJ8YvM3cSgQxv8g7f3pQ9zvQkJ4JrV2aY3hB6cD7eF",
+  "networks": ["solana"],
+  "protocols": ["hylo"],
+  "stress_profile": "standard"
+}
+```
+
 Wallet analysis is read-only. Protocol failures are isolated and returned as warnings or errors so unavailable data is never represented as confirmed zero exposure.
 
 Detailed service documentation:
@@ -1048,6 +1073,7 @@ Production CORS permits the deployed frontend plus local Next.js development ori
 - Hyperliquid access uses read-only public information endpoints.
 - Aave access uses configured read-only RPC calls.
 - Morpho access uses its supported public API.
+- Hylo access uses Solana public JSON-RPC and is limited to supported token quantities and metadata until an official Hylo state source is configured.
 - External-protocol failures are isolated and returned to the caller.
 - Short-lived in-memory caching is used; the current MVP has no server database. The opt-in Strategy Registry remains browser-local unless an agent exports and stores its JSON elsewhere.
 - Recommendations are analytical outputs, not trade instructions or execution.
@@ -1080,7 +1106,7 @@ Decision Confidence measures how clearly the evaluated metrics support the recom
 
 ### Which wallet integrations are live?
 
-Hyperliquid and Morpho are live read-only integrations. Aave is live with configured RPC access. Coverage is limited to the positions and networks supported by the current adapters.
+Hyperliquid and Morpho are live read-only integrations. Aave is live with configured RPC access. Hylo is live for supported Solana token quantities through public RPC, with no USD or pool-state claim. Coverage is limited to the positions and networks supported by the current adapters.
 
 ### What happens when no wallet positions are found?
 
