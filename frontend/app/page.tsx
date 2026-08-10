@@ -279,7 +279,7 @@ export default function Home() {
             <a href="https://drive.google.com/file/d/10FnOtqaoEykPCZ3PklQyNNml_Kfh7Lnk/view" target="_blank" rel="noreferrer" className="button button-primary">Watch Demo <span>▶</span></a>
             <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/agent" className="button button-secondary">Agent Console <span>◎</span></Link>
-            <Link href="/auditor" className="button button-secondary">Hedge-Drift Auditing <span>◇</span></Link>
+            <Link href="/wallet" className="button button-secondary">Hedge Intelligence <span>◇</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
             {['Read only', 'No signatures', 'Deterministic engine', 'Agent payment ready'].map((badge) => <span key={badge}>✓ {badge}</span>)}
