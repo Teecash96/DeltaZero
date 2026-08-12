@@ -124,7 +124,7 @@ class HyloAdapter(WalletAdapter):
             )
 
         warnings.append(
-            "Hylo discovery currently reports supported SPL token quantities. "
+            "Hylo Position Health currently reports supported SPL token quantities. "
             "USD valuation and protocol pool collateral ratios are not invented until an official Hylo state API or IDL-backed decoder is configured."
         )
         if not raw_positions:

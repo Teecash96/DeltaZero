@@ -145,7 +145,7 @@ export default function MethodologyPage() {
           <article><strong>Hyperliquid</strong><p>Public market and supported position data. Live responses carry a source timestamp and data-quality label.</p></article>
           <article><strong>Aave</strong><p>Read-only lending data through configured Ethereum or Arbitrum RPC access.</p></article>
           <article><strong>Morpho</strong><p>Supported market and vault positions from Morpho&apos;s public API.</p></article>
-          <article><strong>Hylo</strong><p>Supported Solana token balances from public RPC. Token quantities and source slots are available; USD valuation, collateral ratios, and liquidation state remain unavailable until an official Hylo state source is configured.</p></article>
+          <article><strong>Hylo Position Health</strong><p>Supported Hylo token balances from public Solana RPC. Token quantities and source slots are available; collateral ratios, pool state, and liquidation state remain unavailable until an official Hylo state source is configured. This is protocol exposure analysis, not an external hedge claim.</p></article>
           <article><strong>User assumptions</strong><p>Manual yield, funding, collateral, fee, stress, and simulation inputs are labelled as user supplied rather than live market data.</p></article>
         </div>
       </section>

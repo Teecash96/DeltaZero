@@ -97,13 +97,14 @@ RPC access is used only where public read calls are required. Missing RPC config
 - Morpho GraphQL API for market and vault position data.
 - Solana public JSON-RPC `getTokenAccountsByOwner` for supported Hylo SPL token balances.
 
-### Hylo read-only discovery
+### Hylo Position Health read-only discovery
 
-Hylo discovery is deliberately conservative. The adapter reads supported token
+Hylo Position Health is deliberately conservative. The adapter reads supported token
 quantities and records the Solana RPC slot, official Hylo mint metadata, and
 source timestamp. It does not invent USD values, collateral ratios, liquidation
 prices, or pool state. Those fields remain unavailable until an official Hylo
-state API or an IDL-backed decoder is configured.
+state API or an IDL-backed decoder is configured. This reports protocol exposure
+health; it does not claim that DeltaZero hedges Hylo through an external venue.
 
 Official Hylo references:
 

@@ -312,7 +312,7 @@ Hyperliquid accounts.
 | Hyperliquid | Live | Reads supported perpetual positions and account context from public protocol data. |
 | Aave | Live with RPC | Reads supported lending and collateral data when an RPC endpoint is configured. |
 | Morpho | Live | Reads supported market and vault positions from Morpho's public API. |
-| Hylo | Live · Solana read only | Reads supported Hylo SPL token quantities through Solana public RPC. USD valuation and pool collateral state remain unavailable until an official Hylo state source is configured. |
+| Hylo Position Health | Live · Solana read only | Reads supported Hylo token quantities through Solana public RPC. Collateral ratios, pool state, and liquidation state remain unavailable until an official Hylo state source is configured. |
 
 ## Products
 
@@ -458,13 +458,14 @@ Set `ETHEREUM_RPC_URL` and `ARBITRUM_RPC_URL` in the backend environment to enab
 
 Read-only market and vault position analysis through Morpho's supported public API.
 
-### Hylo — LIVE · SOLANA READ ONLY
+### Hylo Position Health — LIVE · SOLANA READ ONLY
 
 The Hylo adapter discovers supported `hyUSD`, `eHYUSD`, `xSOL`, `hyloSOL`, and
 `hyloSOL+` SPL token balances through Solana public JSON-RPC. It records the
 source slot, timestamp, mint, and token quantity. It does not claim USD
 valuation, collateral ratios, liquidation prices, or pool health because Hylo's
-official public state API or IDL-backed decoder is not configured yet.
+official public state API or IDL-backed decoder is not configured yet. This is
+protocol exposure health analysis, not an external hedge claim.
 
 See the official [Hylo developer resources](https://docs.hylo.so/developer-resources)
 and [onchain addresses](https://docs.hylo.so/security/onchain-addresses).
@@ -762,7 +763,7 @@ Successful Wallet Auditor reports can pass a normalized, non-sensitive exposure 
 | `POST` | `/strategy/audit` | Audit an existing position structure. |
 | `POST` | `/stress-test/run` | Apply a deterministic stress scenario and impairment model. |
 | `POST` | `/strategy/stress-test` | Legacy alias retained for SDK compatibility. Temporarily free. |
-| `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, Morpho, and Hylo positions and generate a read-only hedge-intelligence report. Permanently free. |
+| `POST` | `/wallet/analyze` | Read supported public Hyperliquid, Aave, Morpho, and Hylo positions and generate a read-only protocol-position report. Permanently free. |
 | `POST` | `/strategy-registry/evaluate` | Evaluate a client-owned recommendation and observed-outcome registry without server persistence or silent retraining. Free. |
 | `POST` | `/preview/compare` | Compare Conservative Income and Aggressive Carry through the production strategy engine. |
 | `POST` | `/monte-carlo/run` | Run seeded Monte Carlo sensitivity analysis. Temporarily free. |
@@ -1073,7 +1074,7 @@ Production CORS permits the deployed frontend plus local Next.js development ori
 - Hyperliquid access uses read-only public information endpoints.
 - Aave access uses configured read-only RPC calls.
 - Morpho access uses its supported public API.
-- Hylo access uses Solana public JSON-RPC and is limited to supported token quantities and metadata until an official Hylo state source is configured.
+- Hylo Position Health uses Solana public JSON-RPC and is limited to supported token quantities and metadata until an official Hylo state source is configured.
 - External-protocol failures are isolated and returned to the caller.
 - Short-lived in-memory caching is used; the current MVP has no server database. The opt-in Strategy Registry remains browser-local unless an agent exports and stores its JSON elsewhere.
 - Recommendations are analytical outputs, not trade instructions or execution.

@@ -120,9 +120,9 @@ const liveIntegrations = [
     useCase: "Read-only market and vault positions through Morpho’s supported public data API.",
   },
   {
-    name: "Hylo",
+    name: "Hylo Position Health",
     badge: "LIVE · SOLANA",
-    useCase: "Read-only discovery of supported Hylo SPL token positions through Solana public RPC. Token quantities and source metadata are live; USD valuation and pool collateral ratios remain explicitly unavailable until an official Hylo state source is configured.",
+    useCase: "Read-only Hylo exposure health through Solana public RPC. Token quantities and source metadata are live; collateral ratios, pool state, and liquidation state remain unavailable until an official Hylo state source is configured.",
   },
   {
     name: "Live Funding Rates",

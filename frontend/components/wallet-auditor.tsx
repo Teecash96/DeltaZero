@@ -36,7 +36,7 @@ const NETWORK_OPTIONS: Array<{ value: WalletNetwork; label: string; note: string
   { value: "ethereum", label: "Ethereum", note: "Aave and Morpho coverage" },
   { value: "arbitrum", label: "Arbitrum", note: "Aave and Morpho coverage" },
   { value: "hyperliquid", label: "Hyperliquid", note: "Perpetual hedge data" },
-  { value: "solana", label: "Solana", note: "Hylo public token positions" },
+  { value: "solana", label: "Solana", note: "Hylo Position Health" },
   { value: "okx-earn", label: "OKX Earn", note: "Yield positions (demo mode)" },
 ];
 
@@ -44,7 +44,7 @@ const PROTOCOL_OPTIONS: Array<{ value: WalletProtocol; label: string; note: stri
   { value: "hyperliquid", label: "Hyperliquid", note: "Perpetual positions and margin" },
   { value: "aave", label: "Aave", note: "Supply, borrow, and health factor" },
   { value: "morpho", label: "Morpho", note: "Market and vault positions" },
-  { value: "hylo", label: "Hylo", note: "Read-only Solana token positions" },
+  { value: "hylo", label: "Hylo Position Health", note: "Read-only Solana exposure" },
   { value: "okx-earn", label: "OKX Earn", note: "Flexible savings and liquid staking" },
 ];
 
@@ -124,7 +124,7 @@ function WalletRequestForm({
                   onChange={(event) => setValue({ ...value, wallet_address: event.target.value })}
                   required
                 />
-                <small>{solanaMode ? "Public Solana address only. Hylo valuation is partial until official pool state is available." : "Public address only. DeltaZero never asks for signatures or private keys."}</small>
+                <small>{solanaMode ? "Public Solana address only. Hylo Position Health is partial: token quantities are available, but protocol pool state is not." : "Public address only. DeltaZero never asks for signatures or private keys."}</small>
               </div>
               <div className="field">
                 <label htmlFor="stress_profile">Stress profile</label>
@@ -200,7 +200,7 @@ function WalletRequestForm({
         </section>
       ))}
       <button className="button button-primary form-submit" disabled={loading}>
-        {loading ? "Auditing wallet..." : <>Audit Wallet or Positions <span>→</span></>}
+        {loading ? "Assessing public positions..." : <>{solanaMode ? "Assess Hylo Position Health" : "Analyze Wallet Positions"} <span>→</span></>}
       </button>
       <button className="button wallet-demo-button" type="button" onClick={loadDemo} disabled={loading}>Demo Wallet <span>↗</span></button>
       <p className="wallet-demo-note">Loads a predefined public Hyperliquid address. Submit normally to retrieve live supported positions. No sample results are injected.</p>
@@ -508,6 +508,10 @@ function ProtocolWarnings({ result }: { result: WalletPortfolioResponse }) {
 }
 
 function InstitutionalReport({ result, protocols, stressProfile, reportGeneratedAt }: { result: WalletPortfolioResponse; protocols: WalletProtocol[]; stressProfile: WalletStressProfile; reportGeneratedAt: string | null }) {
+  const hyloSelected = protocols.includes("hylo");
+  const reportLabel = hyloSelected ? "Hylo Position Health" : "Hedge Intelligence";
+  const reportTitle = hyloSelected ? "Hylo Position Health Report" : "Hedge Integrity Report";
+
   function buildHedgeRecommendation() {
     const exposure = result.exposure_analysis;
     if (!exposure || !result.recommendation) return;
@@ -547,7 +551,7 @@ function InstitutionalReport({ result, protocols, stressProfile, reportGenerated
           <p>This assessment includes only the supported positions successfully retrieved. Do not treat it as a complete wallet inventory.</p>
         </section>
       ) : null}
-      <div className="report-breadcrumb" aria-label="Report location"><span>Hedge Intelligence</span><i aria-hidden="true">/</i><strong>Hedge Integrity Report</strong></div>
+      <div className="report-breadcrumb" aria-label="Report location"><span>{reportLabel}</span><i aria-hidden="true">/</i><strong>{reportTitle}</strong></div>
       <DeltaZeroVerdict health={result.strategy_health} action={result.recommendation?.action} confidence={result.decision_confidence ?? 0} safetyBuffer={result.risk_metrics.safety_buffer_score} />
       <RiskZonePanel metrics={{
         recommendation: result.recommendation?.action,
@@ -584,7 +588,7 @@ function InstitutionalReport({ result, protocols, stressProfile, reportGenerated
       <ProtocolAllocation result={result} />
       <PortfolioAllocation result={result} />
       <RecommendedPlan result={result} />
-      <button className="button button-primary wallet-hedge-cta" type="button" onClick={buildHedgeRecommendation}>Build Hedge Recommendation <span>→</span></button>
+      {!hyloSelected ? <button className="button button-primary wallet-hedge-cta" type="button" onClick={buildHedgeRecommendation}>Build Hedge Recommendation <span>→</span></button> : null}
       {canRunMonteCarlo ? <button className="button button-primary wallet-hedge-cta" type="button" onClick={runExposureMonteCarlo}>Run Monte Carlo on Exposure <span>→</span></button> : null}
       <PrimaryDrivers drivers={result.primary_drivers} />
       <RiskBreakdown result={result} />
@@ -593,9 +597,9 @@ function InstitutionalReport({ result, protocols, stressProfile, reportGenerated
       <ProtocolWarnings result={result} />
       <ReportActions
         data={result}
-        analysis={`DeltaZero Hedge Intelligence\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
+        analysis={`DeltaZero ${reportLabel}\nRecommendation: ${result.recommendation?.action}\nRisk level: ${result.strategy_health}\nDecision clarity: ${result.decision_confidence?.toFixed(0)}%\n${result.executive_summary?.body ?? result.recommendation?.summary}`}
         filename={`deltazero-wallet-${result.wallet_address.slice(0, 10)}.json`}
-        title="DeltaZero Wallet Portfolio Assessment"
+        title={`DeltaZero ${reportTitle}`}
       />
       <details className="panel json-box">
         <summary><span><b>Raw JSON</b><small>Developer payload</small></span><i aria-hidden="true">⌄</i></summary>
@@ -656,7 +660,7 @@ export function WalletPortfolioWorkspace() {
   return (
     <div className="workspace">
       <header className="page-intro wallet-page-intro">
-        <div><p className="kicker">Hedge Intelligence</p><h1>Read-Only Hedge Intelligence</h1><div className="wallet-pro-badge">FREE PUBLIC PROTOCOL DATA</div><p>Analyze supported public positions for hedge drift, exposure integrity, and corrective action.</p></div>
+        <div><p className="kicker">{value.protocols.includes("hylo") ? "Hylo Position Health" : "Hedge Intelligence"}</p><h1>{value.protocols.includes("hylo") ? "Read-Only Hylo Position Health" : "Read-Only Hedge Intelligence"}</h1><div className="wallet-pro-badge">FREE PUBLIC PROTOCOL DATA</div><p>{value.protocols.includes("hylo") ? "Inspect supported Hylo exposure and data availability without implying an external hedge." : "Analyze supported public positions for hedge drift, exposure integrity, and corrective action."}</p></div>
         <div className="wallet-page-side"><span className="endpoint">POST /wallet/analyze</span><p className="wallet-readonly-note">DeltaZero only reads public wallet and protocol data. It never requests signatures, private keys, or transaction permissions.</p></div>
       </header>
       <div className="workspace-grid wallet-workspace-grid">

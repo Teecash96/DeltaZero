@@ -238,7 +238,7 @@ def create_mcp_server() -> FastMCP:
                 "wallet_positions": ["Hyperliquid", "Aave", "Morpho", "Hylo"],
                 "wallet_position_networks": {"Hylo": "Solana"},
                 "wallet_position_boundaries": {
-                    "Hylo": "Solana public RPC token quantities and mint metadata only; USD valuation and pool state are unavailable.",
+                    "Hylo": "Hylo Position Health reads Solana public RPC token quantities and mint metadata only; USD valuation, collateral ratios, and pool state are unavailable.",
                 },
                 "supported_assets": ["SOL", "ETH"],
                 "access": "read_only",
