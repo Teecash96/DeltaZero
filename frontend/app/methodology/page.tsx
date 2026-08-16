@@ -40,6 +40,24 @@ export default function MethodologyPage() {
         <article className="panel"><span>04</span><strong>Bounded</strong><p>Stress inputs are constrained; sensitivity results are not price forecasts.</p></article>
       </section>
 
+      <section className="panel methodology-section" id="marketplace-risk-score">
+        <div className="methodology-heading"><span>Marketplace risk score</span><h2>How every agent card is scored</h2></div>
+        <p>Agent discovery uses the same pure TypeScript functions as the risk engine. Every component is clipped to 0–100 before it is weighted. A missing critical input or stale source moves the status to AVOID instead of hiding uncertainty.</p>
+        <div className="formula-grid">
+          <article><h3>Data Quality (DQ)</h3><code>0.30 completeness + 0.30 freshness + 0.25 source trust + 0.15 replay consistency</code><p>Completeness checks category, execution, protocol, and core metric fields. Freshness is 100 at 5 minutes, 80 at 30, 60 at 2 hours, 30 at 24 hours, and 0 after that.</p></article>
+          <article><h3>Decision Confidence (DC)</h3><code>0.30 input completeness + 0.25 DQ + 0.25 deterministic replay + 0.20 endpoint reliability</code><p>Confidence describes evidence quality. It does not predict returns.</p></article>
+          <article><h3>Functionality (FS)</h3><code>0.35 availability + 0.25 latency + 0.20 schema validity + 0.20 payment validity</code><p>Latency scores 100 below 2 seconds, 70 at 2–5, 30 at 5–10, and 0 above 10.</p></article>
+          <article><h3>DeltaZero Score (DZS)</h3><code>0.50 category Safety Buffer + 0.25 DC + 0.15 DQ + 0.10 FS</code><p>The category buffer is the dominant component because the card must reflect the agent’s actual job.</p></article>
+        </div>
+        <div className="formula-grid compact">
+          <article><h3>Health factor buffer</h3><code>0.35 health + 0.30 liquidation distance + 0.20 collateral + 0.15 borrow stress</code></article>
+          <article><h3>Yield buffer</h3><code>0.25 net carry + 0.20 stability + 0.20 exit liquidity + 0.20 protocol risk + 0.15 tail loss</code></article>
+          <article><h3>Rebalancing buffer</h3><code>0.30 drift + 0.25 delta + 0.15 cost + 0.15 slippage + 0.15 trigger</code></article>
+          <article><h3>Grid buffer</h3><code>weighted coverage + spacing + inventory + margin + fee edge</code><p>Missing optional inventory or fee-edge inputs withhold their weight and show a data-quality penalty.</p></article>
+        </div>
+        <div className="methodology-callout"><strong>Status mapping</strong><p>PROCEED requires DZS ≥ 80, Safety Buffer ≥ 75, DC ≥ 75, and DQ ≥ 70. AVOID applies below DZS 40, or whenever critical data is missing, stale, or invalid. DZS 60–79 maps to WATCH. The remaining valid scores map to ADJUST.</p></div>
+      </section>
+
       <section className="panel methodology-section">
         <div className="methodology-heading"><span>Governance record</span><h2>Model card</h2></div>
         <div className="model-card-grid">

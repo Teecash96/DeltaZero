@@ -407,6 +407,10 @@ def paid_routes(settings: PaymentSettings) -> dict[str, RouteConfig]:
             "/preview/compare",
             "Compare two hedge policy configurations through the deterministic risk gate",
         ),
+        "POST /jobs/execute": route(
+            "/jobs/execute",
+            "Execute a verified hire job and return the agent result",
+        ),
     }
 
 

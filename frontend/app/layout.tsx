@@ -3,6 +3,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WhyDeltaZeroButton } from "@/components/why-deltazero-button";
+import { AppProviders } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "DeltaZero | Deterministic Risk Gate for Pseudo Delta Neutral DeFi",
@@ -20,10 +21,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body>
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
-        <WhyDeltaZeroButton />
+        <AppProviders>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+          <WhyDeltaZeroButton />
+        </AppProviders>
       </body>
     </html>
   );

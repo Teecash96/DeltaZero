@@ -1,6 +1,8 @@
 """DeltaZero FastAPI and MCP application entry point."""
 
 from contextlib import asynccontextmanager
+import asyncio
+from contextlib import suppress
 import os
 from typing import Any
 
@@ -26,6 +28,7 @@ from app.routers.preview import router as preview_router
 from app.routers.standards import evaluation_router as envelope_router, router as standards_router
 from app.routers.strategy import router as strategy_router, stress_router
 from app.routers.wallet import router as wallet_router
+from app.routers.jobs import router as jobs_router
 from app.mcp_server import (
     CANONICAL_MCP_TOOL,
     LEGACY_RISK_ENGINE_TOOL,
@@ -40,6 +43,7 @@ from app.services.stress_test import stress_test_strategy
 from app.services.monte_carlo import run_monte_carlo as run_monte_carlo_analysis
 from app.services.market_data import get_hyperliquid_market
 from app.services.strategy_registry import evaluate_strategy_registry
+from app.services.job_service import monitor_active_jobs
 from app.models.schemas import AuditRequest, BuildRequest, StressTestRequest
 from app.models.monte_carlo import MonteCarloRequest
 from app.models.registry import RegistryEvaluationRequest
@@ -182,8 +186,24 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        async with mcp_application.router.lifespan_context(mcp_application):
-            yield
+        worker_task: asyncio.Task[None] | None = None
+
+        async def risk_guard_worker() -> None:
+            interval = max(10.0, float(os.getenv("DELTAZERO_JOB_WORKER_INTERVAL_SECONDS", "30")))
+            while True:
+                await asyncio.to_thread(monitor_active_jobs)
+                await asyncio.sleep(interval)
+
+        if os.getenv("DELTAZERO_ENABLE_JOB_WORKER", "false").strip().lower() == "true":
+            worker_task = asyncio.create_task(risk_guard_worker())
+        try:
+            async with mcp_application.router.lifespan_context(mcp_application):
+                yield
+        finally:
+            if worker_task is not None:
+                worker_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await worker_task
 
     application = FastAPI(
         title="DeltaZero",
@@ -255,6 +275,7 @@ def create_app(
     application.include_router(preview_router)
     application.include_router(standards_router)
     application.include_router(envelope_router)
+    application.include_router(jobs_router)
     # Reuse the SDK's exact /mcp route without Starlette's mount redirect.
     application.router.routes.extend(mcp_application.routes)
 

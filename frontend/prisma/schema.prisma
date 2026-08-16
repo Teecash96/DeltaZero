@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentStatus {
+  ACTIVE
+  PAUSED
+  DELISTED
+  UNVERIFIED
+}
+
+enum RiskCategory {
+  HEALTH_FACTOR
+  YIELD_OPTIMISATION
+  REBALANCING
+  GRID_TRADING
+}
+
+enum RiskStatus {
+  PROCEED
+  WATCH
+  ADJUST
+  AVOID
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING_PAYMENT
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  SETTLED
+  FAILED
+}
+
+model Agent {
+  id               String      @id @default(cuid())
+  erc8004AgentId   String      @unique
+  chainId          Int         @default(56)
+  registryAddress  String
+  ownerAddress     String
+  name             String
+  description      String
+  endpoint         String
+  categories       RiskCategory[]
+  supportedProtocols String[]
+  status           AgentStatus  @default(UNVERIFIED)
+  startingPrice    Decimal      @db.Decimal(36, 18)
+  priceCurrency    String       @default("USDT")
+  priceInterval    String       @default("per_call")
+  metadata         Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  riskReports      RiskReport[]
+  jobs             Job[]
+
+  @@index([chainId, status])
+  @@index([registryAddress])
+}
+
+model RiskReport {
+  id                 String       @id @default(cuid())
+  agentId            String
+  category           RiskCategory
+  status             RiskStatus
+  deltaZeroScore     Float
+  safetyBuffer       Float
+  decisionConfidence Float
+  dataQuality        Float
+  functionality      Float
+  freshnessMinutes   Float
+  formulaVersion     String
+  sourceTimestamp    DateTime
+  proofHash          String?
+  evidence           Json
+  createdAt          DateTime     @default(now())
+  agent              Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  jobs               Job[]
+
+  @@index([agentId, category, createdAt])
+  @@index([status])
+}
+
+model Job {
+  id           String       @id @default(cuid())
+  agentId      String
+  riskReportId String?
+  buyerAddress String
+  category     RiskCategory
+  status       JobStatus    @default(DRAFT)
+  prompt       String?
+  budgetAmount Decimal?     @db.Decimal(36, 18)
+  budgetCurrency String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  agent        Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  riskReport   RiskReport?  @relation(fields: [riskReportId], references: [id], onDelete: SetNull)
+  payment      Payment?
+
+  @@index([agentId, status])
+  @@index([riskReportId])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  jobId         String        @unique
+  network       String        @default("bsc")
+  amount        Decimal       @db.Decimal(36, 18)
+  currency      String
+  recipient     String
+  payer         String?
+  txHash        String?
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  settledAt     DateTime?
+  job           Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([txHash])
+}
