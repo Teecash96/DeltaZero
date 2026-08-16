@@ -163,6 +163,11 @@ def execute_job(
     try:
         request = RiskEnginePassRequest.model_validate(job.input_data)
         result = run_risk_engine_pass(request).model_dump(mode="json", exclude_none=True)
+        # The bundled simulation is still a job execution. Add the identity
+        # envelope that a remote provider must return as well. Verification
+        # should never infer the job identity from the request alone.
+        result["job_id"] = job.id
+        result["agent_id"] = job.agent_erc8004_id
     except Exception as exc:
         failed = _transition(running, "FAILED", f"Agent execution failed: {exc}")
         get_job_store().save(failed)
@@ -187,9 +192,26 @@ def verify_job(job_id: str) -> JobRecord:
     result_hash = _hash(result)
     request_hash = _hash(job.input_data)
     envelope = result.get("risk_envelope") if isinstance(result, dict) else None
-    identity_verified = isinstance(envelope, dict) and envelope.get("subject", {}).get("asset") == job.input_data.get("asset")
+    result_job_id = result.get("job_id") if isinstance(result, dict) else None
+    result_agent_id = result.get("agent_id") if isinstance(result, dict) else None
+    identity_verified = (
+        isinstance(envelope, dict)
+        and envelope.get("subject", {}).get("asset") == job.input_data.get("asset")
+        and result_agent_id == job.agent_erc8004_id
+    )
+    job_id_verified = result_job_id == job.id
     schema_validated = isinstance(result, dict) and all(
-        key in result for key in ("generated_at", "risk_envelope", "strategy_build", "hedge_drift_audit", "funding_stress_test", "monte_carlo_sensitivity")
+        key in result
+        for key in (
+            "job_id",
+            "agent_id",
+            "generated_at",
+            "risk_envelope",
+            "strategy_build",
+            "hedge_drift_audit",
+            "funding_stress_test",
+            "monte_carlo_sensitivity",
+        )
     )
     generated_at = result.get("generated_at") if isinstance(result, dict) else None
     timestamps_verified = _parse_time(generated_at) is not None if generated_at else False
@@ -200,13 +222,13 @@ def verify_job(job_id: str) -> JobRecord:
         request_hash=request_hash,
         result_hash=result_hash,
         identity_verified=identity_verified,
-        job_id_verified=True,
+        job_id_verified=job_id_verified,
         timestamps_verified=timestamps_verified,
-        payment_verified=True,
+        payment_verified=job.payment.status == "SETTLED",
         schema_validated=schema_validated,
         deterministic=True,
     )
-    if not all((identity_verified, timestamps_verified, schema_validated)):
+    if not all((identity_verified, job_id_verified, timestamps_verified, schema_validated)):
         raise ValueError("Result failed schema, identity, or timestamp verification")
     updated = _transition(job.model_copy(update={"proof": proof}), "MONITORING", "Result verified and proof envelope created.")
     updated = evaluate_risk_guard(updated)

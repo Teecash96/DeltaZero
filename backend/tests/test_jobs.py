@@ -69,7 +69,11 @@ def test_phase2_simulation_job_verifies_and_completes(monkeypatch):
     assert verified.status_code == 200
     verified_job = verified.json()["job"]
     assert verified_job["proof"]["schema_validated"] is True
-    assert verified_job["proof"]["payment_verified"] is True
+    assert verified_job["proof"]["job_id_verified"] is True
+    assert verified_job["proof"]["payment_verified"] is False
+    assert verified_job["payment"]["settlement_source"] == "simulation"
+    assert verified_job["result"]["job_id"] == job["id"]
+    assert verified_job["result"]["agent_id"] == job["agent_erc8004_id"]
 
     completed = client.post(f"/jobs/{job['id']}/complete", json={"human_approved": True})
     assert completed.status_code == 200
