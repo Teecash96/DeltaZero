@@ -5,11 +5,11 @@ import { useMemo, useState } from "react";
 
 import { CATEGORY_DEFINITIONS, CATEGORY_ORDER } from "@/src/lib/marketplace/categories";
 import { DEFAULT_FILTERS, filterAgents, sortAgents } from "@/src/lib/marketplace/filters";
-import type { AgentFilters, AgentSort, MarketplaceAgent } from "@/src/lib/marketplace/types";
+import type { AgentFilters, AgentSort, MarketplaceAgent, MarketplaceExclusion } from "@/src/lib/marketplace/types";
 import styles from "./marketplace.module.css";
 import { AgentCard } from "./agent-card";
 
-export function AgentListing({ agents }: { agents: MarketplaceAgent[] }) {
+export function AgentListing({ agents, exclusions = [] }: { agents: MarketplaceAgent[]; exclusions?: MarketplaceExclusion[] }) {
   const [filters, setFilters] = useState<AgentFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<AgentSort>("delta_zero_score");
   const [selected, setSelected] = useState<string[]>([]);
@@ -38,7 +38,8 @@ export function AgentListing({ agents }: { agents: MarketplaceAgent[] }) {
         <label className={styles.liveToggle}><input type="checkbox" checked={filters.liveOnly} onChange={(event) => updateFilter("liveOnly", event.target.checked)} /> Live verified only</label>
       </section>
       <div className={styles.resultsBar} aria-live="polite"><span><strong>{visibleAgents.length}</strong> verified agents match these filters.</span>{selected.length > 0 ? <Link href={`/compare?ids=${selected.join(",")}`} className={styles.linkButton}>Compare {selected.length}/3 →</Link> : <span>Click Compare to build a side-by-side view.</span>}</div>
-      {visibleAgents.length > 0 ? <section className={styles.grid} aria-label="Verified agents">{visibleAgents.map((agent) => <AgentCard key={agent.id} agent={agent} selected={selected.includes(agent.id)} onCompare={toggleCompare} />)}</section> : <section className={styles.empty}><h2>No verified agents match</h2><p>Change the category, risk zone, price, or freshness filter. DeltaZero hides unverified agents instead of presenting incomplete risk evidence.</p></section>}
+      {visibleAgents.length > 0 ? <section className={styles.grid} aria-label="Verified agents">{visibleAgents.map((agent) => <AgentCard key={agent.id} agent={agent} selected={selected.includes(agent.id)} onCompare={toggleCompare} />)}</section> : <section className={styles.empty}><h2>No verified agents match</h2><p>Change the category, risk zone, price, or freshness filter. DeltaZero hides unverified agents instead of presenting incomplete risk evidence.</p><div className={styles.exclusionList}><strong>Why agents may be excluded</strong>{exclusions.slice(0, 6).map((exclusion) => <div key={exclusion.id}><b>{exclusion.name}</b><span>{exclusion.reason}</span></div>)}</div></section>}
+      {exclusions.length > 0 ? <details className={styles.exclusionDetails}><summary>{exclusions.length} registered agents excluded from live discovery</summary><div className={styles.exclusionList}>{exclusions.map((exclusion) => <div key={exclusion.id}><b>{exclusion.name}</b><span>{exclusion.reason}</span></div>)}</div></details> : null}
     </>
   );
 }

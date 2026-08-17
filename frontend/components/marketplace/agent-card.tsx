@@ -11,6 +11,7 @@ export function AgentCard({ agent, selected = false, onCompare }: { agent: Marke
   const category = CATEGORY_DEFINITIONS[agent.categories[0]];
   const initials = agent.name.split(" ").map((word) => word[0]).slice(0, 2).join("").toUpperCase();
   const verificationAge = agent.sources[0]?.freshnessMinutes ?? 0;
+  const price = agent.startingPrice.amount === "Not listed" ? "Price not listed" : `${agent.startingPrice.amount} ${agent.startingPrice.currency} / ${agent.startingPrice.interval === "monthly" ? "month" : "call"}`;
   return (
     <article className={styles.card}>
       <div className={styles.cardTop}>
@@ -34,7 +35,7 @@ export function AgentCard({ agent, selected = false, onCompare }: { agent: Marke
       <div className={styles.meta}>
         <span className={styles.chip}>● BSC live</span>
         <span className={styles.chip}>✓ ERC-8004 proof</span>
-        <span className={styles.chip}>{agent.startingPrice.amount} {agent.startingPrice.currency} / month</span>
+        <span className={styles.chip}>{price}</span>
         {agent.supportedProtocols.map((protocol) => <span className={styles.chip} key={protocol}>{protocol}</span>)}
       </div>
       <div className={styles.cardFooter}>

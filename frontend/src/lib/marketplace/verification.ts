@@ -24,38 +24,18 @@ export async function runHealthSchemaCheck(agent: MarketplaceAgent): Promise<Ver
     };
   }
 
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 4_000);
   try {
-    const response = await fetch(agent.verification.endpoint, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-    });
-    const contentType = response.headers.get("content-type") ?? "";
-    const checks = {
-      health: response.ok,
-      schema: contentType.includes("application/json"),
-      erc8004: agent.verification.checks.erc8004,
-      categoryCoverage: agent.verification.checks.categoryCoverage,
-    };
-    const passed = Object.values(checks).every(Boolean);
-    return {
-      status: passed ? "passed" : "failed",
-      checkedAt: nowIso(),
-      latencyMs: Math.round(performance.now() - startedAt),
-      checks,
-      message: passed ? "Live endpoint returned a valid JSON health response." : "Live endpoint responded, but its schema or registry checks failed.",
-    };
+    const response = await fetch(`/api/marketplace/verify/${encodeURIComponent(agent.id)}`, { method: "POST", cache: "no-store" });
+    const payload = await response.json() as VerificationResult;
+    if (!response.ok) throw new Error(typeof payload.message === "string" ? payload.message : "Live verification failed.");
+    return payload;
   } catch {
     return {
       status: "failed",
       checkedAt: nowIso(),
       latencyMs: Math.round(performance.now() - startedAt),
       checks: { health: false, schema: false, erc8004: agent.verification.checks.erc8004, categoryCoverage: agent.verification.checks.categoryCoverage },
-      message: "The live endpoint did not respond within four seconds.",
+      message: "The server-side live verification route did not respond.",
     };
-  } finally {
-    window.clearTimeout(timeout);
   }
 }

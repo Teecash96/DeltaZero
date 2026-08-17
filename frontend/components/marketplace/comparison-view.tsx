@@ -27,6 +27,10 @@ export function ComparisonView({ agents, initialIds }: { agents: MarketplaceAgen
     setSelectedIds((current) => current.includes(id) ? current.filter((value) => value !== id) : current.length < 3 ? [...current, id] : current);
   }
 
+  function price(agent: MarketplaceAgent) {
+    return agent.startingPrice.amount === "Not listed" ? "Not listed" : `${agent.startingPrice.amount} ${agent.startingPrice.currency} / ${agent.startingPrice.interval === "monthly" ? "month" : "call"}`;
+  }
+
   return (
     <>
       <section className={styles.section}><div className={styles.compareToolbar}><p>Select up to three verified agents. Winners are highlighted per metric; this is not a profit ranking.</p><strong className={styles.headerBadge}>{selected.length}/3 selected</strong></div><div className={styles.agentPicker}>{agents.map((agent) => <button type="button" className={styles.picker} aria-pressed={selectedIds.includes(agent.id)} key={agent.id} onClick={() => toggle(agent.id)}>{agent.name}</button>)}</div></section>
@@ -37,9 +41,9 @@ export function ComparisonView({ agents, initialIds }: { agents: MarketplaceAgen
         <tr><td>Decision Confidence</td>{selected.map((agent) => <td key={agent.id}>{agent.risk.decisionConfidence.toFixed(1)}</td>)}</tr>
         <tr><td>Data Quality</td>{selected.map((agent) => <td className={winners.dq.has(agent.id) ? styles.winner : undefined} key={agent.id}>{agent.risk.dataQuality.toFixed(1)}</td>)}</tr>
         <tr><td>Functionality</td>{selected.map((agent) => <td className={winners.functionality.has(agent.id) ? styles.winner : undefined} key={agent.id}>{agent.risk.functionality.toFixed(1)}</td>)}</tr>
-        <tr><td>Price</td>{selected.map((agent) => <td key={agent.id}>{agent.startingPrice.amount} {agent.startingPrice.currency} / month</td>)}</tr>
+        <tr><td>Price</td>{selected.map((agent) => <td key={agent.id}>{price(agent)}</td>)}</tr>
         <tr><td>Protocols</td>{selected.map((agent) => <td key={agent.id}>{agent.supportedProtocols.join(", ")}</td>)}</tr>
-      </tbody></table></div>
+      </tbody></table></div><div className={styles.comparisonMobile}>{selected.map((agent) => <article className={styles.comparisonMobileCard} key={agent.id}><h3>{agent.name}</h3><div className={styles.comparisonMobileRow}><span>Risk zone</span><strong><RiskStatusBadge status={agent.risk.status} /></strong></div><div className={styles.comparisonMobileRow}><span>DeltaZero Score</span><strong className={winners.dzs.has(agent.id) ? styles.winner : undefined}>{agent.risk.deltaZeroScore.toFixed(1)}</strong></div><div className={styles.comparisonMobileRow}><span>Safety Buffer</span><strong className={winners.safety.has(agent.id) ? styles.winner : undefined}>{agent.risk.safetyBuffer.toFixed(1)}</strong></div><div className={styles.comparisonMobileRow}><span>Decision Confidence</span><strong>{agent.risk.decisionConfidence.toFixed(1)}</strong></div><div className={styles.comparisonMobileRow}><span>Data Quality</span><strong className={winners.dq.has(agent.id) ? styles.winner : undefined}>{agent.risk.dataQuality.toFixed(1)}</strong></div><div className={styles.comparisonMobileRow}><span>Functionality</span><strong className={winners.functionality.has(agent.id) ? styles.winner : undefined}>{agent.risk.functionality.toFixed(1)}</strong></div><div className={styles.comparisonMobileRow}><span>Price</span><strong>{price(agent)}</strong></div></article>)}</div>
       {selected.map((agent) => { const category = CATEGORY_DEFINITIONS[agent.categories[0]]; return <div className={styles.section} key={agent.id}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>{agent.name} · {category.name}</p><h2>Category metrics</h2></div></div><div className={styles.metricList}>{agent.categoryMetrics[agent.categories[0]].map((metric) => <article className={styles.metricItem} key={metric.key}><div><strong>{metric.label}</strong><b>{metric.value}{metric.unit ? ` ${metric.unit}` : ""}</b></div><p>{metric.description}</p></article>)}</div></div>; })}
       </section>}
     </>

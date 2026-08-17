@@ -36,7 +36,11 @@ export function HireConfiguration({ agent }: { agent: MarketplaceAgent }) {
   const [stress, setStress] = useState("4");
   const [simulations, setSimulations] = useState("1000");
   const [horizon, setHorizon] = useState("30");
-  const [budget, setBudget] = useState(agent.startingPrice.amount);
+  const [budget, setBudget] = useState(() => (
+    agent.startingPrice.amount === "Not listed"
+      ? (process.env.NEXT_PUBLIC_X402_PRICE_USDT ?? "1")
+      : agent.startingPrice.amount
+  ));
   const [deadline, setDeadline] = useState(defaultDeadline);
   const [safetyMin, setSafetyMin] = useState("50");
   const [confidenceMin, setConfidenceMin] = useState("70");

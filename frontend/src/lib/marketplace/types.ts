@@ -17,7 +17,12 @@ export interface AgentVerification {
     schema: boolean;
     erc8004: boolean;
     categoryCoverage: boolean;
+    serviceEndpoint?: boolean;
+    paymentFlow?: boolean;
   };
+  serviceKind?: "mcp" | "a2a";
+  toolCount?: number;
+  verificationMessage?: string;
 }
 
 export interface RegistryProof {
@@ -25,7 +30,7 @@ export interface RegistryProof {
   agentId: string;
   ownerAddress: string;
   chainId: 56;
-  identitySource: "erc8004_fixture" | "erc8004_onchain";
+  identitySource: "erc8004_fixture" | "erc8004_onchain" | "erc8004_indexer";
   metadataUri: string;
 }
 
@@ -34,7 +39,7 @@ export interface SourceRecord {
   source: string;
   observedAt: string;
   freshnessMinutes: number;
-  trust: "official" | "verified_indexer" | "fixture";
+  trust: "official" | "verified_indexer" | "rpc" | "endpoint" | "fixture";
 }
 
 export interface CategoryMetricValue {
@@ -54,6 +59,25 @@ export interface MarketplaceAgent extends Agent {
   categoryMetrics: Record<RiskCategory, CategoryMetricValue[]>;
   riskZoneLabel: string;
   tags: string[];
+  riskBasis?: "service_verification" | "position_assessment";
+  riskDisclaimer?: string;
+}
+
+export interface MarketplaceExclusion {
+  id: string;
+  name: string;
+  category?: RiskCategory;
+  endpoint?: string;
+  reason: string;
+  checkedAt: string;
+}
+
+export interface MarketplaceDiscovery {
+  agents: MarketplaceAgent[];
+  exclusions: MarketplaceExclusion[];
+  categoryCounts: Record<RiskCategory, number>;
+  checkedAt: string;
+  source: string;
 }
 
 export type AgentSort =

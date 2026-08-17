@@ -23,6 +23,7 @@ export function AgentDetail({ agent }: { agent: MarketplaceAgent }) {
   const [checking, setChecking] = useState(false);
   const [verification, setVerification] = useState<VerificationResult | null>(null);
   const category = CATEGORY_DEFINITIONS[agent.categories[0]];
+  const price = agent.startingPrice.amount === "Not listed" ? "Pricing not listed by registry" : `${agent.startingPrice.amount} ${agent.startingPrice.currency} / ${agent.startingPrice.interval === "monthly" ? "month" : "call"}`;
 
   async function verify() {
     setChecking(true);
@@ -50,14 +51,14 @@ export function AgentDetail({ agent }: { agent: MarketplaceAgent }) {
             <div className={styles.proofRow}><span>ERC-8004</span><strong className={styles.proofPass}>✓ {agent.registryProof.agentId}</strong></div>
             <div className={styles.proofRow}><span>Registry</span><strong>{agent.registryProof.registryAddress}</strong></div>
             <div className={styles.proofRow}><span>Owner</span><strong>{agent.registryProof.ownerAddress}</strong></div>
-            <div className={styles.proofRow}><span>Price</span><strong>{agent.startingPrice.amount} {agent.startingPrice.currency} / month</strong></div>
+            <div className={styles.proofRow}><span>Price</span><strong>{price}</strong></div>
           </div>
           <div className={styles.verificationBox}><p><strong>Last successful verification</strong><br />{new Date(agent.verification.lastVerifiedAt).toLocaleString()}<br />{agent.verification.mode === "verified_fixture" ? "Verified fixture, not a live production claim." : "Live endpoint verification."}</p><button type="button" className={styles.verifyButton} onClick={verify} disabled={checking}>{checking ? "Checking…" : "Run health check"}</button></div>
           {verification ? <p className={styles.verifyMessage} role="status">{verification.status === "passed" ? "✓" : "!"} {verification.message} {verification.latencyMs} ms.</p> : null}
         </aside>
       </div>
 
-      <section className={styles.section}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Risk profile</p><h2>Deterministic score breakdown</h2><p>The scores are calculated with the Phase 0 pure functions. They are risk assessments, not profit forecasts.</p></div><span className={styles.headerBadge}>Formula v1</span></div><div className={styles.metricList}>{scoreRows(agent).map(([label, value, description]) => <article className={styles.metricItem} key={label}><div><strong>{label}</strong><b>{value}</b></div><p>{description}</p></article>)}</div></section>
+      <section className={styles.section}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Risk profile</p><h2>Deterministic score breakdown</h2><p>{agent.riskDisclaimer ?? "The scores are calculated with pure deterministic functions. They are risk assessments, not profit forecasts."}</p></div><span className={styles.headerBadge}>Formula v1</span></div><div className={styles.metricList}>{scoreRows(agent).map(([label, value, description]) => <article className={styles.metricItem} key={label}><div><strong>{label}</strong><b>{value}</b></div><p>{description}</p></article>)}</div></section>
 
       <section className={styles.section}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>Category evidence</p><h2>{category.name} metrics</h2><p>{category.decisionQuestion}</p></div></div><div className={styles.metricList}>{agent.categoryMetrics[agent.categories[0]].map((metric) => <article className={styles.metricItem} key={metric.key}><div><strong>{metric.label}</strong><b>{metric.value}{metric.unit ? ` ${metric.unit}` : ""}</b></div><p>{metric.description}</p></article>)}</div></section>
 

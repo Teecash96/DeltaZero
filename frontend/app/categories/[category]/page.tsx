@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 
 import { CategoryHub } from "@/components/marketplace/category-hub";
 import { CATEGORY_DEFINITIONS, CATEGORY_ORDER, isRiskCategory } from "@/src/lib/marketplace/categories";
-import { getAgentsForCategory } from "@/src/lib/marketplace/fixtures";
+import { getLiveMarketplaceDiscovery } from "@/src/server/marketplace/live-registry";
 
-export function generateStaticParams() {
-  return CATEGORY_ORDER.map((category) => ({ category }));
-}
+export const dynamic = "force-dynamic";
+
+export function generateStaticParams() { return CATEGORY_ORDER.map((category) => ({ category })); }
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params;
@@ -18,5 +18,6 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
   if (!isRiskCategory(category)) notFound();
-  return <CategoryHub definition={CATEGORY_DEFINITIONS[category]} agents={getAgentsForCategory(category)} />;
+  const discovery = await getLiveMarketplaceDiscovery();
+  return <CategoryHub definition={CATEGORY_DEFINITIONS[category]} agents={discovery.agents.filter((agent) => agent.categories.includes(category))} exclusions={discovery.exclusions.filter((exclusion) => !exclusion.category || exclusion.category === category)} />;
 }
