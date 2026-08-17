@@ -8,7 +8,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const navItems = [
   { href: "/risk-engine", label: "Risk Engine" },
   { href: "/agent", label: "Agent Console" },
-  { href: "/agents", label: "Agents" },
   { href: "/registry", label: "Strategy Registry" },
 ];
 
@@ -62,13 +61,6 @@ export function SiteHeader() {
               <strong>Morpho</strong>
               <small>Free read-only market and vault positions</small>
             </Link>
-          </div>
-        </details>
-        <details className="site-nav-menu">
-          <summary className={`site-nav-link${pathname === "/portfolio" || pathname === "/activity" ? " site-nav-active" : ""}`}>Workspace <span aria-hidden="true">⌄</span></summary>
-          <div className="site-nav-menu-panel">
-            <Link href="/portfolio"><strong>My Agents</strong><small>Connected agents and Risk Guard state</small></Link>
-            <Link href="/activity"><strong>Activity</strong><small>Local runs, outcomes, and alerts</small></Link>
           </div>
         </details>
         <ThemeToggle />

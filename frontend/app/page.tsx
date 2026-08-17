@@ -12,7 +12,7 @@ const quickLinks = [
   { label: "Why Agents", href: "#why-agents", note: "Measured latency and repeatability" },
   { label: "Composability", href: "#composability", note: "REST, MCP, JSON, and adapter contracts" },
   { label: "Strategy Registry", href: "#strategy-registry", note: "Opt-in recommendation and outcome memory" },
-  { label: "Agents", href: "/agents", note: "Live BSC ERC-8004 marketplace" },
+  { label: "Agents", href: "#agents", note: "SDKs and automated workflows" },
   { label: "FAQs", href: "#faqs", note: "Common questions and constraints" },
 ];
 
@@ -280,7 +280,6 @@ export default function Home() {
             <Link href="/risk-engine" className="button button-primary">Launch Risk Engine <span>→</span></Link>
             <Link href="/agent" className="button button-secondary">Agent Console <span>◎</span></Link>
             <Link href="/wallet" className="button button-secondary">Hedge Intelligence <span>◇</span></Link>
-            <Link href="/agents" className="button button-secondary">Browse BSC Agents <span>↗</span></Link>
           </div>
           <div className="hero-trust-badges" aria-label="DeltaZero trust properties">
             {['Read only', 'No signatures', 'Deterministic engine', 'Agent payment ready'].map((badge) => <span key={badge}>✓ {badge}</span>)}

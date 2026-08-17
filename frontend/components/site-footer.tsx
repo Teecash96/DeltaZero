@@ -9,9 +9,7 @@ const quickLinks = [
   { label: "Methodology", href: "/methodology" },
   { label: "Strategy Registry", href: "/registry" },
   { label: "Support", href: "/support" },
-  { label: "Agents", href: "/agents" },
-  { label: "My Agents", href: "/portfolio" },
-  { label: "Activity", href: "/activity" },
+  { label: "Agents", href: "/#agents" },
   { label: "FAQs", href: "/#faqs" },
 ];
 
