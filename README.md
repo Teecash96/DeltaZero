@@ -1054,6 +1054,46 @@ npm run build
 
 SDK commands are documented in the [Published SDKs](#published-sdks) section.
 
+### Phase 4 readiness checks
+
+Run these checks before submitting or recording the demo:
+
+```bash
+cd frontend
+npm run typecheck
+npm run lint
+npm test
+npm run test:e2e
+npm run build
+npm run smoke:live
+```
+
+`test:e2e` starts a local Next.js server with `DELTAZERO_E2E=true`. That flag
+only enables deterministic Playwright fixtures. It is never enabled in
+production and it does not change the live marketplace registry.
+
+`smoke:live` is read only. It checks the public Vercel site, the Railway
+health and OpenAPI routes, marketplace discovery, and a small number of live
+BSC agent verification routes. Set `MARKETPLACE_URL`, `BACKEND_URL`, or
+`SMOKE_VERIFY_LIMIT` when testing another deployment. A nonzero exit means a
+public dependency is unavailable and the product is not ready for submission.
+
+Phase 4 status must be reported from evidence, not from local fixtures:
+
+| Surface | Real check | Local-only or conditional part |
+| --- | --- | --- |
+| BSC marketplace discovery | 8004scan metadata and live service probes | None when the public registry is reachable |
+| Agent verification | Endpoint health, schema, latency, and x402 capability | 30 second server cache |
+| Marketplace pages | Vercel rendered pages and Playwright mobile checks | E2E fixture data is test-only |
+| ERC-8183 jobs | Real only with a configured contract and wallet | Simulation mode otherwise |
+| x402 payment | Real only with configured facilitator and browser signer | Challenge or simulation mode otherwise |
+| Risk Guard | Server worker when `DELTAZERO_ENABLE_JOB_WORKER=true` | In-memory or SQLite state is not durable across replacement without a volume |
+
+The final submission checklist still requires at least two verified live
+agents in each required category. If discovery returns fewer, show the
+exclusion reasons and resolve the external agent availability before claiming
+that criterion is met. Do not fill the gap with fixture agents.
+
 ## Deployment
 
 | Component | Platform | Address |

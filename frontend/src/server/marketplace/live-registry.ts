@@ -16,6 +16,7 @@ import type {
   RiskStatus,
 } from "../../lib/risk/types";
 import type { CategoryMetricValue, MarketplaceAgent, MarketplaceDiscovery, MarketplaceExclusion, AgentVerification } from "../../lib/marketplace/types";
+import { MARKETPLACE_AGENTS } from "../../lib/marketplace/fixtures";
 
 /**
  * Server-side discovery for BSC ERC-8004 agents.
@@ -31,6 +32,7 @@ export const EIGHTH_HUNDRED_FOUR_SCAN = "https://8004scan.io/api/v1";
 
 const REQUEST_TIMEOUT_MS = 6_000;
 const CACHE_TTL_MS = 60_000;
+const VERIFICATION_CACHE_TTL_MS = 30_000;
 const USER_AGENT = "DeltaZero-BSC-Marketplace/1.0";
 
 const CANDIDATE_IDS = [
@@ -54,7 +56,7 @@ export interface ServiceDescriptor {
   endpoint: string;
 }
 
-interface ServiceCheck {
+export interface ServiceCheck {
   ok: boolean;
   kind?: "mcp" | "a2a";
   endpoint: string;
@@ -92,6 +94,7 @@ interface ScanAgentDetail extends JsonObject {
 }
 
 let discoveryCache: { expiresAt: number; value: MarketplaceDiscovery } | null = null;
+const verificationCache = new Map<string, { expiresAt: number; checkedAt: string; check: ServiceCheck }>();
 
 function isObject(value: unknown): value is JsonObject {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -273,6 +276,36 @@ async function verifyA2a(endpoint: string, startedAt: number): Promise<ServiceCh
 export async function verifyRegisteredService(service: ServiceDescriptor): Promise<ServiceCheck> {
   const startedAt = Date.now();
   return service.kind === "mcp" ? verifyMcp(service.endpoint, startedAt) : verifyA2a(service.endpoint, startedAt);
+}
+
+/**
+ * Short lived cache for repeated detail page checks.
+ * Discovery still performs fresh checks when its snapshot expires. This cache
+ * only prevents repeated clicks from hammering a third party endpoint and
+ * never turns a failed check into a verified agent.
+ */
+export async function getCachedRegisteredServiceVerification(
+  service: ServiceDescriptor,
+  options: { force?: boolean } = {},
+): Promise<{ check: ServiceCheck; checkedAt: string; cacheHit: boolean }> {
+  const key = `${service.kind}:${service.endpoint}`;
+  const cached = verificationCache.get(key);
+  if (!options.force && cached && cached.expiresAt > Date.now()) {
+    return { check: cached.check, checkedAt: cached.checkedAt, cacheHit: true };
+  }
+
+  const check = await verifyRegisteredService(service);
+  const checkedAt = nowIso();
+  verificationCache.set(key, {
+    check,
+    checkedAt,
+    expiresAt: Date.now() + VERIFICATION_CACHE_TTL_MS,
+  });
+  return { check, checkedAt, cacheHit: false };
+}
+
+export function clearMarketplaceVerificationCacheForTest(): void {
+  verificationCache.clear();
 }
 
 function inferCategory(detail: ScanAgentDetail, service: ServiceDescriptor, toolNames: string[]): { category: RiskCategory; basis: string } | null {
@@ -458,6 +491,29 @@ export function parseRpcPayloadForTest(raw: string): JsonObject | null {
 
 async function discover(): Promise<MarketplaceDiscovery> {
   const checkedAt = nowIso();
+  // Playwright uses an explicit test-only process flag so browser tests do not
+  // depend on third party registry availability. This branch is never enabled
+  // by the production deployment and is labelled as fixture data in the UI.
+  if (process.env.DELTAZERO_E2E === "true") {
+    const agents = MARKETPLACE_AGENTS.map((agent) => ({
+      ...agent,
+      updatedAt: checkedAt,
+      verification: { ...agent.verification, checkedAt, lastVerifiedAt: checkedAt },
+      dataMode: "verified_fixture" as const,
+    }));
+    return {
+      agents,
+      exclusions: [],
+      categoryCounts: {
+        health_factor: agents.filter((agent) => agent.categories.includes("health_factor")).length,
+        yield_optimisation: agents.filter((agent) => agent.categories.includes("yield_optimisation")).length,
+        rebalancing: agents.filter((agent) => agent.categories.includes("rebalancing")).length,
+        grid_trading: agents.filter((agent) => agent.categories.includes("grid_trading")).length,
+      },
+      checkedAt,
+      source: "Playwright-only verified fixture data",
+    };
+  }
   const details = await Promise.all(CANDIDATE_IDS.map(async (id) => ({ id, detail: await fetchDetail(id) })));
 
   type DiscoveryResult = { agent?: MarketplaceAgent; exclusion?: MarketplaceExclusion };
